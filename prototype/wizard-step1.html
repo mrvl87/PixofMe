@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wizard 1 - Project Setting - Pixforme</title>
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/wizard.css?v=workspace1">
+</head>
+<body class="wizard-shell">
+<div class="wizard-topbar" id="wizardChrome"></div>
+
+<main class="wizard-page container-narrow">
+  <div class="wizard-title-row">
+    <div>
+      <div class="wizard-kicker">STEP 01</div>
+      <h1 class="wizard-title">PROJECT SETTING</h1>
+      <p class="wizard-subtitle">Satu workspace dapat menyimpan banyak project. Data instansi, pekerjaan, lokasi, dan item pekerjaan disimpan di level project agar bisa dipakai ulang pada laporan berikutnya.</p>
+    </div>
+  </div>
+
+  <div class="wizard-grid-2">
+    <section class="card card-accent">
+      <div class="form-grid">
+        <div class="span-2">
+          <label class="field-label">Nama Pekerjaan / Project <span class="req">*</span></label>
+          <input class="field-input" id="projectName" placeholder="mis. Pembangunan Gedung Kantor Dinas A">
+        </div>
+        <div>
+          <label class="field-label">Nama Instansi</label>
+          <input class="field-input" id="projectClient" placeholder="mis. Dinas Pekerjaan Umum Kota X">
+        </div>
+        <div>
+          <label class="field-label">Lokasi Kegiatan</label>
+          <input class="field-input" id="projectLocation" placeholder="mis. Jl. Sudirman No. 10">
+        </div>
+        <div class="span-2">
+          <label class="field-label">Paste Item Pekerjaan dari RAB</label>
+          <textarea class="field-textarea mono" rows="7" id="rabItems" placeholder="Paste baris RAB di sini. Contoh:\n1. Pekerjaan Persiapan\n2. Galian dan pembesian pondasi\n3. Pengecoran kolom lantai 1"></textarea>
+          <div class="project-items-preview" id="rabItemsPreview"></div>
+        </div>
+        <div class="span-2">
+          <label class="field-label">Logo yang ditampilkan</label>
+          <div class="toggle-row">
+            <button class="toggle-btn" type="button" id="logoInstansi">Logo Instansi</button>
+            <button class="toggle-btn" type="button" id="logoPerusahaan">Logo Perusahaan</button>
+          </div>
+        </div>
+        <div class="span-2">
+          <label class="field-label">Teks Header</label>
+          <textarea class="field-textarea" rows="4" id="headerText" placeholder="DINAS PEKERJAAN UMUM\nLaporan Dokumentasi Proyek"></textarea>
+        </div>
+        <div class="span-2">
+          <label class="field-label">Tampilkan Header</label>
+          <div class="toggle-row">
+            <button class="toggle-btn" type="button" data-header-mode="all">Semua Halaman</button>
+            <button class="toggle-btn" type="button" data-header-mode="first">Halaman Pertama</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="info-panel">
+      <h3>Arah UX</h3>
+      <ul>
+        <li>Workspace menjadi rumah untuk project_1, project_2, dan seterusnya.</li>
+        <li>Project Setting menyimpan atribut utama project.</li>
+        <li>Item RAB otomatis menjadi dropdown di Step 3.</li>
+      </ul>
+      <div id="summaryBox"></div>
+    </aside>
+  </div>
+</main>
+
+<script src="assets/js/pixel-icons.js"></script>
+<script src="assets/js/wizard-state.js?v=workspace1"></script>
+<script>
+  var state = PixWizard.loadState();
+  PixWizard.renderWizardChrome(1, '<a class="pixel-btn pixel-btn-ghost" href="workspace.html">Workspace</a><button class="pixel-btn pixel-btn-ghost" id="resetDemo">Reset</button><button class="pixel-btn pixel-btn-accent" id="nextStep">Lanjut</button>');
+
+  var fields = {
+    name: document.getElementById('projectName'),
+    client: document.getElementById('projectClient'),
+    location: document.getElementById('projectLocation'),
+    rabText: document.getElementById('rabItems'),
+    headerText: document.getElementById('headerText')
+  };
+
+  fields.name.value = state.project.name || '';
+  fields.client.value = state.project.client || state.project.instansi || '';
+  fields.location.value = state.project.location || state.project.lokasi || '';
+  fields.rabText.value = state.project.rabText || PixWizard.getProjectItems(state).join('\n');
+  fields.headerText.value = state.project.headerText || '';
+
+  function syncActiveProjectSummary() {
+    state.workspace = state.workspace || { name: 'Workspace Utama', activeProjectId: 'project_1', projects: [] };
+    state.workspace.projects = state.workspace.projects || [];
+    var activeId = state.workspace.activeProjectId || 'project_1';
+    var activeProject = state.workspace.projects.find(function (project) { return project.id === activeId; });
+    if (!activeProject) {
+      activeProject = { id: activeId, status: 'Aktif' };
+      state.workspace.projects.unshift(activeProject);
+    }
+    activeProject.name = state.project.name || '-';
+    activeProject.instansi = state.project.client || '-';
+    activeProject.location = state.project.location || '-';
+    activeProject.status = 'Aktif';
+  }
+
+  function renderItemPreview() {
+    var items = PixWizard.getProjectItems(state);
+    document.getElementById('rabItemsPreview').innerHTML = '<div class="mini-label">' + items.length + ' item tersimpan untuk dropdown Step 3</div>' +
+      '<div class="item-chip-list">' + items.slice(0, 12).map(function (item) {
+        return '<span class="item-chip">' + PixWizard.escapeHtml(item) + '</span>';
+      }).join('') + (items.length > 12 ? '<span class="item-chip muted">+' + (items.length - 12) + ' lainnya</span>' : '') + '</div>';
+  }
+
+  function refreshToggles() {
+    document.getElementById('logoInstansi').classList.toggle('active', !!state.project.logoInstansi);
+    document.getElementById('logoPerusahaan').classList.toggle('active', !!state.project.logoPerusahaan);
+    document.querySelectorAll('[data-header-mode]').forEach(function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-header-mode') === state.project.headerMode);
+    });
+    renderItemPreview();
+    document.getElementById('summaryBox').innerHTML = PixWizard.projectSummary(state);
+  }
+
+  function persist() {
+    state.project.name = fields.name.value.trim();
+    state.project.pekerjaan = state.project.name;
+    state.project.client = fields.client.value.trim();
+    state.project.instansi = state.project.client;
+    state.project.location = fields.location.value.trim();
+    state.project.lokasi = state.project.location;
+    state.project.headerText = fields.headerText.value;
+    state.project.rabText = fields.rabText.value;
+    state.project.items = PixWizard.parseRabItems(fields.rabText.value);
+    syncActiveProjectSummary();
+    PixWizard.saveState(state);
+    refreshToggles();
+  }
+
+  Object.keys(fields).forEach(function (key) {
+    fields[key].addEventListener('input', persist);
+  });
+
+  document.getElementById('logoInstansi').addEventListener('click', function () {
+    state.project.logoInstansi = !state.project.logoInstansi;
+    persist();
+  });
+
+  document.getElementById('logoPerusahaan').addEventListener('click', function () {
+    state.project.logoPerusahaan = !state.project.logoPerusahaan;
+    persist();
+  });
+
+  document.querySelectorAll('[data-header-mode]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      state.project.headerMode = btn.getAttribute('data-header-mode');
+      persist();
+    });
+  });
+
+  document.getElementById('resetDemo').addEventListener('click', function () {
+    state = PixWizard.resetState();
+    window.location.reload();
+  });
+
+  document.getElementById('nextStep').addEventListener('click', function () {
+    persist();
+    if (!state.project.name) {
+      fields.name.classList.add('required-empty');
+      fields.name.focus();
+      return;
+    }
+    window.location.href = 'wizard-step2.html';
+  });
+
+  refreshToggles();
+</script>
+</body>
+</html>

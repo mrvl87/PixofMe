@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Fix Tools — Pixforme</title>
+<link rel="stylesheet" href="assets/css/tokens.css">
+<style>
+  .ph-hero { padding: 56px 24px 40px; text-align: center; }
+  .ph-hero h1 { font-family: var(--font-pixel); font-size: 22px; line-height: 1.7; margin-bottom: 16px; }
+  .ph-hero p { color: var(--text-muted); font-size: 15px; max-width: 580px; margin: 0 auto; line-height: 1.7; }
+
+  .tool-route-grid { max-width: 1000px; margin: 0 auto 80px; padding: 0 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .tool-route-card {
+    border: 2px solid var(--black); border-radius: 8px; padding: 28px; background: #fff;
+    box-shadow: 4px 4px 0 0 var(--border); display: flex; flex-direction: column; gap: 14px;
+  }
+  .tool-route-card.coming { opacity: 0.6; }
+  .tool-route-icon { width: 48px; height: 48px; background: var(--black); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+  .tool-route-card h3 { font-size: 15px; font-weight: 800; }
+  .tool-route-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; flex: 1; }
+  .badge-status { align-self: flex-start; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 3px; letter-spacing: 0.04em; }
+  .badge-live { background: #EAFAF1; color: #2E9E5B; }
+  .badge-soon { background: var(--accent-bg); color: var(--text-muted); }
+
+  @media (max-width: 800px) { .tool-route-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<nav class="topnav" id="topnav" data-active="tools"></nav>
+
+<section class="ph-hero">
+  <h1>AI FIX TOOLS</h1>
+  <p>Tool terpisah dari wizard laporan — untuk bukti lapangan real-time dan pengelolaan foto massal. Hasilnya tersimpan di galeri Anda, terpisah dari foto laporan resmi.</p>
+</section>
+
+<div class="tool-route-grid">
+  <div class="tool-route-card">
+    <div class="tool-route-icon"><span data-pixel-icon="geo" data-pixel-size="24" data-pixel-color="#fff"></span></div>
+    <span class="badge-status badge-soon">SEGERA HADIR</span>
+    <h3>AI Geotag Burn-in</h3>
+    <p>Bakar koordinat, tanggal, dan jam langsung ke piksel foto — untuk bukti lapangan real-time saat GPS tidak presisi atau tidak ada jaringan. Pilih lokasi lewat Google Maps, kontrol prompt ketat di sisi client.</p>
+    <button class="pixel-btn pixel-btn-ghost" disabled style="align-self:flex-start;">Buka Tool</button>
+  </div>
+
+  <div class="tool-route-card">
+    <div class="tool-route-icon" style="background:var(--orange);"><span data-pixel-icon="watermark" data-pixel-size="24" data-pixel-color="#fff"></span></div>
+    <span class="badge-status badge-soon">SEGERA HADIR</span>
+    <h3>Watermark Manager</h3>
+    <p>Hapus, ganti, atau tambahkan watermark tanggal secara massal ke puluhan foto sekaligus — cocok untuk foto dari berbagai sumber dengan format watermark berbeda-beda.</p>
+    <button class="pixel-btn pixel-btn-ghost" disabled style="align-self:flex-start;">Buka Tool</button>
+  </div>
+
+  <div class="tool-route-card">
+    <div class="tool-route-icon" style="background:#2563EB;"><span data-pixel-icon="image" data-pixel-size="24" data-pixel-color="#fff"></span></div>
+    <span class="badge-status badge-soon">SEGERA HADIR</span>
+    <h3>Galeri Foto</h3>
+    <p>Semua foto Anda — asli maupun hasil AI Fix — tersimpan rapi per project. Pilih foto dari galeri kapan saja untuk dipakai di laporan manapun, tanpa upload ulang.</p>
+    <button class="pixel-btn pixel-btn-ghost" disabled style="align-self:flex-start;">Buka Galeri</button>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-bottom">© 2026 PIXFORME.IO</div>
+</footer>
+
+<script src="assets/js/pixel-icons.js"></script>
+<script src="assets/js/topnav.js"></script>
+</body>
+</html>

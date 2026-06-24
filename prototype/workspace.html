@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workspace - Pixforme</title>
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/wizard.css?v=workspace1">
+</head>
+<body class="wizard-shell">
+<div class="wizard-topbar" id="wizardChrome"></div>
+<main class="wizard-page container">
+  <div class="wizard-title-row">
+    <div>
+      <div class="wizard-kicker">WORKSPACE</div>
+      <h1 class="wizard-title">USER WORKSPACE</h1>
+      <p class="wizard-subtitle">Workspace menyimpan banyak project. Setiap project membawa atribut instansi, pekerjaan, lokasi kegiatan, dan item pekerjaan untuk dipakai dalam wizard laporan.</p>
+    </div>
+    <div class="state-chip-row" id="workspaceSummary"></div>
+  </div>
+  <div class="workspace-layout">
+    <aside class="info-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;">
+        <h3 style="margin:0;">Project</h3>
+        <button class="pixel-btn pixel-btn-ghost" id="addProject" style="padding:7px 10px;font-size:10px;box-shadow:none;">Tambah</button>
+      </div>
+      <div class="project-list-card" id="projectList"></div>
+    </aside>
+    <section class="card card-accent">
+      <div class="form-grid">
+        <div><label class="field-label">Nama Instansi</label><input class="field-input" id="projectClient"></div>
+        <div><label class="field-label">Lokasi Kegiatan</label><input class="field-input" id="projectLocation"></div>
+        <div class="span-2"><label class="field-label">Nama Pekerjaan</label><input class="field-input" id="projectName"></div>
+        <div class="span-2"><label class="field-label">Paste Item Pekerjaan dari RAB</label><textarea class="field-textarea mono" rows="9" id="rabItems"></textarea><div class="project-items-preview" id="rabItemsPreview"></div></div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;"><a class="pixel-btn pixel-btn-accent" href="wizard-step1.html">Buka Project Setting</a><a class="pixel-btn pixel-btn-ghost" href="wizard-step3.html">Cek Dropdown Step 3</a></div>
+    </section>
+  </div>
+</main>
+<script src="assets/js/pixel-icons.js"></script>
+<script src="assets/js/wizard-state.js?v=workspace1"></script>
+<script>
+  var state = PixWizard.loadState();
+  PixWizard.renderWizardChrome(0, '<a class="pixel-btn pixel-btn-accent" href="wizard-step1.html">Mulai Wizard</a>');
+  var fields = { name: document.getElementById('projectName'), client: document.getElementById('projectClient'), location: document.getElementById('projectLocation'), rabText: document.getElementById('rabItems') };
+  function activeProjectId() { state.workspace = state.workspace || { name: 'Workspace Utama', activeProjectId: 'project_1', projects: [] }; state.workspace.projects = state.workspace.projects || []; return state.workspace.activeProjectId || 'project_1'; }
+  function activeProjectRecord() { var id = activeProjectId(); var project = state.workspace.projects.find(function (row) { return row.id === id; }); if (!project) { project = { id: id, status: 'Aktif' }; state.workspace.projects.unshift(project); } return project; }
+  function updateFieldsFromState() { fields.name.value = state.project.name || ''; fields.client.value = state.project.client || state.project.instansi || ''; fields.location.value = state.project.location || state.project.lokasi || ''; fields.rabText.value = state.project.rabText || PixWizard.getProjectItems(state).join('\n'); }
+  function renderItems() { var items = PixWizard.getProjectItems(state); document.getElementById('rabItemsPreview').innerHTML = '<div class="mini-label">' + items.length + ' item pekerjaan aktif</div><div class="item-chip-list">' + items.map(function (item) { return '<span class="item-chip">' + PixWizard.escapeHtml(item) + '</span>'; }).join('') + '</div>'; }
+  function renderProjects() { var activeId = activeProjectId(); document.getElementById('projectList').innerHTML = state.workspace.projects.map(function (project) { return '<button class="project-list-item ' + (project.id === activeId ? 'active' : '') + '" data-project="' + project.id + '" type="button"><div style="font-size:11px;font-weight:900;line-height:1.35;">' + PixWizard.escapeHtml(project.name || project.id) + '</div><div style="font-size:10px;color:var(--text-muted);margin-top:5px;line-height:1.35;">' + PixWizard.escapeHtml(project.instansi || '-') + '</div><div class="mono" style="font-size:9px;color:var(--orange);margin-top:7px;">' + PixWizard.escapeHtml(project.id) + ' / ' + PixWizard.escapeHtml(project.status || 'Draft') + '</div></button>'; }).join(''); document.querySelectorAll('[data-project]').forEach(function (btn) { btn.addEventListener('click', function () { activateProject(btn.getAttribute('data-project')); }); }); }
+  function renderSummary() { document.getElementById('workspaceSummary').innerHTML = '<span class="state-chip">Workspace: ' + PixWizard.escapeHtml(state.workspace.name || 'Workspace Utama') + '</span><span class="state-chip">Project: ' + state.workspace.projects.length + '</span><span class="state-chip">Item aktif: ' + PixWizard.getProjectItems(state).length + '</span>'; }
+  function renderAll() { renderProjects(); renderItems(); renderSummary(); }
+  function persist() { state.project.name = fields.name.value.trim(); state.project.pekerjaan = state.project.name; state.project.client = fields.client.value.trim(); state.project.instansi = state.project.client; state.project.location = fields.location.value.trim(); state.project.lokasi = state.project.location; state.project.rabText = fields.rabText.value; state.project.items = PixWizard.parseRabItems(fields.rabText.value); var project = activeProjectRecord(); project.name = state.project.name || project.id; project.instansi = state.project.client || '-'; project.location = state.project.location || '-'; project.items = state.project.items.slice(); project.rabText = state.project.rabText; project.status = 'Aktif'; PixWizard.saveState(state); renderAll(); }
+  function activateProject(id) { persist(); state.workspace.activeProjectId = id; state.workspace.projects.forEach(function (row) { row.status = row.id === id ? 'Aktif' : row.status === 'Aktif' ? 'Draft' : row.status; }); var project = activeProjectRecord(); state.project.name = project.name || ''; state.project.pekerjaan = state.project.name; state.project.client = project.instansi || ''; state.project.instansi = state.project.client; state.project.location = project.location || ''; state.project.lokasi = state.project.location; state.project.items = Array.isArray(project.items) && project.items.length ? project.items.slice() : []; state.project.rabText = project.rabText || state.project.items.join('\n'); PixWizard.saveState(state); updateFieldsFromState(); renderAll(); }
+  document.getElementById('addProject').addEventListener('click', function () { persist(); var next = state.workspace.projects.length + 1; var id = 'project_' + next; state.workspace.projects.unshift({ id: id, name: 'Project ' + next, instansi: 'Belum diatur', location: '-', status: 'Draft', items: [], rabText: '' }); state.workspace.activeProjectId = id; state.project.name = 'Project ' + next; state.project.client = ''; state.project.location = ''; state.project.items = []; state.project.rabText = ''; PixWizard.saveState(state); updateFieldsFromState(); renderAll(); });
+  Object.keys(fields).forEach(function (key) { fields[key].addEventListener('input', persist); });
+  updateFieldsFromState(); renderAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masuk — Pixforme</title>
+<link rel="stylesheet" href="assets/css/tokens.css">
+<style>
+  body { display: flex; flex-direction: column; min-height: 100vh; }
+  .login-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .login-box { width: 360px; }
+  .login-box .logo-row { display: flex; align-items: center; gap: 9px; justify-content: center; margin-bottom: 28px; }
+  .login-box .logo-row span.brand { font-family: var(--font-pixel); font-size: 13px; }
+  .login-box h1 { font-size: 16px; font-weight: 800; text-align: center; margin-bottom: 6px; }
+  .login-box p.sub { font-size: 12px; color: var(--text-muted); text-align: center; margin-bottom: 24px; }
+</style>
+</head>
+<body>
+
+<div class="login-wrap">
+  <div class="login-box">
+    <a href="index.html" class="logo-row">
+      <span data-pixel-logo data-pixel-size="26"></span>
+      <span class="brand">PIXFORME</span>
+    </a>
+
+    <div class="card card-accent">
+      <h1>Masuk ke akun Anda</h1>
+      <p class="sub">Project dan laporan Anda menunggu.</p>
+      <div>
+        <label class="field-label">Email</label>
+        <input class="field-input" type="email" placeholder="nama@perusahaan.com">
+      </div>
+      <div>
+        <label class="field-label">Kata Sandi</label>
+        <input class="field-input" type="password" placeholder="••••••••">
+      </div>
+      <button class="pixel-btn pixel-btn-accent" style="justify-content:center;width:100%;padding:12px;">Masuk</button>
+      <div style="text-align:center;font-size:12px;color:var(--text-muted);">
+        Belum punya akun? <a href="wizard-step1.html" style="color:var(--orange);font-weight:700;">Mulai gratis</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/pixel-icons.js"></script>
+</body>
+</html>

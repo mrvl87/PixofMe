@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wizard 3 - Foto & Caption - Pixforme</title>
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/wizard.css?v=workspace1">
+</head>
+<body class="wizard-shell">
+<div class="wizard-topbar" id="wizardChrome"></div>
+
+<main class="wizard-page container">
+  <div class="wizard-title-row">
+    <div>
+      <div class="wizard-kicker">STEP 03</div>
+      <h1 class="wizard-title">FOTO & CAPTION</h1>
+      <p class="wizard-subtitle">Foto masuk dari galeri dulu, lalu dipilih ke laporan. Caption, urutan, fit, AI extend, dan geotag tersimpan per relasi foto-laporan.</p>
+    </div>
+    <div class="state-chip-row" id="summaryBox"></div>
+  </div>
+
+  <div class="gallery-layout">
+    <aside class="gallery-panel info-panel">
+      <h3>Galeri Foto</h3>
+      <p>Upload baru masuk galeri. Foto bukti lapangan tidak masuk laporan kecuali dipilih eksplisit.</p>
+      <div style="margin:12px 0;display:grid;gap:8px;">
+        <button class="pixel-btn pixel-btn-accent" id="uploadBtn" style="justify-content:center;">Upload Foto</button>
+        <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
+      </div>
+      <div class="gallery-list" id="galleryList"></div>
+    </aside>
+
+    <section>
+      <div class="photo-workbar">
+        <div>
+          <div class="pixel-heading" style="font-size:13px;">FOTO DALAM LAPORAN</div>
+          <div class="text-muted" style="font-size:12px;margin-top:6px;" id="photoCounter"></div>
+        </div>
+        <div class="bulk-box">
+          <div>
+            <label class="mini-label">BULK ITEM</label>
+            <select class="field-input" id="bulkItem"></select>
+          </div>
+          <div>
+            <label class="mini-label">BULK PROGRESS</label>
+            <input class="field-input mono" id="bulkProgress" type="number" min="0" max="100" placeholder="75">
+          </div>
+          <button class="pixel-btn pixel-btn-ghost" id="applyBulk">Terapkan</button>
+        </div>
+      </div>
+      <datalist id="itemPresets"></datalist>
+      <div class="report-grid" id="reportGrid"></div>
+    </section>
+  </div>
+</main>
+
+<div class="modal-overlay" id="fitModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">Posisi Foto</div>
+        <div class="modal-sub">Pilih cara foto masuk ke frame 4:3.</div>
+      </div>
+      <button class="modal-close" data-close="fitModal"><span data-pixel-icon="x" data-pixel-size="16" data-pixel-color="#6B6B68"></span></button>
+    </div>
+    <div class="crop-stage"><img id="fitPreview" src="" alt="Preview"></div>
+    <div class="fit-options">
+      <button data-fit="crop">Crop 4:3</button>
+      <button data-fit="contain">Contain</button>
+      <button data-fit="ai">AI Extend</button>
+    </div>
+    <div class="style-row" style="margin-top:12px;margin-bottom:0;" id="cropYControl">
+      <div class="style-label">POSISI CROP VERTIKAL: <span class="mono" id="cropYValue">50%</span></div>
+      <input id="cropYRange" type="range" min="0" max="100" value="50">
+    </div>
+    <div class="prototype-banner" style="margin-top:12px;">AI Extend di prototype hanya menandai state. Di production nanti memanggil Image Edit API setelah user konfirmasi kredit.</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="geoModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">Geotag Overlay</div>
+        <div class="modal-sub">Metadata ini non-destructive dan ikut tampil di preview/export.</div>
+      </div>
+      <button class="modal-close" data-close="geoModal"><span data-pixel-icon="x" data-pixel-size="16" data-pixel-color="#6B6B68"></span></button>
+    </div>
+    <label class="field-label">Alamat / Lokasi</label>
+    <input class="field-input" id="geoAddress" placeholder="mis. Kota Jayapura">
+    <div class="map-fake" id="mapFake">
+      <svg width="100%" height="100%" style="position:absolute;inset:0;">
+        <path d="M0,80 Q150,40 460,94" stroke="#fff" stroke-width="6" fill="none" opacity="0.7"></path>
+        <rect x="110" y="96" width="48" height="30" fill="#FFC299" opacity="0.65" rx="2"></rect>
+        <rect x="250" y="52" width="64" height="42" fill="#FFA41B" opacity="0.35" rx="2"></rect>
+      </svg>
+      <div class="map-pin-center" data-pixel-icon="mapPin" data-pixel-size="30" data-pixel-color="#E8331C"></div>
+      <div class="map-coords" id="mapCoords"></div>
+    </div>
+    <div class="form-grid" style="margin-top:12px;">
+      <div>
+        <label class="field-label">Latitude</label>
+        <input class="field-input mono" id="geoLat">
+      </div>
+      <div>
+        <label class="field-label">Longitude</label>
+        <input class="field-input mono" id="geoLng">
+      </div>
+      <div>
+        <label class="field-label">Tanggal</label>
+        <input class="field-input mono" type="date" id="geoDate">
+      </div>
+      <div>
+        <label class="field-label">Jam</label>
+        <input class="field-input mono" type="time" id="geoTime">
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="pixel-btn pixel-btn-ghost" id="removeGeo" style="flex:1;justify-content:center;">Hapus</button>
+      <button class="pixel-btn pixel-btn-accent" id="saveGeo" style="flex:2;justify-content:center;">Simpan Geotag</button>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/pixel-icons.js"></script>
+<script src="assets/js/wizard-state.js?v=workspace1"></script>
+<script>
+  var state = PixWizard.loadState();
+  var activeItemId = null;
+  var geoPos = { lat: -2.5916, lng: 140.6690 };
+
+  PixWizard.renderWizardChrome(3, '<a class="pixel-btn pixel-btn-ghost" href="wizard-step2.html">Kembali</a><a class="pixel-btn pixel-btn-accent" href="wizard-step4.html">Preview</a>');
+
+  function esc(value) { return PixWizard.escapeHtml(value); }
+
+  function renderAll() {
+    renderSummary();
+    renderPresets();
+    renderGallery();
+    renderReport();
+    if (typeof renderPixelIcons === 'function') renderPixelIcons();
+  }
+
+  function renderSummary() {
+    document.getElementById('summaryBox').innerHTML = '<span class="state-chip">Project: ' + esc(state.project.name) + '</span><span class="state-chip">Foto laporan: ' + state.reportPhotos.length + '</span>';
+  }
+
+  function itemOptionsHTML(selected, includeEmpty) {
+    var items = PixWizard.getProjectItems(state);
+    var selectedText = String(selected || '');
+    var html = includeEmpty ? '<option value="">Pilih item pekerjaan</option>' : '';
+    if (selectedText && !items.some(function (item) { return item.toLowerCase() === selectedText.toLowerCase(); })) {
+      html += '<option value="' + esc(selectedText) + '" selected>' + esc(selectedText) + ' (custom)</option>';
+    }
+    return html + items.map(function (item) {
+      return '<option value="' + esc(item) + '" ' + (item === selectedText ? 'selected' : '') + '>' + esc(item) + '</option>';
+    }).join('');
+  }
+
+  function renderPresets() {
+    var items = PixWizard.getProjectItems(state);
+    document.getElementById('itemPresets').innerHTML = items.map(function (row) {
+      return '<option value="' + esc(row) + '"></option>';
+    }).join('');
+    document.getElementById('bulkItem').innerHTML = itemOptionsHTML('', true);
+  }
+
+  function renderGallery() {
+    var selected = {};
+    state.reportPhotos.forEach(function (row) { selected[row.photoId] = true; });
+    document.getElementById('galleryList').innerHTML = state.gallery.map(function (photo) {
+      var isSelected = !!selected[photo.id];
+      var sourceLabel = photo.sourceType === 'bukti_lapangan' ? 'BUKTI LAPANGAN' : 'LAPORAN';
+      return '<div class="gallery-item">' +
+        '<div class="gallery-thumb"><img src="' + photo.url + '" alt=""></div>' +
+        '<div class="gallery-meta">' +
+          '<div class="gallery-name">' + esc(photo.filename) + '</div>' +
+          '<div class="gallery-badge">' + sourceLabel + ' / ' + PixWizard.arLabel(photo) + '</div>' +
+          '<button class="pixel-btn ' + (isSelected ? 'pixel-btn-success' : 'pixel-btn-ghost') + '" data-add-photo="' + photo.id + '" style="padding:6px 9px;font-size:10px;justify-content:center;box-shadow:none;">' + (isSelected ? 'Sudah dipilih' : 'Tambah ke laporan') + '</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    document.querySelectorAll('[data-add-photo]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        PixWizard.addToReport(state, btn.getAttribute('data-add-photo'));
+        state = PixWizard.loadState();
+        renderAll();
+      });
+    });
+  }
+
+  function geotagHTML(item) {
+    if (!item.geotag) return '';
+    return '<div class="geo-overlay"><div>' + esc(item.geotag.address) + '</div><div class="mono">' + Number(item.geotag.lat).toFixed(5) + ', ' + Number(item.geotag.lng).toFixed(5) + '</div><div class="mono">' + esc(item.geotag.date) + ' ' + esc(item.geotag.time) + '</div></div>';
+  }
+
+  function renderReport() {
+    var items = PixWizard.getReportItems(state);
+    document.getElementById('photoCounter').textContent = items.length + ' foto dipilih dari galeri';
+    if (!items.length) {
+      document.getElementById('reportGrid').innerHTML = '<div class="empty-state">Belum ada foto dalam laporan. Pilih foto dari galeri di sebelah kiri.</div>';
+      return;
+    }
+
+    document.getElementById('reportGrid').innerHTML = items.map(function (item) {
+      return '<article class="photo-card">' +
+        '<div class="photo-frame">' +
+          '<img src="' + item.photo.url + '" style="' + PixWizard.imageFitStyle(item) + '" alt="">' +
+          '<div class="photo-badge">' + PixWizard.arLabel(item.photo) + (item.aiExtended ? ' / AI' : '') + '</div>' +
+          '<div class="photo-index">#' + String(item.index + 1).padStart(2, '0') + '</div>' +
+          geotagHTML(item) +
+        '</div>' +
+        '<div class="photo-tools">' +
+          '<button data-move="-1" data-id="' + item.id + '">UP</button>' +
+          '<button data-move="1" data-id="' + item.id + '">DOWN</button>' +
+          '<button data-fit-open="' + item.id + '" class="' + (item.fitMode ? 'active' : '') + '">FIT</button>' +
+          '<button data-ai="' + item.id + '" class="' + (item.aiExtended ? 'done' : '') + '">AI</button>' +
+          '<button data-geo-open="' + item.id + '" class="' + (item.geotag ? 'active' : '') + '">GEO</button>' +
+          '<button data-remove="' + item.id + '">DEL</button>' +
+        '</div>' +
+        '<div class="photo-fields">' +
+          '<div><div class="mini-label">NAMA PEKERJAAN</div><input class="mini-input" data-field="nama" data-id="' + item.id + '" value="' + esc(item.nama) + '"></div>' +
+          '<div><div class="mini-label">ITEM PEKERJAAN</div><select class="mini-input item-dropdown" data-field="item" data-id="' + item.id + '">' + itemOptionsHTML(item.item, false) + '</select></div>' +
+          '<div><div class="mini-label">PROGRESS</div><div class="progress-row"><input class="mini-input" type="number" min="0" max="100" data-field="progress" data-id="' + item.id + '" value="' + esc(item.progress) + '"><span class="mono" style="font-size:10px;">%</span><div class="progress-quick">' +
+            [25, 50, 75, 100].map(function (v) { return '<button data-quick="' + v + '" data-id="' + item.id + '" class="' + (String(item.progress) === String(v) ? 'active' : '') + '">' + v + '</button>'; }).join('') +
+          '</div></div></div>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+
+    attachReportEvents();
+  }
+
+  function attachReportEvents() {
+    document.querySelectorAll('[data-field]').forEach(function (input) {
+      function persistField() {
+        var changes = {};
+        changes[input.getAttribute('data-field')] = input.value;
+        PixWizard.updateReportPhoto(state, input.getAttribute('data-id'), changes);
+      }
+      input.addEventListener('input', persistField);
+      input.addEventListener('change', persistField);
+    });
+    document.querySelectorAll('[data-quick]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        PixWizard.updateReportPhoto(state, btn.getAttribute('data-id'), { progress: btn.getAttribute('data-quick') });
+        state = PixWizard.loadState();
+        renderReport();
+      });
+    });
+    document.querySelectorAll('[data-remove]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        PixWizard.removeFromReport(state, btn.getAttribute('data-remove'));
+        state = PixWizard.loadState();
+        renderAll();
+      });
+    });
+    document.querySelectorAll('[data-move]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        PixWizard.moveReportPhoto(state, btn.getAttribute('data-id'), Number(btn.getAttribute('data-move')));
+        state = PixWizard.loadState();
+        renderReport();
+      });
+    });
+    document.querySelectorAll('[data-fit-open]').forEach(function (btn) {
+      btn.addEventListener('click', function () { openFitModal(btn.getAttribute('data-fit-open')); });
+    });
+    document.querySelectorAll('[data-ai]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        PixWizard.updateReportPhoto(state, btn.getAttribute('data-ai'), { aiExtended: true, fitMode: 'crop', cropY: 50 });
+        state = PixWizard.loadState();
+        renderReport();
+      });
+    });
+    document.querySelectorAll('[data-geo-open]').forEach(function (btn) {
+      btn.addEventListener('click', function () { openGeoModal(btn.getAttribute('data-geo-open')); });
+    });
+  }
+
+  function openFitModal(id) {
+    activeItemId = id;
+    var item = PixWizard.getReportItems(state).find(function (row) { return row.id === id; });
+    if (!item) return;
+    document.getElementById('fitPreview').src = item.photo.url;
+    document.getElementById('fitPreview').style.cssText = PixWizard.imageFitStyle(item);
+    document.getElementById('cropYRange').value = typeof item.cropY === 'number' ? item.cropY : 50;
+    document.getElementById('cropYValue').textContent = document.getElementById('cropYRange').value + '%';
+    document.getElementById('cropYControl').style.display = item.fitMode === 'contain' ? 'none' : 'grid';
+    document.querySelectorAll('[data-fit]').forEach(function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-fit') === item.fitMode || (btn.getAttribute('data-fit') === 'ai' && item.aiExtended));
+    });
+    document.getElementById('fitModal').classList.add('show');
+  }
+
+  document.querySelectorAll('[data-fit]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var mode = btn.getAttribute('data-fit');
+      var current = state.reportPhotos.find(function (row) { return row.id === activeItemId; }) || {};
+      var cropY = Number(document.getElementById('cropYRange').value || current.cropY || 50);
+      var changes = mode === 'ai' ? { fitMode: 'crop', cropY: cropY, aiExtended: true } : { fitMode: mode, cropY: cropY, aiExtended: false };
+      PixWizard.updateReportPhoto(state, activeItemId, changes);
+      state = PixWizard.loadState();
+      closeModal('fitModal');
+      renderReport();
+    });
+  });
+
+  document.getElementById('cropYRange').addEventListener('input', function (event) {
+    var value = Number(event.target.value);
+    document.getElementById('cropYValue').textContent = value + '%';
+    var current = state.reportPhotos.find(function (row) { return row.id === activeItemId; });
+    if (!current) return;
+    var previewItem = Object.assign({}, current, { cropY: value, photo: PixWizard.findGalleryPhoto(state, current.photoId) });
+    document.getElementById('fitPreview').style.cssText = PixWizard.imageFitStyle(previewItem);
+  });
+
+  function openGeoModal(id) {
+    activeItemId = id;
+    var item = PixWizard.getReportItems(state).find(function (row) { return row.id === id; });
+    var geo = item && item.geotag ? item.geotag : { address: '', lat: -2.5916, lng: 140.6690, date: new Date().toISOString().slice(0, 10), time: '09:00' };
+    geoPos = { lat: Number(geo.lat), lng: Number(geo.lng) };
+    document.getElementById('geoAddress').value = geo.address || '';
+    document.getElementById('geoLat').value = geoPos.lat.toFixed(5);
+    document.getElementById('geoLng').value = geoPos.lng.toFixed(5);
+    document.getElementById('geoDate').value = geo.date;
+    document.getElementById('geoTime').value = geo.time;
+    updateMapText();
+    document.getElementById('geoModal').classList.add('show');
+  }
+
+  function updateMapText() {
+    document.getElementById('mapCoords').textContent = geoPos.lat.toFixed(5) + ', ' + geoPos.lng.toFixed(5);
+    document.getElementById('geoLat').value = geoPos.lat.toFixed(5);
+    document.getElementById('geoLng').value = geoPos.lng.toFixed(5);
+  }
+
+  document.getElementById('mapFake').addEventListener('click', function (event) {
+    var rect = event.currentTarget.getBoundingClientRect();
+    var xFrac = (event.clientX - rect.left) / rect.width;
+    var yFrac = (event.clientY - rect.top) / rect.height;
+    geoPos.lat = geoPos.lat + (0.5 - yFrac) * 0.01;
+    geoPos.lng = geoPos.lng + (xFrac - 0.5) * 0.01;
+    updateMapText();
+  });
+
+  document.getElementById('saveGeo').addEventListener('click', function () {
+    var geo = {
+      address: document.getElementById('geoAddress').value || 'Lokasi dipilih',
+      lat: Number(document.getElementById('geoLat').value || geoPos.lat),
+      lng: Number(document.getElementById('geoLng').value || geoPos.lng),
+      date: document.getElementById('geoDate').value,
+      time: document.getElementById('geoTime').value
+    };
+    PixWizard.updateReportPhoto(state, activeItemId, { geotag: geo });
+    state = PixWizard.loadState();
+    closeModal('geoModal');
+    renderReport();
+  });
+
+  document.getElementById('removeGeo').addEventListener('click', function () {
+    PixWizard.updateReportPhoto(state, activeItemId, { geotag: null });
+    state = PixWizard.loadState();
+    closeModal('geoModal');
+    renderReport();
+  });
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('show');
+  }
+
+  document.querySelectorAll('[data-close]').forEach(function (btn) {
+    btn.addEventListener('click', function () { closeModal(btn.getAttribute('data-close')); });
+  });
+  document.querySelectorAll('.modal-overlay').forEach(function (overlay) {
+    overlay.addEventListener('click', function (event) { if (event.target === overlay) overlay.classList.remove('show'); });
+  });
+
+  document.getElementById('uploadBtn').addEventListener('click', function () { document.getElementById('fileInput').click(); });
+  document.getElementById('fileInput').addEventListener('change', function (event) {
+    Promise.all(Array.from(event.target.files).map(PixWizard.readImageFile)).then(function (items) {
+      items.forEach(function (data) { PixWizard.addGalleryPhoto(state, data); });
+      state = PixWizard.loadState();
+      renderAll();
+      event.target.value = '';
+    });
+  });
+
+  document.getElementById('applyBulk').addEventListener('click', function () {
+    var itemValue = document.getElementById('bulkItem').value.trim();
+    var progressValue = document.getElementById('bulkProgress').value;
+    state.reportPhotos.forEach(function (row) {
+      var changes = {};
+      if (itemValue) changes.item = itemValue;
+      if (progressValue !== '') changes.progress = progressValue;
+      PixWizard.updateReportPhoto(state, row.id, changes);
+    });
+    state = PixWizard.loadState();
+    renderReport();
+  });
+
+  renderAll();
+</script>
+</body>
+</html>

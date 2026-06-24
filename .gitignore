@@ -1,0 +1,36 @@
+# dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# env
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+prototype/server.log
+prototype/server.err
+
+# local/generated checks
+prototype/__check*/
+prototype/assets/js/__write_test.tmp
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# local outputs
+Hasil print/
+# reference artifacts
+conversation.md
+files.zip

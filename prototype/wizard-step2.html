@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wizard 2 - Laporan - Pixforme</title>
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/wizard.css">
+</head>
+<body class="wizard-shell">
+<div class="wizard-topbar" id="wizardChrome"></div>
+
+<main class="wizard-page container-narrow">
+  <div class="wizard-title-row">
+    <div>
+      <div class="wizard-kicker">STEP 02</div>
+      <h1 class="wizard-title">DETAIL LAPORAN</h1>
+      <p class="wizard-subtitle">Step ini sengaja ringkas. Layout, jumlah foto per halaman, dan gaya dokumen diputuskan di Preview agar tidak ada pilihan yang dobel.</p>
+    </div>
+  </div>
+
+  <div class="wizard-grid-2">
+    <section class="card card-accent">
+      <div>
+        <label class="field-label">Nama Laporan <span class="req">*</span></label>
+        <input class="field-input" id="reportName" placeholder="mis. Laporan Mingguan Ke-3">
+      </div>
+      <div>
+        <label class="field-label">Periode / Tanggal</label>
+        <input class="field-input" id="reportPeriod" placeholder="mis. 1 - 7 Juni 2026">
+      </div>
+      <div class="prototype-banner">
+        Template belum dipilih di sini. User akan mencoba template di Step 4 dan melihat pagination langsung dari foto yang sudah dipilih.
+      </div>
+    </section>
+
+    <aside class="info-panel">
+      <h3>Data Saat Ini</h3>
+      <p id="projectLine"></p>
+      <div id="summaryBox"></div>
+    </aside>
+  </div>
+</main>
+
+<script src="assets/js/pixel-icons.js"></script>
+<script src="assets/js/wizard-state.js"></script>
+<script>
+  var state = PixWizard.loadState();
+  PixWizard.renderWizardChrome(2, '<a class="pixel-btn pixel-btn-ghost" href="wizard-step1.html">Kembali</a><button class="pixel-btn pixel-btn-accent" id="nextStep">Lanjut</button>');
+
+  var nameInput = document.getElementById('reportName');
+  var periodInput = document.getElementById('reportPeriod');
+  nameInput.value = state.report.name || '';
+  periodInput.value = state.report.period || '';
+
+  function persist() {
+    state.report.name = nameInput.value.trim();
+    state.report.period = periodInput.value.trim();
+    PixWizard.saveState(state);
+    document.getElementById('summaryBox').innerHTML = PixWizard.projectSummary(state);
+    document.getElementById('projectLine').textContent = (state.project.name || 'Project belum diisi') + ' - ' + (state.project.location || 'Lokasi belum diisi');
+  }
+
+  nameInput.addEventListener('input', persist);
+  periodInput.addEventListener('input', persist);
+
+  document.getElementById('nextStep').addEventListener('click', function () {
+    persist();
+    if (!state.report.name) {
+      nameInput.classList.add('required-empty');
+      nameInput.focus();
+      return;
+    }
+    window.location.href = 'wizard-step3.html';
+  });
+
+  persist();
+</script>
+</body>
+</html>

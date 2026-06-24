@@ -1,0 +1,162 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harga - Pixforme</title>
+<link rel="stylesheet" href="assets/css/tokens.css">
+<style>
+  .ph-hero { padding: 56px 24px 40px; text-align: center; }
+  .ph-hero h1 { font-family: var(--font-pixel); font-size: 22px; line-height: 1.7; margin-bottom: 16px; }
+  .ph-hero p { color: var(--text-muted); font-size: 15px; max-width: 560px; margin: 0 auto; line-height: 1.7; }
+
+  .pricing-grid { max-width: 1000px; margin: 0 auto 80px; padding: 0 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .price-card { border: 2px solid var(--black); border-radius: 8px; padding: 28px; background: #fff; box-shadow: 4px 4px 0 0 var(--border); display: flex; flex-direction: column; gap: 16px; }
+  .price-card.featured { background: var(--black); color: #fff; box-shadow: 5px 5px 0 0 var(--orange); }
+  .price-card h3 { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+  .price-amount { font-family: var(--font-pixel); font-size: 22px; }
+  .price-card.featured .price-amount { color: var(--orange); }
+  .price-period { font-size: 11px; color: var(--text-muted); }
+  .price-card.featured .price-period { color: #D4D4D0; }
+  .price-features { display: flex; flex-direction: column; gap: 10px; font-size: 12px; }
+  .price-features li { display: flex; align-items: flex-start; gap: 8px; list-style: none; }
+  .payment-note { max-width: 1000px; margin: -44px auto 80px; padding: 0 24px; font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .payment-status { display: none; margin-top: 4px; padding: 10px 12px; border: 2px solid var(--black); border-radius: 4px; background: #fff; color: var(--black); font-size: 11px; line-height: 1.5; }
+  .payment-status.active { display: block; }
+  .payment-status.error { background: #FFF1E8; border-color: var(--red); }
+  .payment-status.success { background: var(--success-bg); border-color: var(--success); }
+
+  @media (max-width: 800px) { .pricing-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<nav class="topnav" id="topnav" data-active="pricing"></nav>
+
+<section class="ph-hero">
+  <h1>HARGA YANG SEPADAN<br>DENGAN WAKTU YANG ANDA HEMAT</h1>
+  <p>Subscription untuk pemakaian rutin, kredit untuk fitur AI sesuai kebutuhan. Detail final masih disusun - berikut gambaran strukturnya.</p>
+</section>
+
+<div class="pricing-grid">
+  <div class="price-card">
+    <h3>Gratis</h3>
+    <div><span class="price-amount">Rp0</span> <span class="price-period">/bulan</span></div>
+    <ul class="price-features">
+      <li><span data-pixel-icon="check" data-pixel-size="12" data-pixel-color="#2E9E5B"></span> 1 laporan aktif</li>
+      <li><span data-pixel-icon="check" data-pixel-size="12" data-pixel-color="#2E9E5B"></span> Hingga 30 foto</li>
+      <li><span data-pixel-icon="check" data-pixel-size="12" data-pixel-color="#2E9E5B"></span> Export PDF dengan watermark</li>
+    </ul>
+    <button class="pixel-btn pixel-btn-ghost" style="margin-top:auto;justify-content:center;">Mulai Gratis</button>
+  </div>
+
+  <div class="price-card featured">
+    <h3 style="color:var(--orange);">Pro</h3>
+    <div><span class="price-amount">Segera</span></div>
+    <ul class="price-features">
+      <li><span data-pixel-icon="check" data-pixel-size="12" data-pixel-color="#FF6B1A"></span> Project & laporan tanpa batas</li>
+      <li><span data-pixel-icon="check" data-pixel-size="12" data-pixel-color="#FF6B1A"></span> Ratusan foto per laporan</li>
+      <li><span data-pixel-icon="check" data-pixel-size="12" data-pixel-color="#FF6B1A"></span> Export PDF tanpa watermark</li>
+      <li><span data-pixel-icon="check" data-pixel-size="12" data-pixel-color="#FF6B1A"></span> Kredit AI bulanan termasuk</li>
+    </ul>
+    <button class="pixel-btn pixel-btn-accent" style="margin-top:auto;justify-content:center;" disabled>Segera Hadir</button>
+  </div>
+
+  <div class="price-card">
+    <h3>Kredit AI</h3>
+    <div><span class="price-amount">Rp29.000</span> <span class="price-period">/paket test</span></div>
+    <ul class="price-features">
+      <li><span data-pixel-icon="check" data-pixel-size="12" data-pixel-color="#2E9E5B"></span> 50 kredit AI</li>
+      <li><span data-pixel-icon="check" data-pixel-size="12" data-pixel-color="#2E9E5B"></span> AI Extend aspek rasio</li>
+      <li><span data-pixel-icon="check" data-pixel-size="12" data-pixel-color="#2E9E5B"></span> AI Geotag Burn-in</li>
+      <li><span data-pixel-icon="check" data-pixel-size="12" data-pixel-color="#2E9E5B"></span> Sandbox Snap: GoPay, QRIS, VA</li>
+    </ul>
+    <button id="snapPayBtn" class="pixel-btn pixel-btn-ghost" style="margin-top:auto;justify-content:center;">Uji Bayar</button>
+    <div id="paymentStatus" class="payment-status" role="status" aria-live="polite"></div>
+  </div>
+</div>
+
+<div class="payment-note">
+  Jalankan lewat server lokal <span class="mono">node prototype/midtrans-snap-test-server.js</span>.
+  Token Snap dibuat di server agar server key Midtrans tidak bocor ke browser.
+</div>
+
+<footer class="site-footer">
+  <div class="footer-bottom">(c) 2026 PIXFORME.IO</div>
+</footer>
+
+<script src="assets/js/pixel-icons.js"></script>
+<script src="assets/js/topnav.js"></script>
+<script>
+(function () {
+  var button = document.getElementById('snapPayBtn');
+  var statusBox = document.getElementById('paymentStatus');
+  var snapLoaded = false;
+
+  function setStatus(message, type) {
+    statusBox.textContent = message;
+    statusBox.className = 'payment-status active' + (type ? ' ' + type : '');
+  }
+
+  function loadSnap(clientKey) {
+    return new Promise(function (resolve, reject) {
+      if (window.snap || snapLoaded) return resolve();
+      if (!clientKey) return reject(new Error('MIDTRANS_CLIENT_KEY belum diisi.'));
+      var script = document.createElement('script');
+      script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+      script.setAttribute('data-client-key', clientKey);
+      script.onload = function () {
+        snapLoaded = true;
+        resolve();
+      };
+      script.onerror = function () {
+        reject(new Error('Gagal memuat Snap JS sandbox.'));
+      };
+      document.body.appendChild(script);
+    });
+  }
+
+  async function fetchJson(url, options) {
+    var response = await fetch(url, options);
+    var contentType = response.headers.get('content-type') || '';
+    if (contentType.indexOf('application/json') === -1) {
+      throw new Error('Endpoint ' + url + ' mengembalikan HTML. Jalankan node prototype/midtrans-snap-test-server.js lalu buka http://localhost:4173/pricing.html.');
+    }
+    var payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || 'Request gagal.');
+    return payload;
+  }
+
+  async function requestSnapToken() {
+    return fetchJson('/api/midtrans/snap-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sku: 'ai_starter' })
+    });
+  }
+
+  async function openSnap() {
+    button.disabled = true;
+    setStatus('Membuat transaksi sandbox...', '');
+    try {
+      var config = await fetchJson('/api/midtrans/config');
+      await loadSnap(config.clientKey);
+      var transaction = await requestSnapToken();
+      setStatus('Order ' + transaction.orderId + ' siap. Membuka Snap...', '');
+      window.snap.pay(transaction.token, {
+        onSuccess: function () { setStatus('Pembayaran sukses di sandbox.', 'success'); },
+        onPending: function () { setStatus('Pembayaran pending. Cek webhook/status Midtrans.', ''); },
+        onError: function () { setStatus('Pembayaran gagal dari Snap.', 'error'); },
+        onClose: function () { setStatus('Popup Snap ditutup sebelum pembayaran selesai.', ''); }
+      });
+    } catch (error) {
+      setStatus(error.message, 'error');
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  button.addEventListener('click', openSnap);
+})();
+</script>
+</body>
+</html>

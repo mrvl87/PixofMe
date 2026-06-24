@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wizard 4 - Preview & Export - Pixforme</title>
+<link rel="stylesheet" href="assets/css/tokens.css">
+<link rel="stylesheet" href="assets/css/wizard.css?v=mistralTpl1">
+</head>
+<body class="wizard-shell">
+<div class="wizard-topbar" id="wizardChrome"></div>
+
+<div class="preview-layout">
+  <aside class="preview-sidebar">
+    <div class="sidebar-tabs">
+      <button class="active" data-panel="template">TEMPLATE</button>
+      <button data-panel="style">GAYA</button>
+    </div>
+    <div id="sidebarContent"></div>
+  </aside>
+
+  <main class="preview-main">
+    <div class="wizard-title-row">
+      <div>
+        <div class="wizard-kicker">STEP 04</div>
+        <h1 class="wizard-title">PREVIEW & EXPORT</h1>
+        <p class="wizard-subtitle">Template menentukan jumlah foto per halaman. Halaman terakhir tetap memakai layout template, slot kosong dibiarkan sebagai whitespace tanpa placeholder.</p>
+      </div>
+      <div class="state-chip-row" id="summaryBox"></div>
+    </div>
+    <div class="pages-wrap" id="pagesWrap"></div>
+  </main>
+</div>
+
+<script src="assets/js/pixel-icons.js"></script>
+<script src="assets/js/wizard-state.js?v=mistralTpl1"></script>
+<script>
+  var state = PixWizard.loadState();
+  var panel = 'template';
+  var titleBeforePrint = document.title;
+  if (!state.preview.gridGeoContrastApplied) {
+    state.preview.gridGeoColor = '#FFFFFF';
+    state.preview.gridGeoSize = Math.max(7, Number(state.preview.gridGeoSize || 7));
+    state.preview.gridGeoContrastApplied = true;
+    PixWizard.saveState(state);
+  }
+  var PAPER_SIZES = {
+    a4: { label: "A4", portrait: { w: 300, h: 424 }, landscape: { w: 424, h: 300 } },
+    f4: { label: "F4", portrait: { w: 300, h: 472 }, landscape: { w: 472, h: 300 } }
+  };
+
+  PixWizard.renderWizardChrome(4, '<a class="pixel-btn pixel-btn-ghost" href="wizard-step3.html">Kembali</a><button class="pixel-btn pixel-btn-success" id="exportBtn"><span data-pixel-icon="download" data-pixel-size="13" data-pixel-color="#fff"></span>Export PDF</button>');
+
+  function esc(value) { return PixWizard.escapeHtml(value); }
+
+  function activeTemplate() {
+    return PixWizard.templates.find(function (tpl) { return tpl.id === state.preview.templateId; }) || PixWizard.templates[0];
+  }
+
+  function activePaper() {
+    return PAPER_SIZES[state.preview.paperSize || "a4"] || PAPER_SIZES.a4;
+  }
+
+  function pageDim(tpl) {
+    var paper = activePaper();
+    return tpl.orientation === "landscape" ? paper.landscape : paper.portrait;
+  }
+
+  function photosPerPage(tpl) {
+    var paper = state.preview.paperSize || "a4";
+    if (tpl.id === "t1") return paper === "f4" ? 3 : 2;
+    if (tpl.id === "t2" || tpl.id === "t3") return paper === "f4" ? 6 : 4;
+    if (tpl.id === "t5") return paper === "f4" ? 3 : 2;
+    return 1;
+  }
+
+  function gridSpecForCount(count) {
+    if (count <= 1) return { cols: 1, rows: 1 };
+    if (count === 2 || count === 3) return { cols: count, rows: 1 };
+    return { cols: 2, rows: Math.ceil(count / 2) };
+  }
+
+  function savePreview() {
+    PixWizard.saveState(state);
+    renderSidebar();
+    renderPages();
+  }
+
+  function sidebarImageUrls() {
+    var fallback = [
+      'https://picsum.photos/seed/pixforme-pondasi/600/420',
+      'https://picsum.photos/seed/pixforme-atap/600/420',
+      'https://picsum.photos/seed/pixforme-beton/600/420',
+      'https://picsum.photos/seed/pixforme-tunnel/600/420',
+      'https://picsum.photos/seed/pixforme-type/600/420'
+    ];
+    var urls = PixWizard.getReportItems(state).map(function (item) {
+      return item.photo && item.photo.url;
+    }).filter(Boolean);
+    return urls.concat(fallback).slice(0, 6);
+  }
+
+  function miniPhoto(url, numberText) {
+    return '<div class="tpl-mini-photo" style="background-image:url(&quot;' + esc(url) + '&quot;);">' + (numberText ? '<span>' + numberText + '</span>' : '') + '</div>';
+  }
+
+  function templatePreviewMini(tpl) {
+    var urls = sidebarImageUrls();
+    if (tpl.id === 't1') {
+      return '<div class="tpl-mini-preview mini-t1">' + miniPhoto(urls[0]) + '<div class="tpl-mini-copy"><b></b><i></i><em></em></div></div>';
+    }
+    if (tpl.id === 't2') {
+      return '<div class="tpl-mini-preview mini-t2">' + [0, 1, 2, 3].map(function (idx) { return miniPhoto(urls[idx]); }).join('') + '</div>';
+    }
+    if (tpl.id === 't3') {
+      return '<div class="tpl-mini-preview mini-t3">' + [0, 1, 2, 3].map(function (idx) { return miniPhoto(urls[idx], String(idx + 1).padStart(2, '0')); }).join('') + '</div>';
+    }
+    if (tpl.id === 't4') {
+      return '<div class="tpl-mini-preview mini-t4">' + miniPhoto(urls[0]) + '</div>';
+    }
+    return '<div class="tpl-mini-preview mini-t5">' + [0, 1].map(function (idx) { return miniPhoto(urls[idx]); }).join('') + '</div>';
+  }
+
+  function renderSummary() {
+    var tpl = activeTemplate();
+    document.getElementById('summaryBox').innerHTML = '<span class="state-chip">Kertas: ' + activePaper().label + '</span><span class="state-chip">Template: ' + esc(tpl.label) + '</span><span class="state-chip">Foto/hal: ' + photosPerPage(tpl) + '</span><span class="state-chip">Foto: ' + state.reportPhotos.length + '</span>';
+  }
+
+  function renderSidebar() {
+    document.querySelectorAll('[data-panel]').forEach(function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-panel') === panel);
+    });
+
+    var content = document.getElementById('sidebarContent');
+    if (panel === 'template') {
+      content.innerHTML = PixWizard.templates.map(function (tpl) {
+        var active = tpl.id === state.preview.templateId;
+        var dynamicPpp = photosPerPage(tpl);
+        return '<button class="template-option template-option-rich ' + (active ? 'active' : '') + '" data-template="' + tpl.id + '">' +
+          templatePreviewMini(tpl) +
+          '<div><div style="font-size:10px;font-weight:900;">' + esc(tpl.label) + '</div><div style="font-size:9px;color:var(--text-muted);line-height:1.35;">' + esc(tpl.desc) + '</div><div class="tpl-mini-meta">' + dynamicPpp + ' foto / halaman</div></div>' +
+        '</button>';
+      }).join('');
+      document.querySelectorAll('[data-template]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          state.preview.templateId = btn.getAttribute('data-template');
+          savePreview();
+        });
+      });
+    } else {
+      var colors = ['#0A0A0A', '#FF6B1A', '#E8331C', '#FFA41B', '#2563EB', '#0F766E', '#7C3AED'];
+      content.innerHTML = '<div class="style-row"><div class="style-label">UKURAN KERTAS</div><div class="toggle-row"><button class="toggle-btn ' + ((state.preview.paperSize || 'a4') === 'a4' ? 'active' : '') + '" data-paper="a4" type="button">A4</button><button class="toggle-btn ' + ((state.preview.paperSize || 'a4') === 'f4' ? 'active' : '') + '" data-paper="f4" type="button">F4</button></div></div>' +
+        '<div class="prototype-banner" style="margin-bottom:14px;">Kapasitas foto mengikuti ukuran kertas. F4 memberi ruang ekstra: stack bisa 3 foto, grid bisa 6 foto.</div>' +
+        '<div class="style-row"><div class="style-label">WARNA AKSEN</div><div class="swatch-row">' +
+        colors.map(function (color) { return '<button class="swatch-btn ' + (state.preview.accentColor === color ? 'active' : '') + '" data-color="' + color + '" style="background:' + color + ';"></button>'; }).join('') +
+        '</div></div>' +
+        '<div class="style-row"><div class="style-label">KOORDINAT GRID - OUTLINE OTOMATIS</div><div class="swatch-row"><button class="swatch-btn ' + ((state.preview.gridGeoColor || '#FFFFFF') === '#FFFFFF' ? 'active' : '') + '" data-grid-geo-color="#FFFFFF" style="background:#FFFFFF;"></button><button class="swatch-btn ' + ((state.preview.gridGeoColor || '#FFFFFF') === '#0A0A0A' ? 'active' : '') + '" data-grid-geo-color="#0A0A0A" style="background:#0A0A0A;"></button><button class="swatch-btn ' + ((state.preview.gridGeoColor || '#FFFFFF') === '#FFD600' ? 'active' : '') + '" data-grid-geo-color="#FFD600" style="background:#FFD600;"></button><button class="swatch-btn ' + ((state.preview.gridGeoColor || '#FFFFFF') === '#20E82A' ? 'active' : '') + '" data-grid-geo-color="#20E82A" style="background:#20E82A;"></button></div><div class="mini-label">Stroke otomatis menjaga teks tetap terbaca di latar terang/gelap.</div></div>' +
+        '<div class="style-row"><div class="style-label">UKURAN KOORDINAT GRID: <span class="mono">' + (state.preview.gridGeoSize || 7) + 'px</span></div><input id="gridGeoSizeRange" type="range" min="6" max="12" value="' + (state.preview.gridGeoSize || 7) + '"></div>' +
+        '<div class="style-row"><div class="style-label">JARAK FOTO: <span class="mono">' + state.preview.spacing + 'px</span></div><input id="spacingRange" type="range" min="2" max="18" value="' + state.preview.spacing + '"></div>' +
+        '<div class="style-row"><div class="style-label">UKURAN TEKS: <span class="mono">' + state.preview.fontSize + 'px</span></div><input id="fontRange" type="range" min="6" max="12" value="' + state.preview.fontSize + '"></div>' +
+        '<div class="style-row"><div class="style-label">BORDER FOTO</div><button class="toggle-btn ' + (state.preview.border ? 'active' : '') + '" id="borderToggle" type="button">' + (state.preview.border ? 'Aktif' : 'Nonaktif') + '</button></div>' +
+        '<div class="style-row"><div class="style-label">RADIUS SUDUT: <span class="mono">' + state.preview.borderRadius + 'px</span></div><input id="radiusRange" type="range" min="0" max="8" value="' + state.preview.borderRadius + '"></div>' +
+        '<div class="style-row"><div class="style-label">HEADER</div><div class="toggle-row"><button class="toggle-btn ' + (state.project.headerMode === 'all' ? 'active' : '') + '" data-header="all" type="button">Semua</button><button class="toggle-btn ' + (state.project.headerMode === 'first' ? 'active' : '') + '" data-header="first" type="button">Hal. 1</button></div></div>';
+
+      document.querySelectorAll('[data-paper]').forEach(function (btn) {
+        btn.addEventListener('click', function () { state.preview.paperSize = btn.getAttribute('data-paper'); savePreview(); });
+      });
+      document.querySelectorAll('[data-grid-geo-color]').forEach(function (btn) {
+        btn.addEventListener('click', function () { state.preview.gridGeoColor = btn.getAttribute('data-grid-geo-color'); savePreview(); });
+      });
+      document.getElementById('gridGeoSizeRange').addEventListener('input', function (event) { state.preview.gridGeoSize = Number(event.target.value); savePreview(); });
+      document.querySelectorAll('[data-color]').forEach(function (btn) {
+        btn.addEventListener('click', function () { state.preview.accentColor = btn.getAttribute('data-color'); savePreview(); });
+      });
+      document.getElementById('spacingRange').addEventListener('input', function (event) { state.preview.spacing = Number(event.target.value); savePreview(); });
+      document.getElementById('fontRange').addEventListener('input', function (event) { state.preview.fontSize = Number(event.target.value); savePreview(); });
+      document.getElementById('radiusRange').addEventListener('input', function (event) { state.preview.borderRadius = Number(event.target.value); savePreview(); });
+      document.getElementById('borderToggle').addEventListener('click', function () { state.preview.border = !state.preview.border; savePreview(); });
+      document.querySelectorAll('[data-header]').forEach(function (btn) {
+        btn.addEventListener('click', function () { state.project.headerMode = btn.getAttribute('data-header'); savePreview(); });
+      });
+    }
+
+    renderSummary();
+  }
+
+  document.querySelectorAll('[data-panel]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      panel = btn.getAttribute('data-panel');
+      renderSidebar();
+    });
+  });
+
+  function geoCaptionHTML(item) {
+    if (!item || !item.geotag) return '';
+    return '<div class="mono" style="margin-top:3px;font-size:' + Math.max(5, state.preview.fontSize - 2) + 'px;color:' + state.preview.accentColor + ';line-height:1.25;">KOORD: ' + esc(item.geotag.address) + ' / ' + Number(item.geotag.lat).toFixed(5) + ', ' + Number(item.geotag.lng).toFixed(5) + ' / ' + esc(item.geotag.date) + ' ' + esc(item.geotag.time) + '</div>';
+  }
+
+  function photoBox(item) {
+    if (!item) return '<div></div>';
+    return '<div class="preview-photo-box"><img src="' + item.photo.url + '" style="' + PixWizard.imageFitStyle(item) + '" alt=""></div>';
+  }
+
+
+  function photoFrame43(item) {
+    if (!item) return '<div></div>';
+    return '<div class="preview-photo-frame43"><img src="' + item.photo.url + '" style="' + PixWizard.imageFitStyle(item) + '" alt=""></div>';
+  }
+
+
+  function gridGeoStrokeColor(color) {
+    var normalized = String(color || '').toUpperCase();
+    return normalized === '#0A0A0A' || normalized === '#000000' ? '#FFFFFF' : '#0A0A0A';
+  }
+
+  function gridGeoOverlayHTML(item) {
+    if (!item || !item.geotag) return '';
+    var size = Number(state.preview.gridGeoSize || 7);
+    var color = state.preview.gridGeoColor || '#FFFFFF';
+    var stroke = gridGeoStrokeColor(color);
+    return '<div class="grid-geo-overlay mono" style="font-size:' + size + 'px;color:' + color + ';--grid-geo-stroke:' + stroke + ';">' +
+      '<div>' + Number(item.geotag.lat).toFixed(5) + ', ' + Number(item.geotag.lng).toFixed(5) + '</div>' +
+      '<div>' + esc(item.geotag.address || 'Lokasi dipilih') + '</div>' +
+      '<div>' + esc(item.geotag.date) + ' ' + esc(item.geotag.time) + '</div>' +
+    '</div>';
+  }
+
+  function gridCaption(item) {
+    if (!item) return '';
+    var f = state.preview.fontSize;
+    return '<div class="grid-caption-row">' +
+      '<div class="grid-caption-text">' +
+        '<div style="font-size:' + f + 'px;font-weight:900;line-height:1.15;">' + esc(item.nama || '-') + '</div>' +
+        '<div style="font-size:' + Math.max(6, f - 1) + 'px;color:#52524F;line-height:1.15;">' + esc(item.item || '-') + '</div>' +
+      '</div>' +
+      '<div class="grid-progress-box"><span class="mono">' + esc(item.progress || 0) + '%</span></div>' +
+    '</div>';
+  }
+
+  function gridPhotoFrame(item) {
+    if (!item) return '<div></div>';
+    var geoClass = item.geotag ? ' has-grid-geo' : '';
+    return '<div class="preview-photo-frame43 grid-photo-frame' + geoClass + '"><img src="' + item.photo.url + '" style="' + PixWizard.imageFitStyle(item) + '" alt="">' + gridGeoOverlayHTML(item) + '</div>';
+  }
+
+  function gridCard(item, withNumber, numberText) {
+    if (!item) return '<div></div>';
+    var border = state.preview.border ? state.preview.borderWidth + 'px solid ' + state.preview.accentColor : 'none';
+    return '<div class="preview-grid-card" style="border:' + border + ';border-radius:' + state.preview.borderRadius + 'px;">' +
+      (withNumber ? '<div style="position:absolute;z-index:2;top:0;left:0;background:' + state.preview.accentColor + ';color:#fff;font-size:6px;font-family:var(--font-mono);font-weight:900;padding:2px 5px;">' + numberText + '</div>' : '') +
+      gridPhotoFrame(item) + gridCaption(item) +
+    '</div>';
+  }
+
+  function caption(item) {
+    if (!item) return '';
+    var f = state.preview.fontSize;
+    return '<div class="preview-caption">' +
+      '<div style="font-size:' + f + 'px;font-weight:900;">' + esc(item.nama || '-') + '</div>' +
+      '<div style="font-size:' + Math.max(6, f - 1) + 'px;color:#52524F;">' + esc(item.item || '-') + '</div>' +
+      '<div style="display:flex;align-items:center;gap:4px;margin-top:2px;"><span class="mono" style="font-size:' + f + 'px;color:' + state.preview.accentColor + ';font-weight:900;">' + esc(item.progress || 0) + '%</span><div style="flex:1;height:2px;background:var(--border);"><div style="width:' + esc(item.progress || 0) + '%;height:100%;background:' + state.preview.accentColor + ';"></div></div></div>' +
+      geoCaptionHTML(item) +
+    '</div>';
+  }
+
+  function card(item) {
+    if (!item) return '<div></div>';
+    var border = state.preview.border ? state.preview.borderWidth + 'px solid ' + state.preview.accentColor : 'none';
+    return '<div class="preview-photo-card" style="border:' + border + ';border-radius:' + state.preview.borderRadius + 'px;">' + photoBox(item) + caption(item) + '</div>';
+  }
+
+
+  function stackGridRow(item) {
+    return '<div class="stack-grid-row">' +
+      '<div class="stack-grid-photo">' + photoFrame43(item) + '</div>' +
+      '<div class="stack-grid-text">' +
+        '<div style="font-size:' + (state.preview.fontSize + 2) + 'px;font-weight:900;line-height:1.25;">' + esc(item.nama || '-') + '</div>' +
+        '<div style="font-size:' + (state.preview.fontSize + 1) + 'px;color:#52524F;line-height:1.25;margin-top:2px;">' + esc(item.item || '-') + '</div>' +
+        '<div class="mono" style="font-size:' + (state.preview.fontSize + 5) + 'px;color:#0A0A0A;font-weight:900;margin-top:5px;line-height:1;">' + esc(item.progress || 0) + '%</div>' +
+        geoCaptionHTML(item) +
+      '</div>' +
+    '</div>';
+  }
+
+  function renderPageContent(tpl, pageItems) {
+    var gap = state.preview.spacing;
+    if (tpl.id === 't1') {
+      var count = photosPerPage(tpl);
+      var actualItems = pageItems.filter(function (item) { return !!item; });
+      if (!actualItems.length) return '<div></div>';
+      var tableHeight = Math.max(0, Math.min(100, (actualItems.length / count) * 100));
+      var html = '<div class="stack-grid-table" style="--stack-border-color:' + state.preview.accentColor + ';border-color:' + state.preview.accentColor + ';height:' + tableHeight + '%;">';
+      actualItems.forEach(function (item) {
+        html += stackGridRow(item);
+      });
+      return html + '</div>';
+    }
+
+    if (tpl.id === 't2' || tpl.id === 't3') {
+      var countGrid = photosPerPage(tpl);
+      var spec = gridSpecForCount(countGrid);
+      var grid = '<div style="display:grid;grid-template-columns:repeat(' + spec.cols + ',1fr);grid-template-rows:repeat(' + spec.rows + ',minmax(0,1fr));gap:' + gap + 'px;height:100%;min-height:0;">';
+      for (var j = 0; j < countGrid; j++) {
+        var it = pageItems[j];
+        grid += it ? '<div class="preview-cell" style="position:relative;">' + gridCard(it, tpl.id === 't3', String(j + 1).padStart(2, '0')) + '</div>' : '<div></div>';
+      }
+      return grid + '</div>';
+    }
+
+    if (tpl.id === 't4') {
+      var one = pageItems[0];
+      return one ? '<div style="display:flex;flex-direction:column;gap:' + gap + 'px;height:100%;">' + photoBox(one) + caption(one) + '</div>' : '<div></div>';
+    }
+
+    if (tpl.id === 't5') {
+      var countSplit = photosPerPage(tpl);
+      var split = '<div style="display:grid;grid-template-columns:repeat(' + countSplit + ',1fr);gap:' + gap + 'px;height:100%;min-height:0;">';
+      for (var k = 0; k < countSplit; k++) split += pageItems[k] ? card(pageItems[k]) : '<div></div>';
+      return split + '</div>';
+    }
+    return '';
+  }
+
+  function logoHTML(label) {
+    return '<div class="logo-box">' + label + '</div>';
+  }
+
+  function headerHTML(pageIndex) {
+    var shouldShow = state.project.headerMode === 'all' || (state.project.headerMode === 'first' && pageIndex === 0);
+    if (!shouldShow) return '';
+    var logos = '';
+    if (state.project.logoInstansi) logos += logoHTML('INS');
+    if (state.project.logoPerusahaan) logos += logoHTML('PT');
+    return '<div class="a4-header" style="border-bottom-color:' + state.preview.accentColor + ';">' + logos + '<div class="a4-header-text">' + esc(state.project.headerText || '').replace(/\n/g, '<br>') + '</div><div class="mono" style="font-size:6.5px;color:var(--text-muted);">' + esc(state.report.period || '') + '</div></div>';
+  }
+
+  function renderPages() {
+    var items = PixWizard.getReportItems(state);
+    var tpl = activeTemplate();
+    var dim = pageDim(tpl);
+    var ppp = photosPerPage(tpl);
+    var pages = [];
+    for (var i = 0; i < items.length; i += ppp) pages.push(items.slice(i, i + ppp));
+    if (!pages.length) pages.push([]);
+
+    document.getElementById('pagesWrap').innerHTML = pages.map(function (pageItems, idx) {
+      return '<div class="page-col"><div class="page-label">HAL. ' + (idx + 1) + '</div><div class="a4-page" style="width:' + dim.w + 'px;height:' + dim.h + 'px;">' + headerHTML(idx) + '<div class="a4-content">' + renderPageContent(tpl, pageItems) + '</div><div class="a4-footer"><span>' + esc(state.project.name || '-') + '</span><span class="mono" style="color:' + state.preview.accentColor + ';font-weight:900;">' + (idx + 1) + '/' + pages.length + '</span></div></div></div>';
+    }).join('');
+    renderSummary();
+  }
+
+  function printMetrics(tpl) {
+    var dim = pageDim(tpl);
+    var paper = state.preview.paperSize || 'a4';
+    var base = paper === 'f4' ? { label: 'F4', w: 210, h: 330 } : { label: 'A4', w: 210, h: 297 };
+    var landscape = tpl.orientation === 'landscape';
+    var widthMm = landscape ? base.h : base.w;
+    var heightMm = landscape ? base.w : base.h;
+    var widthPx = widthMm * 96 / 25.4;
+    return {
+      pageSize: paper === 'a4' ? 'A4 ' + (landscape ? 'landscape' : 'portrait') : widthMm + 'mm ' + heightMm + 'mm',
+      widthMm: widthMm,
+      heightMm: heightMm,
+      previewW: dim.w,
+      previewH: dim.h,
+      scale: widthPx / dim.w
+    };
+  }
+
+  function applyPrintStyle(metrics) {
+    var style = document.getElementById('pdfPrintStyle');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'pdfPrintStyle';
+      document.head.appendChild(style);
+    }
+    style.textContent = '@page { size: ' + metrics.pageSize + '; margin: 0; }' +
+      '@media print { :root { --print-page-width: ' + metrics.widthMm + 'mm; --print-page-height: ' + metrics.heightMm + 'mm; --print-preview-width: ' + metrics.previewW + 'px; --print-preview-height: ' + metrics.previewH + 'px; --print-scale: ' + metrics.scale.toFixed(4) + '; } }';
+  }
+
+  function exportFileTitle() {
+    var raw = [state.project.name, state.report.name, activePaper().label].filter(Boolean).join(' - ') || 'Pixforme Report';
+    return raw.replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, ' ').trim();
+  }
+
+  function cleanupPrintMode() {
+    document.body.classList.remove('export-pdf-mode');
+    document.title = titleBeforePrint;
+  }
+
+  function exportPdf() {
+    var tpl = activeTemplate();
+    renderPages();
+    applyPrintStyle(printMetrics(tpl));
+    titleBeforePrint = document.title;
+    document.title = exportFileTitle();
+    document.body.classList.add('export-pdf-mode');
+    window.setTimeout(function () {
+      window.print();
+    }, 80);
+  }
+
+  document.getElementById('exportBtn').addEventListener('click', function () {
+    exportPdf();
+  });
+  window.addEventListener('afterprint', cleanupPrintMode);
+
+  renderSidebar();
+  renderPages();
+</script>
+</body>
+</html>
