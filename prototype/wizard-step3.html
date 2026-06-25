@@ -19,18 +19,7 @@
     </div>
     <div class="state-chip-row" id="summaryBox"></div>
   </div>
-
-  <div class="gallery-layout">
-    <aside class="gallery-panel info-panel">
-      <h3>Galeri Foto</h3>
-      <p>Upload baru masuk galeri. Foto bukti lapangan tidak masuk laporan kecuali dipilih eksplisit.</p>
-      <div style="margin:12px 0;display:grid;gap:8px;">
-        <button class="pixel-btn pixel-btn-accent" id="uploadBtn" style="justify-content:center;">Upload Foto</button>
-        <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
-      </div>
-      <div class="gallery-list" id="galleryList"></div>
-    </aside>
-
+  <div class="gallery-layout report-only-layout">
     <section>
       <div class="photo-workbar">
         <div>
@@ -38,7 +27,7 @@
           <div class="text-muted" style="font-size:12px;margin-top:6px;" id="photoCounter"></div>
         </div>
         <div class="bulk-box">
-          <div>
+<div>
             <label class="mini-label">BULK ITEM</label>
             <select class="field-input" id="bulkItem"></select>
           </div>
@@ -46,9 +35,10 @@
             <label class="mini-label">BULK PROGRESS</label>
             <input class="field-input mono" id="bulkProgress" type="number" min="0" max="100" placeholder="75">
           </div>
-          <button class="pixel-btn pixel-btn-ghost" id="applyBulk">Terapkan</button>
+          <button class="pixel-btn pixel-btn-ghost" id="applyBulk" type="button">Terapkan</button>
         </div>
       </div>
+      <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
       <datalist id="itemPresets"></datalist>
       <div class="report-grid" id="reportGrid"></div>
     </section>
@@ -123,6 +113,41 @@
   </div>
 </div>
 
+
+<div class="modal-overlay" id="photoPickerModal">
+  <div class="modal-box photo-picker-box">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">Pilih Foto Galeri</div>
+        <div class="modal-sub">Foto yang sudah dipakai ditandai abu-abu dengan centang hijau.</div>
+      </div>
+      <button class="modal-close" data-close="photoPickerModal"><span data-pixel-icon="x" data-pixel-size="16" data-pixel-color="#6B6B68"></span></button>
+    </div>
+    <div class="picker-actions">
+      <button class="pixel-btn pixel-btn-accent" id="pickerUploadBtn" type="button">Upload Foto</button>
+      <div class="text-muted" id="pickerHint">Pilih foto kosong untuk mengisi card aktif.</div>
+    </div>
+    <div class="photo-picker-grid" id="photoPickerGrid"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="emptyWarningModal">
+  <div class="modal-box warning-box">
+    <div class="modal-head">
+      <div>
+        <div class="modal-title">Foto belum lengkap</div>
+        <div class="modal-sub">Lengkapi semua card foto sebelum masuk ke preview.</div>
+      </div>
+      <button class="modal-close" data-close="emptyWarningModal"><span data-pixel-icon="x" data-pixel-size="16" data-pixel-color="#6B6B68"></span></button>
+    </div>
+    <div class="prototype-banner" id="emptyWarningText">Masih ada placeholder kosong.</div>
+    <button class="pixel-btn pixel-btn-accent" data-close="emptyWarningModal" type="button" style="margin-top:14px;width:100%;justify-content:center;">Lengkapi Foto</button>
+  </div>
+</div>
+<button class="floating-add-photo pixel-btn pixel-btn-accent" id="addSlotBtn" type="button" aria-label="Tambah frame foto">
+  <span data-pixel-icon="camera" data-pixel-size="15" data-pixel-color="#fff"></span>
+  <span>Add Foto</span>
+</button>
 <script src="assets/js/pixel-icons.js"></script>
 <script src="assets/js/wizard-state.js?v=workspace1"></script>
 <script>
@@ -130,20 +155,65 @@
   var activeItemId = null;
   var geoPos = { lat: -2.5916, lng: 140.6690 };
 
-  PixWizard.renderWizardChrome(3, '<a class="pixel-btn pixel-btn-ghost" href="wizard-step2.html">Kembali</a><a class="pixel-btn pixel-btn-accent" href="wizard-step4.html">Preview</a>');
+  PixWizard.renderWizardChrome(3, '<a class="pixel-btn pixel-btn-ghost" href="wizard-step2.html">Kembali</a><button class="pixel-btn pixel-btn-accent" id="goPreview" type="button">Preview</button>');
 
   function esc(value) { return PixWizard.escapeHtml(value); }
 
+  function selectedPhotoMap() {
+    var selected = {};
+    state.reportPhotos.forEach(function (row) {
+      if (row.photoId) selected[row.photoId] = row.id;
+    });
+    return selected;
+  }
+
+  function reportRows() {
+    return state.reportPhotos.map(function (row, index) {
+      return Object.assign({}, row, { index: index, photo: row.photoId ? PixWizard.findGalleryPhoto(state, row.photoId) : null });
+    });
+  }
+
+  function hasPhoto(row) {
+    return !!(row && row.photoId && PixWizard.findGalleryPhoto(state, row.photoId));
+  }
+
+  function emptyRows() {
+    return state.reportPhotos.filter(function (row) { return !hasPhoto(row); });
+  }
+
+  function persistAndReload() {
+    PixWizard.saveState(state);
+    state = PixWizard.loadState();
+  }
+
+  function createEmptySlot() {
+    var id = PixWizard.uid('rp');
+    state.reportPhotos.push({
+      id: id,
+      photoId: null,
+      nama: '',
+      item: '',
+      progress: '',
+      fitMode: 'crop',
+      cropY: 50,
+      aiExtended: false,
+      geotag: null
+    });
+    persistAndReload();
+    return id;
+  }
   function renderAll() {
     renderSummary();
     renderPresets();
-    renderGallery();
     renderReport();
-    if (typeof renderPixelIcons === 'function') renderPixelIcons();
+    if (document.getElementById('photoPickerModal').classList.contains('show')) renderPhotoPicker();
+    if (typeof renderPixelIcons === 'function') { try { renderPixelIcons(); } catch (error) { console.warn('Icon render skipped', error); } }
   }
 
   function renderSummary() {
-    document.getElementById('summaryBox').innerHTML = '<span class="state-chip">Project: ' + esc(state.project.name) + '</span><span class="state-chip">Foto laporan: ' + state.reportPhotos.length + '</span>';
+    var total = state.reportPhotos.length;
+    var empty = emptyRows().length;
+    document.getElementById('summaryBox').innerHTML = '<span class="state-chip">Project: ' + esc(state.project.name) + '</span><span class="state-chip">Slot foto: ' + total + '</span><span class="state-chip">Kosong: ' + empty + '</span>';
   }
 
   function itemOptionsHTML(selected, includeEmpty) {
@@ -166,63 +236,59 @@
     document.getElementById('bulkItem').innerHTML = itemOptionsHTML('', true);
   }
 
-  function renderGallery() {
-    var selected = {};
-    state.reportPhotos.forEach(function (row) { selected[row.photoId] = true; });
-    document.getElementById('galleryList').innerHTML = state.gallery.map(function (photo) {
-      var isSelected = !!selected[photo.id];
-      var sourceLabel = photo.sourceType === 'bukti_lapangan' ? 'BUKTI LAPANGAN' : 'LAPORAN';
-      return '<div class="gallery-item">' +
-        '<div class="gallery-thumb"><img src="' + photo.url + '" alt=""></div>' +
-        '<div class="gallery-meta">' +
-          '<div class="gallery-name">' + esc(photo.filename) + '</div>' +
-          '<div class="gallery-badge">' + sourceLabel + ' / ' + PixWizard.arLabel(photo) + '</div>' +
-          '<button class="pixel-btn ' + (isSelected ? 'pixel-btn-success' : 'pixel-btn-ghost') + '" data-add-photo="' + photo.id + '" style="padding:6px 9px;font-size:10px;justify-content:center;box-shadow:none;">' + (isSelected ? 'Sudah dipilih' : 'Tambah ke laporan') + '</button>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-
-    document.querySelectorAll('[data-add-photo]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        PixWizard.addToReport(state, btn.getAttribute('data-add-photo'));
-        state = PixWizard.loadState();
-        renderAll();
-      });
-    });
+  function toolIcon(name, color) {
+    return '<span class="tool-icon-solid"><span data-pixel-icon="' + name + '" data-pixel-size="17" data-pixel-color="' + (color || '#0A0A0A') + '"></span></span>';
   }
 
+  function toolButton(attrs, icon, label, color, extra, shortLabel) {
+    return '<button ' + attrs + ' title="' + label + '" aria-label="' + label + '" ' + (extra || '') + '>' + toolIcon(icon, color) + '<span class="tool-mini-label">' + shortLabel + '</span></button>';
+  }
   function geotagHTML(item) {
     if (!item.geotag) return '';
     return '<div class="geo-overlay"><div>' + esc(item.geotag.address) + '</div><div class="mono">' + Number(item.geotag.lat).toFixed(5) + ', ' + Number(item.geotag.lng).toFixed(5) + '</div><div class="mono">' + esc(item.geotag.date) + ' ' + esc(item.geotag.time) + '</div></div>';
   }
 
+  function photoFrameHTML(item) {
+    if (!item.photo) {
+      return '<button class="photo-frame photo-frame-empty" data-frame-picker="' + item.id + '" type="button">' +
+        '<span class="empty-plus"></span>' +
+        '<span class="empty-status">EMPTY</span>' +
+        '<span class="empty-help">Klik Add/Replace Foto</span>' +
+      '</button>';
+    }
+    return '<div class="photo-frame">' +
+      '<img src="' + item.photo.url + '" style="' + PixWizard.imageFitStyle(item) + '" alt="">' +
+      '<div class="photo-badge">' + PixWizard.arLabel(item.photo) + (item.aiExtended ? ' / AI' : '') + '</div>' +
+      '<div class="photo-index">#' + String(item.index + 1).padStart(2, '0') + '</div>' +
+      geotagHTML(item) +
+    '</div>';
+  }
+
   function renderReport() {
-    var items = PixWizard.getReportItems(state);
-    document.getElementById('photoCounter').textContent = items.length + ' foto dipilih dari galeri';
-    if (!items.length) {
-      document.getElementById('reportGrid').innerHTML = '<div class="empty-state">Belum ada foto dalam laporan. Pilih foto dari galeri di sebelah kiri.</div>';
+    var rows = reportRows();
+    var empty = emptyRows().length;
+    document.getElementById('photoCounter').textContent = rows.length + ' card laporan / ' + empty + ' placeholder kosong';
+    if (!rows.length) {
+      document.getElementById('reportGrid').innerHTML = '<div class="empty-state">Belum ada card foto. Klik Add Foto untuk membuat placeholder.</div>';
       return;
     }
 
-    document.getElementById('reportGrid').innerHTML = items.map(function (item) {
-      return '<article class="photo-card">' +
-        '<div class="photo-frame">' +
-          '<img src="' + item.photo.url + '" style="' + PixWizard.imageFitStyle(item) + '" alt="">' +
-          '<div class="photo-badge">' + PixWizard.arLabel(item.photo) + (item.aiExtended ? ' / AI' : '') + '</div>' +
-          '<div class="photo-index">#' + String(item.index + 1).padStart(2, '0') + '</div>' +
-          geotagHTML(item) +
-        '</div>' +
-        '<div class="photo-tools">' +
-          '<button data-move="-1" data-id="' + item.id + '">UP</button>' +
-          '<button data-move="1" data-id="' + item.id + '">DOWN</button>' +
-          '<button data-fit-open="' + item.id + '" class="' + (item.fitMode ? 'active' : '') + '">FIT</button>' +
-          '<button data-ai="' + item.id + '" class="' + (item.aiExtended ? 'done' : '') + '">AI</button>' +
-          '<button data-geo-open="' + item.id + '" class="' + (item.geotag ? 'active' : '') + '">GEO</button>' +
-          '<button data-remove="' + item.id + '">DEL</button>' +
+    document.getElementById('reportGrid').innerHTML = rows.map(function (item) {
+      var has = !!item.photo;
+      return '<article id="photo-card-' + item.id + '" class="photo-card ' + (has ? '' : 'is-empty') + '" tabindex="-1">' +
+        photoFrameHTML(item) +
+        '<div class="photo-tools icon-tools">' +
+          toolButton('data-open-picker="' + item.id + '"', has ? 'solidReplace' : 'solidPlus', has ? 'Ganti foto' : 'Add foto', has ? '#0A0A0A' : '#FF6B1A', '', has ? 'GANTI' : 'ADD') +
+          toolButton('data-move="-1" data-id="' + item.id + '"', 'solidUp', 'Naikkan foto', '#0A0A0A', '', 'NAIK') +
+          toolButton('data-move="1" data-id="' + item.id + '"', 'solidDown', 'Turunkan foto', '#0A0A0A', '', 'TURUN') +
+          toolButton('data-fit-open="' + item.id + '" class="' + (item.fitMode && has ? 'active' : '') + '"', 'solidFit', 'Atur fit foto', (item.fitMode && has ? '#FF6B1A' : '#0A0A0A'), has ? '' : 'disabled', 'FIT') +
+          toolButton('data-ai="' + item.id + '" class="' + (item.aiExtended && has ? 'done' : '') + '"', 'solidAi', 'AI extend', (item.aiExtended && has ? '#2E9E5B' : '#0A0A0A'), has ? '' : 'disabled', 'AI') +
+          toolButton('data-geo-open="' + item.id + '" class="' + (item.geotag && has ? 'active' : '') + '"', 'solidGeo', 'Geotag', (item.geotag && has ? '#FF6B1A' : '#0A0A0A'), has ? '' : 'disabled', 'GEO') +
+          toolButton('data-remove="' + item.id + '"', 'solidTrash', 'Hapus card', '#E8331C', '', 'HAPUS') +
         '</div>' +
         '<div class="photo-fields">' +
           '<div><div class="mini-label">NAMA PEKERJAAN</div><input class="mini-input" data-field="nama" data-id="' + item.id + '" value="' + esc(item.nama) + '"></div>' +
-          '<div><div class="mini-label">ITEM PEKERJAAN</div><select class="mini-input item-dropdown" data-field="item" data-id="' + item.id + '">' + itemOptionsHTML(item.item, false) + '</select></div>' +
+          '<div><div class="mini-label">ITEM PEKERJAAN</div><select class="mini-input item-dropdown" data-field="item" data-id="' + item.id + '">' + itemOptionsHTML(item.item, true) + '</select></div>' +
           '<div><div class="mini-label">PROGRESS</div><div class="progress-row"><input class="mini-input" type="number" min="0" max="100" data-field="progress" data-id="' + item.id + '" value="' + esc(item.progress) + '"><span class="mono" style="font-size:10px;">%</span><div class="progress-quick">' +
             [25, 50, 75, 100].map(function (v) { return '<button data-quick="' + v + '" data-id="' + item.id + '" class="' + (String(item.progress) === String(v) ? 'active' : '') + '">' + v + '</button>'; }).join('') +
           '</div></div></div>' +
@@ -233,12 +299,66 @@
     attachReportEvents();
   }
 
+  function renderPhotoPicker() {
+    var selected = selectedPhotoMap();
+    var grid = document.getElementById('photoPickerGrid');
+    if (!state.gallery.length) {
+      grid.innerHTML = '<div class="empty-state">Galeri masih kosong. Upload foto terlebih dahulu.</div>';
+      return;
+    }
+    grid.innerHTML = state.gallery.map(function (photo) {
+      var selectedBy = selected[photo.id];
+      var isCurrent = selectedBy === activeItemId;
+      var isUsed = !!selectedBy;
+      var sourceLabel = photo.sourceType === 'bukti_lapangan' ? 'BUKTI LAPANGAN' : 'LAPORAN';
+      return '<button class="picker-photo ' + (isUsed ? 'is-used' : '') + (isCurrent ? ' is-current' : '') + '" data-picker-photo="' + photo.id + '" type="button">' +
+        '<span class="picker-thumb"><img src="' + photo.url + '" alt=""></span>' +
+        (isUsed ? '<span class="picker-check"><span data-pixel-icon="check" data-pixel-size="12" data-pixel-color="#fff"></span></span>' : '') +
+        '<span class="picker-name">' + esc(photo.filename) + '</span>' +
+        '<span class="picker-badge">' + sourceLabel + ' / ' + PixWizard.arLabel(photo) + '</span>' +
+      '</button>';
+    }).join('');
+    if (typeof renderPixelIcons === 'function') { try { renderPixelIcons(); } catch (error) { console.warn('Icon render skipped', error); } }
+    attachPickerEvents();
+  }
+
+  function attachPickerEvents() {
+    document.querySelectorAll('[data-picker-photo]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var photoId = btn.getAttribute('data-picker-photo');
+        var selected = selectedPhotoMap();
+        var selectedBy = selected[photoId];
+        var active = state.reportPhotos.find(function (row) { return row.id === activeItemId; });
+        if (!active) return;
+        if (selectedBy && selectedBy !== activeItemId) return;
+        if (selectedBy === activeItemId) {
+          active.photoId = null;
+          active.aiExtended = false;
+          active.geotag = null;
+        } else {
+          active.photoId = photoId;
+          active.fitMode = active.fitMode || 'crop';
+          active.cropY = typeof active.cropY === 'number' ? active.cropY : 50;
+        }
+        persistAndReload();
+        renderAll();
+      });
+    });
+  }
+
+  function openPhotoPicker(id) {
+    activeItemId = id;
+    renderPhotoPicker();
+    document.getElementById('photoPickerModal').classList.add('show');
+  }
+
   function attachReportEvents() {
     document.querySelectorAll('[data-field]').forEach(function (input) {
       function persistField() {
         var changes = {};
         changes[input.getAttribute('data-field')] = input.value;
         PixWizard.updateReportPhoto(state, input.getAttribute('data-id'), changes);
+        state = PixWizard.loadState();
       }
       input.addEventListener('input', persistField);
       input.addEventListener('change', persistField);
@@ -264,25 +384,29 @@
         renderReport();
       });
     });
+    document.querySelectorAll('[data-open-picker], [data-frame-picker]').forEach(function (btn) {
+      btn.addEventListener('click', function () { openPhotoPicker(btn.getAttribute('data-open-picker') || btn.getAttribute('data-frame-picker')); });
+    });
     document.querySelectorAll('[data-fit-open]').forEach(function (btn) {
-      btn.addEventListener('click', function () { openFitModal(btn.getAttribute('data-fit-open')); });
+      btn.addEventListener('click', function () { if (!btn.disabled) openFitModal(btn.getAttribute('data-fit-open')); });
     });
     document.querySelectorAll('[data-ai]').forEach(function (btn) {
       btn.addEventListener('click', function () {
+        if (btn.disabled) return;
         PixWizard.updateReportPhoto(state, btn.getAttribute('data-ai'), { aiExtended: true, fitMode: 'crop', cropY: 50 });
         state = PixWizard.loadState();
         renderReport();
       });
     });
     document.querySelectorAll('[data-geo-open]').forEach(function (btn) {
-      btn.addEventListener('click', function () { openGeoModal(btn.getAttribute('data-geo-open')); });
+      btn.addEventListener('click', function () { if (!btn.disabled) openGeoModal(btn.getAttribute('data-geo-open')); });
     });
   }
 
   function openFitModal(id) {
     activeItemId = id;
-    var item = PixWizard.getReportItems(state).find(function (row) { return row.id === id; });
-    if (!item) return;
+    var item = reportRows().find(function (row) { return row.id === id; });
+    if (!item || !item.photo) return;
     document.getElementById('fitPreview').src = item.photo.url;
     document.getElementById('fitPreview').style.cssText = PixWizard.imageFitStyle(item);
     document.getElementById('cropYRange').value = typeof item.cropY === 'number' ? item.cropY : 50;
@@ -318,7 +442,8 @@
 
   function openGeoModal(id) {
     activeItemId = id;
-    var item = PixWizard.getReportItems(state).find(function (row) { return row.id === id; });
+    var item = reportRows().find(function (row) { return row.id === id; });
+    if (!item || !item.photo) return;
     var geo = item && item.geotag ? item.geotag : { address: '', lat: -2.5916, lng: 140.6690, date: new Date().toISOString().slice(0, 10), time: '09:00' };
     geoPos = { lat: Number(geo.lat), lng: Number(geo.lng) };
     document.getElementById('geoAddress').value = geo.address || '';
@@ -377,7 +502,18 @@
     overlay.addEventListener('click', function (event) { if (event.target === overlay) overlay.classList.remove('show'); });
   });
 
-  document.getElementById('uploadBtn').addEventListener('click', function () { document.getElementById('fileInput').click(); });
+  document.getElementById('addSlotBtn').addEventListener('click', function () {
+    var newId = createEmptySlot();
+    renderAll();
+    var newest = document.getElementById('photo-card-' + newId);
+    if (newest) {
+      newest.focus({ preventScroll: false });
+      newest.scrollIntoView({ block: 'center', inline: 'nearest' });
+      window.location.hash = 'photo-card-' + newId;
+    }
+  });
+
+  document.getElementById('pickerUploadBtn').addEventListener('click', function () { document.getElementById('fileInput').click(); });
   document.getElementById('fileInput').addEventListener('change', function (event) {
     Promise.all(Array.from(event.target.files).map(PixWizard.readImageFile)).then(function (items) {
       items.forEach(function (data) { PixWizard.addGalleryPhoto(state, data); });
@@ -398,6 +534,18 @@
     });
     state = PixWizard.loadState();
     renderReport();
+  });
+
+  document.getElementById('goPreview').addEventListener('click', function () {
+    var empty = emptyRows();
+    if (!state.reportPhotos.length || empty.length) {
+      document.getElementById('emptyWarningText').textContent = !state.reportPhotos.length
+        ? 'Belum ada card foto. Tambahkan minimal satu foto laporan.'
+        : 'Masih ada ' + empty.length + ' card kosong. Pilih foto pada semua placeholder sebelum preview.';
+      document.getElementById('emptyWarningModal').classList.add('show');
+      return;
+    }
+    window.location.href = 'wizard-step4.html';
   });
 
   renderAll();

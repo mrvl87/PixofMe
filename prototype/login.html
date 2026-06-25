@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Masuk — Pixforme</title>
+<title>Masuk - Pixforme</title>
 <link rel="stylesheet" href="assets/css/tokens.css">
 <style>
   body { display: flex; flex-direction: column; min-height: 100vh; }
@@ -26,23 +26,24 @@
 
     <div class="card card-accent">
       <h1>Masuk ke akun Anda</h1>
-      <p class="sub">Project dan laporan Anda menunggu.</p>
+      <p class="sub">Login untuk membuat dokumentasi gratis dengan free tier.</p>
       <div>
         <label class="field-label">Email</label>
         <input class="field-input" type="email" placeholder="nama@perusahaan.com">
       </div>
       <div>
         <label class="field-label">Kata Sandi</label>
-        <input class="field-input" type="password" placeholder="••••••••">
+        <input class="field-input" type="password" placeholder="password">
       </div>
-      <button class="pixel-btn pixel-btn-accent" style="justify-content:center;width:100%;padding:12px;">Masuk</button>
+      <button class="pixel-btn pixel-btn-accent" id="loginBtn" type="button" style="justify-content:center;width:100%;padding:12px;">Masuk</button>
       <div style="text-align:center;font-size:12px;color:var(--text-muted);">
-        Belum punya akun? <a href="wizard-step1.html" style="color:var(--orange);font-weight:700;">Mulai gratis</a>
+        Belum punya akun? <a href="workspace.html" style="color:var(--orange);font-weight:700;">Mulai gratis</a>
       </div>
     </div>
   </div>
 </div>
 
 <script src="assets/js/pixel-icons.js"></script>
+<script>document.getElementById("loginBtn").addEventListener("click", function () { window.location.href = "workspace.html"; });</script>
 </body>
 </html>

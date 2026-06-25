@@ -1,829 +1,342 @@
 # Pixforme Prototype Component Map
 
-This map names the visual/components found in `prototype/`. It describes current behavior and source locations only. It does not prescribe a framework implementation.
+Status: synced to current `prototype/` on 2026-06-25.
+Scope: component inventory and prototype-to-Next delta. Do not implement Next.js changes until approved.
 
-## 1. Source Pages
+## 1. Active Prototype Sources
 
-| Prototype page | Purpose | Primary components |
+The files requested as `prototype/styles.css` and `prototype/app.js` are not present in the current tree. Use the actual split source:
+
+| Area | Source |
+| --- | --- |
+| Public landing | `prototype/index.html` |
+| Shared public CSS | `prototype/assets/css/tokens.css` |
+| Wizard/workspace CSS | `prototype/assets/css/wizard.css` |
+| Pixel icons | `prototype/assets/js/pixel-icons.js` |
+| Public topnav | `prototype/assets/js/topnav.js` |
+| Wizard state/utilities | `prototype/assets/js/wizard-state.js` |
+| Login/workspace/wizard pages | `prototype/login.html`, `prototype/workspace.html`, `prototype/wizard-step*.html` |
+
+## 2. Page Map
+
+| Prototype page | Purpose | Key components |
 | --- | --- | --- |
-| `prototype/index.html` | Marketing home | TopNav, Hero, MockReportStack, ProblemMarquee, SolutionCard, StepCard, TemplateThumb, ToolCard, CTABanner, Footer |
-| `prototype/product.html` | Product placeholder | TopNav, PageHero, PlaceholderBox, Footer |
-| `prototype/tools.html` | AI tools placeholder | TopNav, PageHero, ToolRouteCard, StatusBadge, Footer |
-| `prototype/pricing.html` | Pricing and Midtrans sandbox test | TopNav, PageHero, PricingCard, PaymentStatus, Footer |
-| `prototype/login.html` | Login | LogoRow, Card, Field, PixelButton |
-| `prototype/workspace.html` | Multi-project workspace | WizardChrome, StateChip, WorkspaceLayout, ProjectListItem, ProjectForm, ItemChipList |
-| `prototype/wizard-step1.html` | Project setting | WizardChrome, WizardTitleRow, Card, Field, ToggleButton, InfoPanel, ItemChipList |
-| `prototype/wizard-step2.html` | Report details | WizardChrome, Card, Field, PrototypeBanner, InfoPanel |
-| `prototype/wizard-step3.html` | Photo and caption editing | WizardChrome, GalleryPanel, GalleryItem, PhotoCard, PhotoTools, FitModal, GeoModal, BulkBar |
-| `prototype/wizard-step4.html` | Preview and export | WizardChrome, PreviewSidebar, SidebarTabs, TemplateOption, StyleControls, A4Page, PreviewPhotoCard, StackGridTable, GridPreviewCard |
+| `index.html` | Marketing home | TopNav, HomeHero, MockReportStack, ProblemMarquee, SolutionCard, WorkflowStepCard, TemplateShowcase, ToolCard, CTABanner, Footer |
+| `login.html` | Free-tier login/start | LoginBox, LogoRow, AuthFields, LoginCTA |
+| `workspace.html` | Project-card workspace | WorkspaceProjectCard, CreateProjectCard, CreateProjectModal, StateChip |
+| `wizard-step1.html` | Project settings | WizardChrome, ProjectForm, RABTextarea, ItemChipList, HeaderSettings |
+| `wizard-step2.html` | Report details | WizardChrome, ReportForm, SummaryPanel |
+| `wizard-step3.html` | Photo slots and captions | PhotoWorkbar, FloatingAddPhoto, PhotoCard, EmptyPhotoSlot, PhotoPickerModal, EmptyWarningModal, FitModal, GeoModal |
+| `wizard-step4.html` | Preview/export | PreviewSidebar, TemplatePanel, StylePanel, A4Page, StackGridTable, GridCard, GridGeoOverlay, PrintExportMode |
+| `pricing.html` | Pricing and sandbox payment | PricingCard, PaymentStatus, SnapTestButton |
+| `product.html` | Placeholder product page | TopNav, PageHero, PlaceholderBox |
+| `tools.html` | Placeholder tools page | TopNav, ToolRouteCard, StatusBadge |
 
-## 2. Shared Foundation
+## 3. Shared Components
 
 ### TopNav
 
-Source:
+Source: `prototype/assets/js/topnav.js`, `prototype/assets/css/tokens.css`
 
-- `prototype/assets/js/topnav.js`
-- `prototype/assets/css/tokens.css`
+- Injected into `#topnav`.
+- Links: Produk, AI Fix Tools, Harga.
+- Actions: Masuk, Mulai Gratis.
+- Active route from `data-active`.
+- Links hidden under 720px.
 
-Used by:
+Next delta:
 
-- `index.html`, `product.html`, `tools.html`, `pricing.html`
+- `TopNav` in `app/pixforme.tsx` exists, but `Mulai Gratis` still routes directly to wizard. Future implementation should route first-time users through login/workspace.
 
-Structure:
+### PixelIcon and PixelLogo
 
-- Logo link to `index.html`
-- Link group: Produk, AI Fix Tools, Harga
-- Actions: Masuk, Mulai Gratis
+Source: `prototype/assets/js/pixel-icons.js`
 
-States:
+- 7x7 inline SVG grid icons.
+- Pixel logo rendered from fixed rectangles.
+- Newer icon set includes `chevU`, `chevD`, `plus`, and solid toolbar icons: `solidPlus`, `solidReplace`, `solidUp`, `solidDown`, `solidFit`, `solidAi`, `solidGeo`, `solidTrash`.
 
-- Active link from `data-active`
-- Link hover changes text to black and background to accent background
-- Active link uses orange text and orange-tinted background
+Next delta:
 
-Responsive:
-
-- Navigation links hidden under 720px.
-- Actions remain visible.
-
-### PixelIcon / PixelLogo
-
-Source:
-
-- `prototype/assets/js/pixel-icons.js`
-
-Inputs:
-
-- `data-pixel-icon`
-- `data-pixel-size`
-- `data-pixel-color`
-- `data-pixel-logo`
-
-Behavior:
-
-- Replaces matching elements with inline SVG.
-- Icons use `shape-rendering="crispEdges"`.
-- Logo is generated from fixed black/orange/red rectangles.
+- Next `IconName` and `PIXEL_GRIDS` are missing these newer icon names.
 
 ### PixelButton
 
-Source:
+Source: `prototype/assets/css/tokens.css`
 
-- `prototype/assets/css/tokens.css`
+- `.pixel-btn`, `.pixel-btn-primary`, `.pixel-btn-accent`, `.pixel-btn-success`, `.pixel-btn-ghost`, `.pixel-btn-lg`.
+- Hard shadows and 3px active press.
 
-Classes:
+### Modal
 
-- `.pixel-btn`
-- `.pixel-btn-primary`
-- `.pixel-btn-accent`
-- `.pixel-btn-success`
-- `.pixel-btn-ghost`
-- `.pixel-btn-lg`
+Source: `prototype/assets/css/wizard.css`
 
-Behavior:
+- `.modal-overlay`, `.modal-box`, `.modal-head`, `.modal-title`, `.modal-sub`, `.modal-close`.
+- Used by create project, photo picker, empty warning, fit, and geotag flows.
 
-- Active press translates by 3px and removes shadow.
-- Disabled state is gray, no shadow, cursor not allowed.
-
-Used for:
-
-- Navigation actions
-- Wizard actions
-- Upload/add/apply buttons
-- CTA links
-- Payment test button
-- Modal actions
-
-### Card
-
-Source:
-
-- `prototype/assets/css/tokens.css`
-
-Classes:
-
-- `.card`
-- `.card-accent`
-
-Used for:
-
-- Login box
-- Wizard forms
-- Workspace form
-
-Visual:
-
-- White surface, black border, hard shadow.
-- Accent variant uses orange shadow.
-
-### Field
-
-Source:
-
-- `prototype/assets/css/tokens.css`
-- `prototype/assets/css/wizard.css`
-
-Classes:
-
-- `.field-label`
-- `.field-input`
-- `.field-textarea`
-- `.mini-label`
-- `.mini-input`
-
-States:
-
-- Focus border orange.
-- Required empty state uses `.required-empty` amber border.
-
-Used for:
-
-- Project/report forms
-- Login form
-- Photo metadata fields
-- Geotag modal fields
-- Preview controls where native range/select/input appears.
-
-### ToggleButton
-
-Source:
-
-- `prototype/assets/css/wizard.css`
-
-Classes:
-
-- `.toggle-row`
-- `.toggle-btn`
-- `.toggle-btn.active`
-
-Used for:
-
-- Logo display toggles
-- Header mode toggles
-- Paper size selection
-- Border toggle
-
-### StateChip
-
-Source:
-
-- `prototype/assets/css/wizard.css`
-
-Classes:
-
-- `.state-chip-row`
-- `.state-chip`
-
-Used for:
-
-- Workspace summary
-- Wizard project summary
-- Preview paper/template/photo summary
-
-## 3. Marketing Components
+## 4. Landing Components
 
 ### HomeHero
 
-Source:
+Source: `prototype/index.html`
 
-- `prototype/index.html`
+- Two-column hero.
+- Pixel heading with orange highlighted phrase.
+- Mock A4 page stack with floating badges.
 
-Subcomponents:
+Next delta:
 
-- `.hero`
-- `.hero-inner`
-- `.hero-eyebrow`
-- `.hero-ctas`
-- `.hero-meta`
-- `.hero-visual`
+- Next hero broadly matches, but verify copy and CTA route after workflow update.
 
-Behavior:
+### SolutionsSection
 
-- Desktop two-column grid.
-- Collapses to one column under 900px.
-- H1 size reduces under 600px.
+Source: `prototype/index.html`
 
-### MockReportStack
+- `.solutions-section` near viewport height.
+- `.solutions-grid` is 4 columns desktop.
+- `.solution-card` uses layered offset shadows and hover motion.
+- Cards are compact, around 246px minimum height.
 
-Source:
+Next delta:
 
-- `prototype/index.html`
+- Next CSS still uses older 2-column solution grid and simpler card shadow. Needs update.
 
-Subcomponents:
+### WorkflowSection
 
-- `.mock-page`
-- `.mock-header`
-- `.mock-photo`
-- `.mock-progress`
-- `.floating-badge`
+Source: `prototype/index.html`
 
-Role:
+- `.workflow-section` near viewport height, centered vertically.
+- `.steps-row` has four cards with slight rotations through CSS vars.
+- `.step-visual` contains representative images from `prototype/cssstyleassets/#3/img/`.
+- Hover normalizes row rotation and lifts hovered card.
 
-- Hero visual only.
-- Represents generated report pages, geotag, and page count.
+Next delta:
 
-### ProblemMarquee
+- Next `HowItWorksSection` still renders text-only step cards. Needs image-backed cards and section sizing.
 
-Source:
+### TemplateShowcase
 
-- `prototype/index.html`
+Source: `prototype/index.html`
 
-Classes:
+- `.template-showcase` is a long scroll/sticky section.
+- `templatePixelCanvas` draws pixel blocks based on scroll progress.
+- `.template-sticky`, `.template-stage`, `.template-copy`, `.tpl-row`, `.tpl-thumb`, `.tpl-preview` build rich previews.
 
-- `.problem-strip`
-- `.marquee`
+Next delta:
 
-Behavior:
+- Next `TemplatesSection` is still static gray swatches. Needs sticky showcase, canvas effect, and rich thumbnails.
 
-- Horizontal scrolling text with 28s linear animation.
-- Disabled under reduced motion preference.
+## 5. Workspace Components
 
-### SolutionCard
+### WorkspaceProjectCard
 
-Source:
+Source: `prototype/workspace.html`, `prototype/assets/css/wizard.css`
 
-- `prototype/index.html`
-
-Subcomponents:
-
-- `.solution-card`
-- `.solution-icon-box`
-- `.solution-num`
-- `.solution-tag`
-
-Layout:
-
-- Two columns desktop.
-- One column under 600px.
-
-### StepCard
-
-Source:
-
-- `prototype/index.html`
-
-Class:
-
-- `.step-card`
-
-Layout:
-
-- Four columns desktop.
-- Two columns under 900px.
-- One column under 600px.
-
-### TemplateThumb
-
-Source:
-
-- `prototype/index.html`
-
-Classes:
-
-- `.tpl-row`
-- `.tpl-thumb`
-- `.swatch`
-
-Role:
-
-- Static visual preview of five report template families.
-
-### ToolCard / ToolRouteCard
-
-Sources:
-
-- `prototype/index.html`
-- `prototype/tools.html`
-
-Variants:
-
-- Home `ToolCard` can be `.featured` black card.
-- Tools page `ToolRouteCard` can be `.coming` with opacity.
-
-## 4. Workspace Components
-
-### WorkspaceLayout
-
-Source:
-
-- `prototype/workspace.html`
-- `prototype/assets/css/wizard.css`
-
-Structure:
-
-- Left `InfoPanel` with project list.
-- Right accent `Card` with editable project fields.
-
-Responsive:
-
-- Two columns desktop.
-- One column under 900px.
-
-### ProjectListItem
-
-Source:
-
-- `prototype/workspace.html`
-
-Class:
-
-- `.project-list-item`
-
-States:
-
-- Default: white surface, neutral shadow.
-- Active: orange-tinted background and orange shadow.
+- `.workspace-card-grid` lays cards as `repeat(auto-fill, minmax(240px, 1fr))`.
+- `.workspace-project-card` is a button card with id/status/title/meta/CTA.
+- Active card uses orange border/shadow.
+- `create-card` is dashed/accent background with square plus mark.
 
 Behavior:
 
-- Selecting a project persists current project, switches active project id, syncs active project data into main project state, saves localStorage, and rerenders.
+- Clicking a project activates it and routes to wizard step 1.
+- Workspace does not render settings forms.
 
-### ItemChipList
+Next delta:
 
-Sources:
+- Next `WorkspacePage` still uses `.workspace-layout`, `ProjectListItem`, and a settings form. Replace with card-only workspace and create modal.
 
-- `prototype/workspace.html`
-- `prototype/wizard-step1.html`
+### CreateProjectModal
 
-Classes:
+Source: `prototype/workspace.html`
 
-- `.project-items-preview`
-- `.item-chip-list`
-- `.item-chip`
-- `.item-chip.muted`
+- One field: `Nama Project`.
+- Confirm creates project, activates it, clears project setting fields, saves state, routes to `wizard-step1.html`.
 
-Behavior:
+Next delta:
 
-- Renders parsed RAB items.
-- Step 1 caps visible preview at 12 items and shows a muted `+n lainnya` chip.
+- Needs React state/modal implementation. Keep data compatible with existing `workspace.projects` and `project` state.
 
-## 5. Wizard Components
+## 6. Wizard Components
 
 ### WizardChrome
 
-Source:
+Source: `prototype/assets/js/wizard-state.js`
 
-- `prototype/assets/js/wizard-state.js`
-- `renderWizardChrome(step, actionsHtml)`
+- Four steps: Project, Laporan, Foto & Caption, Preview.
+- Previous steps are links with check icon.
+- Current step is orange.
+- Future steps are inactive.
 
-Structure:
+### Project and Report Forms
 
-- Logo link.
-- Four-step wizard nav.
-- Action slot.
+Source: `prototype/wizard-step1.html`, `prototype/wizard-step2.html`
 
-Step states:
+- Step 1 contains project settings and RAB item parser.
+- Step 2 contains report name and period only.
 
-- Done: previous steps show success check and are links.
-- Active: orange step.
-- Future: non-link inactive step.
+Next delta:
 
-Responsive:
+- Existing Next step 1/2 are mostly aligned; recheck after workspace routing changes.
 
-- Stacks under 900px.
+## 7. Step 3 Components
 
-### WizardTitleRow
+### PhotoWorkbar
 
-Source:
+Source: `prototype/wizard-step3.html`
 
-- Wizard and workspace pages.
+- Shows selected slot count and empty placeholder count.
+- Bulk item and bulk progress controls remain.
 
-Elements:
+### FloatingAddPhoto
 
-- `.wizard-kicker`
-- `.wizard-title`
-- `.wizard-subtitle`
-- Optional `.state-chip-row`
+Source: `prototype/wizard-step3.html`, `prototype/assets/css/wizard.css`
 
-### InfoPanel
+- Fixed bottom-right button.
+- Adds an empty report-photo slot.
+- After add, the page scrolls to the new card and updates hash.
 
-Source:
+Next delta:
 
-- `prototype/assets/css/wizard.css`
+- Not implemented in Next.
 
-Used for:
+### PhotoCard and EmptyPhotoSlot
 
-- Project UX notes.
-- Current project/report data.
-- Gallery sidebar.
-- Workspace project list.
+Source: `prototype/wizard-step3.html`
 
-### PrototypeBanner
+Filled card:
 
-Source:
+- 4:3 image frame.
+- Aspect/AI badge.
+- Index badge.
+- Optional geotag overlay.
+- Solid icon tool row.
+- Metadata fields.
+- Progress quick controls.
 
-- `prototype/assets/css/wizard.css`
+Empty card:
 
-Class:
+- `.photo-card.is-empty`.
+- `.photo-frame-empty` with large plus, `EMPTY`, and help text.
+- Fit/AI/GEO disabled until a photo is selected.
 
-- `.prototype-banner`
+Next delta:
 
-Used for:
+- Next `PhotoCard` accepts only filled report items and uses old text buttons. Needs empty-slot support and solid toolbar.
 
-- Notes inside prototype about non-final behavior.
-- Step 2 template note.
-- Fit modal AI Extend note.
-- Step 4 F4 capacity note.
+### PhotoPickerModal
 
-## 6. Step 3 Photo Components
+Source: `prototype/wizard-step3.html`
 
-### GalleryPanel
+- `.photo-picker-box`, `.picker-actions`, `.photo-picker-grid`, `.picker-photo`.
+- Gallery photos appear in a modal grid.
+- Used photos are grayscale and checked.
+- Current photo can be clicked to unselect.
+- Upload button in modal adds photos to gallery.
 
-Source:
+Next delta:
 
-- `prototype/wizard-step3.html`
+- Next still has persistent `GalleryPanel`. Replace with modal picker.
 
-Structure:
+### EmptyWarningModal
 
-- Info panel wrapper.
-- Upload button and hidden file input.
-- `.gallery-list`
+Source: `prototype/wizard-step3.html`
 
-Behavior:
+- Blocks preview navigation if there are no report slots or any empty slots.
+- Message says how many cards remain empty.
 
-- Upload button triggers hidden file input.
-- Multiple image files are read through FileReader and added to gallery as data URLs.
+Next delta:
 
-### GalleryItem
+- Next `Preview` link routes directly to step 4. Needs guard button.
 
-Class:
+### SolidPhotoTools
 
-- `.gallery-item`
+Source: `prototype/wizard-step3.html`, `prototype/assets/css/wizard.css`, `prototype/assets/js/pixel-icons.js`
 
-Structure:
+- 7 columns.
+- Tool labels: ADD/GANTI, NAIK, TURUN, FIT, AI, GEO, HAPUS.
+- Icons are boxed 24px with 17px pixel icon.
 
-- 72px thumbnail.
-- Filename.
-- Badge containing source type and aspect ratio label.
-- Add button.
+Next delta:
 
-Button states:
+- Needs CSS and icon port.
 
-- Not selected: ghost button, label "Tambah ke laporan".
-- Selected: success button, label "Sudah dipilih".
+## 8. Step 4 Components
 
-### PhotoCard
+### TemplatePanel and StylePanel
 
-Class:
+Source: `prototype/wizard-step4.html`
 
-- `.photo-card`
-
-Structure:
-
-- `.photo-frame`
-- `.photo-badge`
-- `.photo-index`
-- optional `.geo-overlay`
-- `.photo-tools`
-- `.photo-fields`
-
-Photo tool buttons:
-
-- UP
-- DOWN
-- FIT
-- AI
-- GEO
-- DEL
-
-States:
-
-- FIT button active when fit mode is present.
-- AI button done when `aiExtended` is true.
-- GEO button active when geotag exists.
-
-Behavior:
-
-- UP/DOWN reorders report photos.
-- FIT opens FitModal.
-- AI marks `aiExtended: true`, `fitMode: crop`, `cropY: 50`.
-- GEO opens GeoModal.
-- DEL removes photo from report.
-
-### ProgressQuick
-
-Class:
-
-- `.progress-quick`
-
-Behavior:
-
-- Four buttons: 25, 50, 75, 100.
-- Active button matches current progress string.
-- Click updates selected report photo progress.
-
-### BulkBar
-
-Source:
-
-- `prototype/wizard-step3.html`
-
-Inputs:
-
-- Bulk item select.
-- Bulk progress number.
-- Apply button.
-
-Behavior:
-
-- Applies provided item and/or progress to every report photo.
-
-### FitModal
-
-Source:
-
-- `prototype/wizard-step3.html`
-
-Classes:
-
-- `.modal-overlay`
-- `.modal-box`
-- `.crop-stage`
-- `.fit-options`
-
-Controls:
-
-- Crop 4:3
-- Contain
-- AI Extend
-- Vertical crop range 0-100
-
-Behavior:
-
-- Modal opens with current image and fit state.
-- Crop range live-updates preview image object-position.
-- Selecting an option saves state and closes modal.
-- Overlay click or close button closes modal.
-
-### GeoModal
-
-Source:
-
-- `prototype/wizard-step3.html`
-
-Classes:
-
-- `.map-fake`
-- `.map-pin-center`
-- `.map-coords`
-
-Controls:
-
-- Address
-- Latitude
-- Longitude
-- Date
-- Time
-- Fake map
-- Hapus
-- Simpan Geotag
-
-Behavior:
-
-- Defaults to Jayapura coordinates.
-- Clicking fake map adjusts lat/lng by click position.
-- Save persists geotag metadata.
-- Remove clears geotag.
-- Geotag appears as overlay in Step 3 and in preview/export.
-
-## 7. Step 4 Preview Components
-
-### PreviewSidebar
-
-Source:
-
-- `prototype/wizard-step4.html`
-
-Classes:
-
-- `.preview-sidebar`
-- `.sidebar-tabs`
-
-Tabs:
-
-- TEMPLATE
-- GAYA
-
-Behavior:
-
-- Tab buttons swap sidebar content and active state.
-
-### TemplateOption
-
-Class:
-
-- `.template-option`
-
-Structure:
-
-- `.tpl-swatch`
-- label and description.
-
-Behavior:
-
-- Shows photos-per-page dynamically based on active paper size.
-- Click updates `state.preview.templateId`.
-- Active option uses orange tint and orange shadow.
-
-### StyleControls
-
-Source:
-
-- `prototype/wizard-step4.html`
-
-Controls:
-
-- Paper size: A4/F4.
-- Accent color swatches.
-- Grid coordinate color swatches.
-- Grid coordinate size range.
-- Photo spacing range.
-- Text size range.
-- Photo border toggle.
-- Corner radius range.
-- Header mode all/first.
-
-Behavior:
-
-- Every change saves preview state and rerenders sidebar and pages.
-
-### A4Page
-
-Classes:
-
-- `.a4-page`
-- `.a4-header`
-- `.a4-content`
-- `.a4-footer`
-
-Behavior:
-
-- Width/height depend on active paper and template orientation.
-- Header visibility follows project header mode.
-- Footer displays project name and page count.
+- Template list dynamically shows photos per page based on paper size.
+- Gaya panel includes paper size, accent color, grid coordinate color, grid coordinate size, spacing, text size, border, radius, and header mode.
 
 ### StackGridTable
 
-Template:
+- Stack + Teks uses bordered rows with image left and caption right.
+- Border color is accent color.
+- Last page table height is proportional to actual item count; no empty bordered rows.
 
-- `t1` Stack + Teks
+### GridCard and GridGeoOverlay
 
-Classes:
-
-- `.stack-grid-table`
-- `.stack-grid-row`
-- `.stack-grid-photo`
-- `.stack-grid-text`
-
-Behavior:
-
-- Uses accent-color borders.
-- A4 renders 2 rows per page.
-- F4 renders 3 rows per page.
-- Last page height is proportional to filled rows so empty slots become whitespace.
-
-### GridPreviewCard
-
-Templates:
-
-- `t2` Grid Equal
-- `t3` Grid Border
-
-Classes:
-
-- `.preview-grid-card`
-- `.grid-photo-frame`
-- `.grid-caption-row`
-- `.grid-progress-box`
-- `.grid-geo-overlay`
-
-Behavior:
-
-- A4 uses 4 cards per page.
-- F4 uses 6 cards per page.
-- `t3` adds a numbered marker in accent color.
-- Grid geotag overlay uses selected color and automatic contrasting stroke.
-
-### FullPagePreview
-
-Template:
-
-- `t4` Full Page
-
-Behavior:
-
-- One photo per page.
-- Photo and caption stack vertically.
-
-### LandscapeSplitPreview
-
-Template:
-
-- `t5` Landscape Split
-
-Behavior:
-
-- Uses landscape page orientation.
-- A4 uses 2 columns.
-- F4 uses 3 columns.
+- Grid Equal/Grid Border use bottom caption row.
+- Progress appears as text, no progress bar.
+- Geotag is an overlay over the image, no background box.
+- Overlay has automatic contrasting stroke/shadow.
 
 ### PrintExportMode
 
-Source:
+- Dynamic `@page` style.
+- `export-pdf-mode` body class.
+- Hides chrome/sidebar/title/page labels.
+- Scales preview to real paper size.
 
-- `prototype/wizard-step4.html`
-- print CSS in `prototype/assets/css/wizard.css`
+Next delta:
 
-Behavior:
+- Next Step 4 is mostly close to current prototype. Recheck after global CSS and state model changes; do not assume parity without browser validation.
 
-- Export button calls `window.print()`.
-- Before print, dynamic `@page` and print variables are injected.
-- Body gets `export-pdf-mode`.
-- Topbar, sidebar, title row, and page labels are hidden.
-- Preview page scales to real A4/F4 millimeters.
-- After print, title and body class are restored.
+## 9. State Utilities
 
-## 8. Pricing Components
+Source: `prototype/assets/js/wizard-state.js`
 
-### PricingCard
+Important public functions:
 
-Source:
+- `loadState`, `saveState`, `resetState`
+- `parseRabItems`, `getProjectItems`
+- `findGalleryPhoto`, `getReportItems`
+- `addToReport`, `removeFromReport`, `moveReportPhoto`, `updateReportPhoto`
+- `addGalleryPhoto`, `readImageFile`
+- `imageFitStyle`, `arLabel`
+- `renderWizardChrome`, `projectSummary`
 
-- `prototype/pricing.html`
+Important state compatibility note:
 
-Classes:
+- Step 3 now supports empty report-photo slots with `photoId: null`; any Next types and helper functions must allow that.
 
-- `.price-card`
-- `.price-card.featured`
+## 10. Current Next.js Components To Change
 
-States:
+Files to change later, after approval:
 
-- Normal card: white with neutral hard shadow.
-- Featured card: black with orange shadow and orange price text.
+- `app/pixforme.tsx`
+  - `IconName` and `PIXEL_GRIDS`
+  - `TopNav`
+  - `HomePage`, `SolutionsSection`, `HowItWorksSection`, `TemplatesSection`
+  - `LoginPage`
+  - `WorkspacePage`
+  - `WizardStep3Page`
+  - `PhotoCard`
+  - Step 3 helper state/types for nullable `photoId`
+- `app/globals.css`
+  - Landing section CSS for solutions/workflow/template showcase.
+  - Workspace card-only CSS.
+  - Photo picker, empty slots, floating add, and solid toolbar CSS.
+  - Any missing prototype CSS from `prototype/assets/css/wizard.css`.
+- Route pages in `app/*.html/page.tsx` likely stay as wrappers unless exports change.
 
-### PaymentStatus
+## 11. Short Implementation Plan
 
-Source:
-
-- `prototype/pricing.html`
-
-Classes:
-
-- `.payment-status`
-- `.payment-status.active`
-- `.payment-status.error`
-- `.payment-status.success`
-
-Behavior:
-
-- Hidden by default.
-- Shows messages during config fetch, Snap token creation, Snap open, success, pending, error, and popup close.
-
-## 9. State and Data Utilities
-
-Source:
-
-- `prototype/assets/js/wizard-state.js`
-
-Global namespace:
-
-- `window.PixWizard`
-
-Public functions used by pages:
-
-- `loadState`
-- `saveState`
-- `resetState`
-- `parseRabItems`
-- `getProjectItems`
-- `escapeHtml`
-- `findGalleryPhoto`
-- `getReportItems`
-- `addToReport`
-- `removeFromReport`
-- `moveReportPhoto`
-- `updateReportPhoto`
-- `addGalleryPhoto`
-- `readImageFile`
-- `imageFitStyle`
-- `arLabel`
-- `renderWizardChrome`
-- `projectSummary`
-
-Stored state key:
-
-- `pixforme.prototype.wizard.v3`
-
-Core data objects:
-
-- `workspace`
-- `project`
-- `report`
-- `gallery`
-- `reportPhotos`
-- `preview`
-
-## 10. Optional Notes
-
-None.
+1. Update icon types/grids and global CSS classes.
+2. Port landing page visual changes section by section.
+3. Update login/workspace flow to free-tier project creation.
+4. Port Step 3 slot/photo-picker workflow.
+5. Re-check Step 4 print/export and patch only verified deltas.
+6. Run lint/build and browser validation before claiming parity.

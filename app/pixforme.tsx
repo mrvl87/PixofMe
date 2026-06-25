@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type IconName =
-  | "folder" | "upload" | "check" | "chevR" | "chevL" | "download" | "mapPin" | "sparkle"
-  | "crop" | "replace" | "trash" | "x" | "layout" | "sliders" | "bulk" | "clock"
-  | "search" | "move" | "camera" | "geo" | "watermark" | "wand" | "image" | "arrowRight"
-  | "star" | "grid" | "lock";
+  | "folder" | "upload" | "check" | "chevR" | "chevL" | "chevU" | "chevD" | "plus"
+  | "solidPlus" | "solidReplace" | "solidUp" | "solidDown" | "solidFit" | "solidAi" | "solidGeo" | "solidTrash"
+  | "download" | "mapPin" | "sparkle" | "crop" | "replace" | "trash" | "x" | "layout"
+  | "sliders" | "bulk" | "clock" | "search" | "move" | "camera" | "geo" | "watermark"
+  | "wand" | "image" | "arrowRight" | "star" | "grid" | "lock";
 
 const PIXEL_GRIDS: Record<IconName, [number, number][]> = {
   folder: [[0,1],[1,1],[2,0],[3,0],[4,1],[5,1],[6,1],[0,2],[6,2],[0,3],[6,3],[0,4],[6,4],[0,5],[1,5],[2,5],[3,5],[4,5],[5,5],[6,5]],
@@ -15,6 +16,17 @@ const PIXEL_GRIDS: Record<IconName, [number, number][]> = {
   check: [[1,4],[2,5],[3,6],[4,5],[5,4],[6,3],[6,2]],
   chevR: [[2,1],[3,2],[4,3],[3,4],[2,5]],
   chevL: [[4,1],[3,2],[2,3],[3,4],[4,5]],
+  chevU: [[3,1],[2,2],[4,2],[1,3],[5,3],[3,2],[3,3],[3,4],[3,5]],
+  chevD: [[3,5],[2,4],[4,4],[1,3],[5,3],[3,1],[3,2],[3,3],[3,4]],
+  plus: [[3,0],[3,1],[3,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[3,4],[3,5],[3,6]],
+  solidPlus: [[2,0],[3,0],[4,0],[2,1],[3,1],[4,1],[0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[0,4],[1,4],[2,4],[3,4],[4,4],[5,4],[6,4],[2,5],[3,5],[4,5],[2,6],[3,6],[4,6]],
+  solidReplace: [[0,1],[1,1],[2,1],[3,1],[4,1],[5,1],[6,1],[0,2],[2,2],[3,2],[6,2],[0,3],[3,3],[4,3],[5,3],[6,3],[0,4],[1,4],[2,4],[4,4],[6,4],[0,5],[1,5],[2,5],[3,5],[4,5],[5,5],[6,5],[4,0],[5,0],[6,0],[6,6],[5,6]],
+  solidUp: [[3,0],[2,1],[3,1],[4,1],[1,2],[2,2],[3,2],[4,2],[5,2],[3,3],[3,4],[3,5],[3,6]],
+  solidDown: [[3,6],[2,5],[3,5],[4,5],[1,4],[2,4],[3,4],[4,4],[5,4],[3,0],[3,1],[3,2],[3,3]],
+  solidFit: [[0,0],[1,0],[2,0],[0,1],[0,2],[4,0],[5,0],[6,0],[6,1],[6,2],[0,4],[0,5],[0,6],[1,6],[2,6],[6,4],[6,5],[4,6],[5,6],[6,6],[2,2],[3,2],[4,2],[2,3],[4,3],[2,4],[3,4],[4,4]],
+  solidAi: [[3,0],[2,1],[3,1],[4,1],[1,2],[2,2],[3,2],[4,2],[5,2],[0,3],[1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[1,4],[2,4],[3,4],[4,4],[5,4],[2,5],[3,5],[4,5],[3,6],[6,0],[5,1],[6,1]],
+  solidGeo: [[3,0],[2,1],[3,1],[4,1],[1,2],[2,2],[3,2],[4,2],[5,2],[1,3],[2,3],[4,3],[5,3],[2,4],[3,4],[4,4],[3,5],[3,6]],
+  solidTrash: [[2,0],[3,0],[4,0],[1,1],[2,1],[3,1],[4,1],[5,1],[1,2],[2,2],[3,2],[4,2],[5,2],[1,3],[2,3],[3,3],[4,3],[5,3],[1,4],[2,4],[3,4],[4,4],[5,4],[2,5],[3,5],[4,5],[2,6],[3,6],[4,6]],
   download: [[3,0],[3,1],[3,2],[3,3],[1,4],[3,4],[5,4],[2,5],[3,5],[4,5],[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6]],
   mapPin: [[3,0],[2,1],[4,1],[1,2],[5,2],[1,3],[3,3],[5,3],[2,4],[4,4],[3,5],[3,6]],
   sparkle: [[1,0],[1,2],[0,1],[2,1],[5,3],[5,5],[4,4],[6,4],[3,1],[3,2]],
@@ -77,7 +89,7 @@ function TopNav({ active }: { active: "home" | "product" | "tools" | "pricing" }
       </div>
       <div className="topnav-actions">
         <Link href={route("login.html")} className="pixel-btn pixel-btn-ghost" style={{ padding: "8px 16px" }}>Masuk</Link>
-        <Link href={route("wizard-step1.html")} className="pixel-btn pixel-btn-accent" style={{ padding: "8px 16px" }}>Mulai Gratis</Link>
+        <Link href={route("login.html")} className="pixel-btn pixel-btn-accent" style={{ padding: "8px 16px" }}>Mulai Gratis</Link>
       </div>
     </nav>
   );
@@ -111,7 +123,7 @@ type Project = {
 type WorkspaceProject = { id: string; name: string; instansi: string; location: string; status: string; items?: string[]; rabText?: string };
 type GalleryPhoto = { id: string; url: string; filename: string; w: number; h: number; sourceType: "laporan" | "bukti_lapangan" };
 type Geotag = { address: string; lat: number; lng: number; date: string; time: string };
-type ReportPhoto = { id: string; photoId: string; nama: string; item: string; progress: string | number; fitMode: "crop" | "contain"; cropY: number; aiExtended: boolean; geotag: Geotag | null };
+type ReportPhoto = { id: string; photoId: string | null; nama: string; item: string; progress: string | number; fitMode: "crop" | "contain"; cropY: number; aiExtended: boolean; geotag: Geotag | null };
 type Preview = { templateId: string; paperSize: "a4" | "f4"; gridGeoColor: string; gridGeoSize: number; gridGeoContrastApplied: boolean; accentColor: string; spacing: number; fontSize: number; border: boolean; borderWidth: number; borderRadius: number };
 type WizardState = { project: Project; workspace: { name: string; activeProjectId: string; projects: WorkspaceProject[] }; report: { name: string; period: string }; gallery: GalleryPhoto[]; reportPhotos: ReportPhoto[]; preview: Preview };
 
@@ -155,16 +167,16 @@ function cleanRabLine(line: string) {
   let value = String(line || "").replace(/\t+/g, "  ").trim();
   if (!value) return "";
   const parts = value.split(/\s{2,}/).map((part) => part.trim()).filter(Boolean);
-  value = parts.find((part) => /[A-Za-zÀ-ÿ]/.test(part) && !/^\d+([.,]\d+)?$/.test(part)) || value;
+  value = parts.find((part) => /[A-Za-z]/.test(part) && !/^\d+([.,]\d+)?$/.test(part)) || value;
   value = value
-    .replace(/^[-•]+\s*/, "")
+    .replace(/^[-\u2022]+\s*/, "")
     .replace(/^[A-Z]\.?\s+/, "")
     .replace(/^\d+(?:[.)]|(?:\.\d+)*\.?)\s*/, "")
     .replace(/\s+(LS|M2|M3|M|KG|UNIT|BH|BUAH|SET)\s+.*$/i, "")
     .replace(/\s+/g, " ")
     .trim();
   if (/^(no|uraian|pekerjaan|volume|satuan|harga|jumlah)$/i.test(value)) return "";
-  return /[A-Za-zÀ-ÿ]/.test(value) ? value : "";
+  return /[A-Za-z]/.test(value) ? value : "";
 }
 
 function parseRabItems(text: string) {
@@ -238,7 +250,8 @@ function uid(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-function findPhoto(state: WizardState, id: string) {
+function findPhoto(state: WizardState, id: string | null) {
+  if (!id) return undefined;
   return state.gallery.find((photo) => photo.id === id);
 }
 
@@ -298,7 +311,7 @@ export function HomePage() {
         <div className="hero-eyebrow"><PixelIcon name="sparkle" size={12} color="#FF6B1A" />DIBUAT UNTUK KONTRAKTOR INDONESIA</div>
         <h1>LAPORAN DOKUMENTASI<br />PROYEK, <span className="hi-orange">BUKAN<br />PEKERJAAN BERHARI-HARI.</span></h1>
         <p className="lead">Susun foto progres lapangan jadi laporan pertanggungjawaban siap cetak - rapi, terstruktur, dan konsisten - tanpa drag-drop manual di Word atau Excel.</p>
-        <div className="hero-ctas"><Link href={route("wizard-step1.html")} className="pixel-btn pixel-btn-accent pixel-btn-lg"><PixelIcon name="arrowRight" size={14} color="#fff" />Buat Laporan Pertama</Link><Link href={route("product.html")} className="pixel-btn pixel-btn-ghost pixel-btn-lg">Lihat Cara Kerja</Link></div>
+        <div className="hero-ctas"><Link href={route("login.html")} className="pixel-btn pixel-btn-accent pixel-btn-lg"><PixelIcon name="arrowRight" size={14} color="#fff" />Buat Laporan Pertama</Link><Link href={route("product.html")} className="pixel-btn pixel-btn-ghost pixel-btn-lg">Lihat Cara Kerja</Link></div>
         <div className="hero-meta"><PixelIcon name="check" size={12} color="#2E9E5B" />Tidak perlu kartu kredit - Export PDF gratis untuk laporan pertama</div>
       </div><MockReportStack /></div></section>
       <ProblemMarquee />
@@ -306,7 +319,7 @@ export function HomePage() {
       <HowItWorksSection />
       <TemplatesSection />
       <HomeToolsSection />
-      <section className="section"><div className="cta-banner"><div><h2>SIAP BUAT LAPORAN<br />PERTAMA ANDA?</h2><p>Gratis untuk laporan pertama. Tidak perlu kartu kredit.</p></div><Link href={route("wizard-step1.html")} className="pixel-btn pixel-btn-primary pixel-btn-lg"><PixelIcon name="arrowRight" size={14} color="#fff" />Mulai Sekarang</Link></div></section>
+      <section className="section"><div className="cta-banner"><div><h2>SIAP BUAT LAPORAN<br />PERTAMA ANDA?</h2><p>Gratis untuk laporan pertama. Tidak perlu kartu kredit.</p></div><Link href={route("login.html")} className="pixel-btn pixel-btn-primary pixel-btn-lg"><PixelIcon name="arrowRight" size={14} color="#fff" />Mulai Sekarang</Link></div></section>
       <Footer />
     </>
   );
@@ -332,18 +345,78 @@ function SolutionsSection() {
     ["watermark" as IconName, "MASALAH 03", "Watermark tanggal berantakan", "Foto dari berbagai sumber datang dengan watermark tanggal yang tidak konsisten. Bersihkan, ganti, atau tambahkan secara massal.", "AI Fix Tools"],
     ["geo" as IconName, "MASALAH 04", "Foto butuh geotag tapi tidak ada GPS", "Tambahkan koordinat, tanggal, dan jam secara manual lewat peta - non-destructive, tidak mengubah foto asli.", "Geotag overlay"],
   ];
-  return <section className="section"><div className="section-head"><span className="section-eyebrow">Masalah yang kami selesaikan</span><h2>EMPAT HAL YANG<br />MEMBUANG WAKTU ANDA</h2><p>Setiap fitur Pixforme dibangun dari keluhan nyata penyusun laporan lapangan - bukan asumsi.</p></div><div className="solutions-grid">{rows.map(([icon, num, title, text, tag]) => <div className="solution-card" key={num}><div className="solution-icon-box"><PixelIcon name={icon as IconName} size={22} color="#fff" /></div><span className="solution-num">{num}</span><h3>{title}</h3><p>{text}</p><span className="solution-tag">{tag}</span></div>)}</div></section>;
+  return <section className="section solutions-section"><div className="section-head"><span className="section-eyebrow">Masalah yang kami selesaikan</span><h2>EMPAT HAL YANG<br />MEMBUANG WAKTU ANDA</h2><p>Setiap fitur Pixforme dibangun dari keluhan nyata penyusun laporan lapangan - bukan asumsi.</p></div><div className="solutions-grid">{rows.map(([icon, num, title, text, tag]) => <div className="solution-card" key={num}><div className="solution-icon-box"><PixelIcon name={icon as IconName} size={22} color="#fff" /></div><span className="solution-num">{num}</span><h3>{title}</h3><p>{text}</p><span className="solution-tag">{tag}</span></div>)}</div></section>;
 }
 
 function HowItWorksSection() {
-  const rows = [["01", "Buat Project", "Isi nama kontrak, klien, dan header laporan - logo instansi atau perusahaan Anda."], ["02", "Detail Laporan", "Nama laporan dan periode pelaporan. Satu project bisa punya banyak laporan."], ["03", "Foto & Caption", "Upload puluhan hingga ratusan foto. Isi item pekerjaan dan progres - manual atau massal."], ["04", "Preview & Export", "Pilih template, sesuaikan gaya, lihat hasil real-time, lalu export PDF siap cetak."]];
-  return <section className="section" style={{ background: "var(--accent-bg)" }}><div className="section-head"><span className="section-eyebrow">Cara kerja</span><h2>EMPAT LANGKAH,<br />SATU LAPORAN SIAP CETAK</h2></div><div className="steps-row">{rows.map(([num, title, text]) => <div className="step-card" key={num}><div className="step-num">{num}</div><h4>{title}</h4><p>{text}</p></div>)}</div></section>;
+  const rows = [
+    { num: "01", title: "Buat Project", text: "Siapkan identitas project, instansi, lokasi, dan header laporan.", img: "/pixforme-workflow/step-1.png", alt: "Representasi buat project laporan", rot: "-4deg" },
+    { num: "02", title: "Detail Laporan", text: "Atur periode, lokasi kegiatan, dan item pekerjaan untuk laporan.", img: "/pixforme-workflow/step-2.png", alt: "Representasi detail laporan", rot: "-1.5deg" },
+    { num: "03", title: "Foto & Caption", text: "Upload foto, isi caption, progres, tanggal, dan koordinat.", img: "/pixforme-workflow/step-3.png", alt: "Representasi foto dan caption", rot: "1.5deg" },
+    { num: "04", title: "Preview & Export", text: "Pilih template, cek preview, lalu export PDF siap cetak.", img: "/pixforme-workflow/step-4.png", alt: "Representasi preview dan export laporan", rot: "4deg" },
+  ];
+  return <section className="section workflow-section" style={{ background: "var(--accent-bg)" }}><div className="section-head"><span className="section-eyebrow">Cara kerja</span><h2>EMPAT LANGKAH,<br />SATU LAPORAN SIAP CETAK</h2></div><div className="steps-row">{rows.map((row, index) => <div className="step-card" style={{ "--i": index, "--rot": row.rot } as React.CSSProperties} key={row.num}><div className="step-visual"><img src={row.img} alt={row.alt} /></div><div className="step-content"><div className="step-num">{row.num}</div><h4>{row.title}</h4><p>{row.text}</p></div></div>)}</div></section>;
 }
-
 function TemplatesSection() {
-  return <section className="section"><div className="section-head"><span className="section-eyebrow">Template siap pakai</span><h2>LIMA GAYA LAYOUT,<br />SEMUA BISA DIKUSTOMISASI</h2><p>Warna aksen, spacing, border, dan tampilan header - sesuaikan tanpa perlu desainer.</p></div><div className="tpl-row">{[["g2", "Stack + Teks"], ["g4", "Grid Equal"], ["g4", "Grid Border"], ["g1", "Full Page"], ["g2", "Landscape Split"]].map(([gridName, label]) => <div className="tpl-thumb" key={label}><div className={`swatch ${gridName}`}>{Array.from({ length: gridName === "g1" ? 1 : gridName === "g2" ? 2 : 4 }).map((_, i) => <div key={i} style={label === "Stack + Teks" && i === 0 ? { gridColumn: "1/3" } : label === "Grid Border" ? { border: "1.5px solid #0A0A0A" } : undefined} />)}</div><span>{label}</span></div>)}</div></section>;
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    const section = sectionRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext("2d");
+    if (!section || !canvas || !ctx) return;
+    const activeSection = section;
+    const activeCanvas = canvas;
+    const activeCtx = ctx;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const colors = ["#FF6B1A", "#E8331C", "#FFA41B", "#D0002A"];
+    function draw(progress: number) {
+      const w = activeCanvas.clientWidth;
+      const h = activeCanvas.clientHeight;
+      activeCtx.clearRect(0, 0, w, h);
+      const size = 54;
+      const cols = Math.ceil(w / size) + 2;
+      const rows = 4;
+      const offsetX = -size * 1.4 + progress * size * 2.2;
+      const offsetY = h * 0.27 + progress * h * 0.08;
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          if ((x + y) % 3 === 1) continue;
+          activeCtx.fillStyle = colors[(x + y) % colors.length];
+          activeCtx.globalAlpha = 0.9 - progress * 0.35;
+          activeCtx.fillRect(offsetX + x * size, offsetY + y * size, size - 1, size - 1);
+        }
+      }
+      activeCtx.globalAlpha = 1;
+    }
+    function update() {
+      const rect = activeSection.getBoundingClientRect();
+      const max = Math.max(1, rect.height - window.innerHeight);
+      const progress = reduced ? 1 : Math.min(1, Math.max(0, -rect.top / max));
+      activeSection.style.setProperty("--tpl-progress", progress.toFixed(3));
+      draw(progress);
+    }
+    function resize() {
+      const rect = activeSection.getBoundingClientRect();
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      activeCanvas.width = Math.max(1, Math.floor(rect.width * ratio));
+      activeCanvas.height = Math.max(1, Math.floor(rect.height * ratio));
+      activeCanvas.style.width = `${rect.width}px`;
+      activeCanvas.style.height = `${rect.height}px`;
+      activeCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      update();
+    }
+    resize();
+    window.addEventListener("resize", resize);
+    window.addEventListener("scroll", update, { passive: true });
+    return () => {
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("scroll", update);
+    };
+  }, []);
+  const photos = ["https://picsum.photos/seed/pixforme-pondasi/600/420", "https://picsum.photos/seed/pixforme-road/500/360", "https://picsum.photos/seed/pixforme-atap/500/360", "https://picsum.photos/seed/pixforme-beton/500/360", "https://picsum.photos/seed/pixforme-tunnel/500/360", "https://picsum.photos/seed/pixforme-grid-1/500/360", "https://picsum.photos/seed/pixforme-grid-2/500/360", "https://picsum.photos/seed/pixforme-grid-3/500/360", "https://picsum.photos/seed/pixforme-grid-4/500/360", "https://picsum.photos/seed/pixforme-full-page/700/460", "https://picsum.photos/seed/pixforme-landscape-a/500/360", "https://picsum.photos/seed/pixforme-landscape-b/500/360"];
+  return <section className="template-showcase" id="templateShowcase" ref={sectionRef} style={{ "--tpl-progress": 0 } as React.CSSProperties}><canvas className="template-pixel-canvas" ref={canvasRef} aria-hidden="true" /><div className="template-sticky"><div className="template-stage"><div className="template-copy"><span className="section-eyebrow">Template siap pakai</span><h2>LIMA GAYA LAYOUT,<br />SEMUA BISA DIKUSTOMISASI</h2><p>Pilih dari contoh laporan nyata, lalu sesuaikan warna aksen, spacing, border, dan header tanpa mengulang layout dari nol.</p></div><div className="tpl-row" aria-label="Pilihan template laporan"><article className="tpl-thumb featured" style={{ "--delay": 0 } as React.CSSProperties}><div className="tpl-preview stack"><div className="tpl-photo" style={{ backgroundImage: `url(${photos[0]})` }} /><div className="tpl-text"><span className="tpl-line strong" /><span className="tpl-line" /><span className="tpl-line accent" /></div></div><h3>Stack + Teks</h3><p>Foto besar di kiri, progres dan caption pekerjaan jelas di kanan.</p></article><article className="tpl-thumb" style={{ "--delay": 1 } as React.CSSProperties}><div className="tpl-preview equal">{photos.slice(1, 5).map((src) => <div className="tpl-photo" key={src} style={{ backgroundImage: `url(${src})` }} />)}</div><h3>Grid Equal</h3><p>Empat foto seimbang untuk laporan padat dan mudah dipindai.</p></article><article className="tpl-thumb" style={{ "--delay": 2 } as React.CSSProperties}><div className="tpl-preview border">{photos.slice(5, 9).map((src, index) => <div className="tpl-photo" key={src} style={{ backgroundImage: `url(${src})` }}><span className="tpl-num">{String(index + 1).padStart(2, "0")}</span></div>)}</div><h3>Grid Border</h3><p>Nomor visual dan border tegas untuk dokumentasi yang butuh referensi cepat.</p></article><article className="tpl-thumb" style={{ "--delay": 3 } as React.CSSProperties}><div className="tpl-preview full"><div className="tpl-photo" style={{ backgroundImage: `url(${photos[9]})` }} /></div><h3>Full Page</h3><p>Satu foto dominan per halaman untuk bukti visual utama.</p></article><article className="tpl-thumb" style={{ "--delay": 4 } as React.CSSProperties}><div className="tpl-preview split">{photos.slice(10, 12).map((src) => <div className="tpl-photo" key={src} style={{ backgroundImage: `url(${src})` }} />)}</div><h3>Landscape Split</h3><p>Dua foto lebar dalam halaman landscape untuk perbandingan progres.</p></article></div></div></div></section>;
 }
-
 function HomeToolsSection() {
   return <section className="section" style={{ background: "var(--accent-bg)" }}><div className="section-head"><span className="section-eyebrow">Di luar wizard laporan</span><h2>AI FIX TOOLS UNTUK<br />KEBUTUHAN LAPANGAN</h2><p>Tool terpisah untuk foto bukti lapangan real-time - tidak tercampur dengan foto laporan resmi Anda.</p></div><div className="tools-grid"><ToolCard featured icon="geo" title="AI Geotag Burn-in" text="Bakar koordinat, tanggal, dan jam langsung ke piksel foto untuk bukti lapangan real-time - dengan kontrol prompt presisi." cta="Buka Tool" /><ToolCard icon="watermark" title="Watermark Manager" text="Hapus, ganti, atau tambahkan watermark tanggal secara massal ke puluhan foto sekaligus." cta="Buka Tool" /><ToolCard icon="image" title="Galeri Foto" text="Semua foto Anda - asli maupun hasil AI Fix - tersimpan rapi dan bisa dipakai ulang di project manapun." cta="Buka Galeri" /></div></section>;
 }
@@ -357,14 +430,13 @@ export function ProductPage() {
 }
 
 export function ToolsPage() {
-  const tools = [["geo" as IconName, "#0A0A0A", "AI Geotag Burn-in", "Bakar koordinat, tanggal, dan jam langsung ke piksel foto - untuk bukti lapangan real-time saat GPS tidak presisi atau tidak ada jaringan. Pilih lokasi lewat Google Maps, kontrol prompt ketat di sisi client."], ["watermark" as IconName, "#FF6B1A", "Watermark Manager", "Hapus, ganti, atau tambahkan watermark tanggal secara massal ke puluhan foto sekaligus - cocok untuk foto dari berbagai sumber dengan format watermark berbeda-beda."], ["image" as IconName, "#2563EB", "Galeri Foto", "Semua foto Anda - asli maupun hasil AI Fix - tersimpan rapi per project. Pilih foto dari galeri kapan saja untuk dipakai di laporan manapun, tanpa upload ulang."]];
+  const tools = [["geo" as IconName, "#0A0A0A", "AI Geotag Burn-in", "Bakar koordinat, tanggal, dan jam langsung ke piksel foto - untuk bukti lapangan real-time saat GPS tidak presisi atau tidak ada jaringan. Pilih lokasi lewat peta satelit, kontrol prompt ketat di sisi client."], ["watermark" as IconName, "#FF6B1A", "Watermark Manager", "Hapus, ganti, atau tambahkan watermark tanggal secara massal ke puluhan foto sekaligus - cocok untuk foto dari berbagai sumber dengan format watermark berbeda-beda."], ["image" as IconName, "#2563EB", "Galeri Foto", "Semua foto Anda - asli maupun hasil AI Fix - tersimpan rapi per project. Pilih foto dari galeri kapan saja untuk dipakai di laporan manapun, tanpa upload ulang."]];
   return <><TopNav active="tools" /><section className="ph-hero"><h1>AI FIX TOOLS</h1><p>Tool terpisah dari wizard laporan - untuk bukti lapangan real-time dan pengelolaan foto massal. Hasilnya tersimpan di galeri Anda, terpisah dari foto laporan resmi.</p></section><div className="tool-route-grid">{tools.map(([icon, bg, title, text]) => <div className="tool-route-card coming" key={title}><div className="tool-route-icon" style={{ background: bg }}><PixelIcon name={icon as IconName} size={24} color="#fff" /></div><span className="badge-status badge-soon">SEGERA HADIR</span><h3>{title}</h3><p>{text}</p><button className="pixel-btn pixel-btn-ghost" disabled style={{ alignSelf: "flex-start" }}>Buka Tool</button></div>)}</div><Footer full={false} /></>;
 }
 
 export function LoginPage() {
-  return <div className="login-page"><div className="login-wrap"><div className="login-box"><Link href="/" className="logo-row"><PixelLogo size={26} /><span className="brand">PIXFORME</span></Link><div className="card card-accent"><h1>Masuk ke akun Anda</h1><p className="sub">Project dan laporan Anda menunggu.</p><div><label className="field-label">Email</label><input className="field-input" type="email" placeholder="nama@perusahaan.com" /></div><div><label className="field-label">Kata Sandi</label><input className="field-input" type="password" placeholder="********" /></div><button className="pixel-btn pixel-btn-accent" style={{ justifyContent: "center", width: "100%", padding: 12 }}>Masuk</button><div style={{ textAlign: "center", fontSize: 12, color: "var(--text-muted)" }}>Belum punya akun? <Link href={route("wizard-step1.html")} style={{ color: "var(--orange)", fontWeight: 700 }}>Mulai gratis</Link></div></div></div></div></div>;
+  return <div className="login-page"><div className="login-wrap"><div className="login-box"><Link href="/" className="logo-row"><PixelLogo size={26} /><span className="brand">PIXFORME</span></Link><div className="card card-accent"><h1>Masuk ke akun Anda</h1><p className="sub">Login untuk membuat dokumentasi gratis dengan free tier.</p><div><label className="field-label">Email</label><input className="field-input" type="email" placeholder="nama@perusahaan.com" /></div><div><label className="field-label">Kata Sandi</label><input className="field-input" type="password" placeholder="password" /></div><Link href={route("workspace.html")} className="pixel-btn pixel-btn-accent" style={{ justifyContent: "center", width: "100%", padding: 12 }}>Masuk</Link><div style={{ textAlign: "center", fontSize: 12, color: "var(--text-muted)" }}>Belum punya akun? <Link href={route("workspace.html")} style={{ color: "var(--orange)", fontWeight: 700 }}>Mulai gratis</Link></div></div></div></div></div>;
 }
-
 export function PricingPage() {
   const [status, setStatus] = useState<{ message: string; type?: "success" | "error" } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -415,45 +487,46 @@ function PriceCard({ title, amount, period, features, button, featured, disabled
 
 export function WorkspacePage() {
   const { state, save } = useWizardState();
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newProjectName, setNewProjectName] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
   const activeId = state.workspace.activeProjectId || "project_1";
-  function persistProject(next: WizardState, projectId = activeId) {
-    const project = next.workspace.projects.find((row) => row.id === projectId) || next.workspace.projects[0];
-    project.name = next.project.name || project.id;
-    project.instansi = next.project.client || "-";
-    project.location = next.project.location || "-";
-    project.items = [...next.project.items];
-    project.rabText = next.project.rabText;
-    project.status = "Aktif";
-    save({ ...next });
-  }
-  function updateProject(changes: Partial<Project>) {
-    const next = cloneState(state);
-    next.project = { ...next.project, ...changes };
-    next.project.pekerjaan = next.project.name;
-    next.project.instansi = next.project.client;
-    next.project.lokasi = next.project.location;
-    if (changes.rabText !== undefined) next.project.items = parseRabItems(changes.rabText);
-    persistProject(next);
-  }
+
   function activateProject(id: string) {
     const next = cloneState(state);
+    const project = next.workspace.projects.find((row) => row.id === id);
+    if (!project) return;
     next.workspace.activeProjectId = id;
     next.workspace.projects = next.workspace.projects.map((row) => ({ ...row, status: row.id === id ? "Aktif" : row.status === "Aktif" ? "Draft" : row.status }));
-    const project = next.workspace.projects.find((row) => row.id === id);
-    if (project) next.project = { ...next.project, name: project.name || "", pekerjaan: project.name || "", client: project.instansi || "", instansi: project.instansi || "", location: project.location || "", lokasi: project.location || "", items: project.items?.length ? [...project.items] : [], rabText: project.rabText || project.items?.join("\n") || "" };
+    next.project = { ...next.project, name: project.name || "", pekerjaan: project.name || "", client: project.instansi || "", instansi: project.instansi || "", location: project.location || "", lokasi: project.location || "", items: project.items?.length ? [...project.items] : [], rabText: project.rabText || project.items?.join("\n") || "" };
     save(next);
+    window.location.assign(route("wizard-step1.html"));
   }
-  function addProject() {
-    const next = cloneState(state);
-    const id = `project_${next.workspace.projects.length + 1}`;
-    next.workspace.projects.unshift({ id, name: `Project ${next.workspace.projects.length + 1}`, instansi: "Belum diatur", location: "-", status: "Draft", items: [], rabText: "" });
-    next.workspace.activeProjectId = id;
-    next.project = { ...next.project, name: `Project ${next.workspace.projects.length}`, pekerjaan: `Project ${next.workspace.projects.length}`, client: "", instansi: "", location: "", lokasi: "", items: [], rabText: "" };
-    save(next);
-  }
-  return <div className="wizard-shell"><WizardChrome step={0} actions={<Link className="pixel-btn pixel-btn-accent" href={route("wizard-step1.html")}>Mulai Wizard</Link>} /><main className="wizard-page container"><div className="wizard-title-row"><div><div className="wizard-kicker">WORKSPACE</div><h1 className="wizard-title">USER WORKSPACE</h1><p className="wizard-subtitle">Workspace menyimpan banyak project. Setiap project membawa atribut instansi, pekerjaan, lokasi kegiatan, dan item pekerjaan untuk dipakai dalam wizard laporan.</p></div><StateChips items={[`Workspace: ${state.workspace.name}`, `Project: ${state.workspace.projects.length}`, `Item aktif: ${getProjectItems(state).length}`]} /></div><div className="workspace-layout"><aside className="info-panel"><div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 12 }}><h3 style={{ margin: 0 }}>Project</h3><button className="pixel-btn pixel-btn-ghost" onClick={addProject} style={{ padding: "7px 10px", fontSize: 10, boxShadow: "none" }}>Tambah</button></div><div className="project-list-card">{state.workspace.projects.map((project) => <button className={`project-list-item ${project.id === activeId ? "active" : ""}`} key={project.id} onClick={() => activateProject(project.id)} type="button"><div style={{ fontSize: 11, fontWeight: 900, lineHeight: 1.35 }}>{project.name || project.id}</div><div style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 5, lineHeight: 1.35 }}>{project.instansi || "-"}</div><div className="mono" style={{ fontSize: 9, color: "var(--orange)", marginTop: 7 }}>{project.id} / {project.status || "Draft"}</div></button>)}</div></aside><section className="card card-accent"><div className="form-grid"><div><label className="field-label">Nama Instansi</label><input className="field-input" value={state.project.client} onChange={(e) => updateProject({ client: e.target.value })} /></div><div><label className="field-label">Lokasi Kegiatan</label><input className="field-input" value={state.project.location} onChange={(e) => updateProject({ location: e.target.value })} /></div><div className="span-2"><label className="field-label">Nama Pekerjaan</label><input className="field-input" value={state.project.name} onChange={(e) => updateProject({ name: e.target.value })} /></div><div className="span-2"><label className="field-label">Paste Item Pekerjaan dari RAB</label><textarea className="field-textarea mono" rows={9} value={state.project.rabText} onChange={(e) => updateProject({ rabText: e.target.value })} /><ItemPreview items={getProjectItems(state)} /></div></div><div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 18 }}><Link className="pixel-btn pixel-btn-accent" href={route("wizard-step1.html")}>Buka Project Setting</Link><Link className="pixel-btn pixel-btn-ghost" href={route("wizard-step3.html")}>Cek Dropdown Step 3</Link></div></section></div></main></div>;
-}
 
+  function openCreate() {
+    setNewProjectName("");
+    setCreateOpen(true);
+    window.setTimeout(() => inputRef.current?.focus(), 40);
+  }
+
+  function createProject() {
+    const name = newProjectName.trim();
+    if (!name) {
+      inputRef.current?.focus();
+      return;
+    }
+    const next = cloneState(state);
+    const id = `project_${Date.now().toString(36)}`;
+    next.workspace.projects = next.workspace.projects.map((row) => ({ ...row, status: row.status === "Aktif" ? "Draft" : row.status }));
+    next.workspace.projects.unshift({ id, name, instansi: "Belum diatur", location: "-", status: "Aktif", items: [], rabText: "" });
+    next.workspace.activeProjectId = id;
+    next.project = { ...next.project, name, pekerjaan: name, client: "", instansi: "", location: "", lokasi: "", items: [], rabText: "" };
+    save(next);
+    window.location.assign(route("wizard-step1.html"));
+  }
+
+  return <div className="wizard-shell"><WizardChrome step={0} actions={<><Link className="pixel-btn pixel-btn-ghost" href="/">Home</Link><button className="pixel-btn pixel-btn-accent" type="button" onClick={openCreate}>Create Project</button></>} /><main className="wizard-page container workspace-page-only"><div className="wizard-title-row"><div><div className="wizard-kicker">WORKSPACE</div><h1 className="wizard-title">PROJECT ANDA</h1><p className="wizard-subtitle">Pilih project yang sudah ada, atau buat project baru untuk mulai dokumentasi gratis pada free tier.</p></div><StateChips items={["Free Tier", `Project: ${state.workspace.projects.length}`]} /></div><section className="workspace-card-grid">{state.workspace.projects.map((project) => <button className={`workspace-project-card ${project.id === activeId ? "active" : ""}`} key={project.id} onClick={() => activateProject(project.id)} type="button"><span className="project-card-top"><span className="mono project-card-id">{project.id}</span><span className="project-card-status">{project.status || "Draft"}</span></span><span className="project-card-title">{project.name || project.id}</span><span className="project-card-meta">{project.instansi || "Belum diatur"}</span><span className="project-card-meta">{project.location || "-"}</span><span className="project-card-cta">Buka Wizard</span></button>)}<button className="workspace-project-card create-card" type="button" onClick={openCreate}><span className="create-card-plus">+</span><span className="project-card-title">Create Project</span><span className="project-card-meta">Mulai dokumentasi gratis</span></button></section></main><div className={`modal-overlay ${createOpen ? "show" : ""}`} onClick={(event) => { if (event.target === event.currentTarget) setCreateOpen(false); }}><div className="modal-box create-project-box"><div className="modal-head"><div><div className="modal-title">Create Project</div><div className="modal-sub">Isi nama project. Detail instansi, pekerjaan, lokasi, dan item RAB diatur pada wizard step 1.</div></div><button className="modal-close" type="button" onClick={() => setCreateOpen(false)}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><label className="field-label">Nama Project</label><input ref={inputRef} className="field-input" value={newProjectName} placeholder="Contoh: Pembangunan Gedung Kantor Dinas A" onChange={(event) => setNewProjectName(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") createProject(); }} /><div className="dialog-actions"><button className="pixel-btn pixel-btn-ghost" type="button" onClick={() => setCreateOpen(false)}>Batal</button><button className="pixel-btn pixel-btn-accent" type="button" onClick={createProject}>Create & Masuk Wizard</button></div></div></div></div>;
+}
 function ItemPreview({ items, max = Infinity }: { items: string[]; max?: number }) {
   const visible = items.slice(0, max);
   return <div className="project-items-preview"><div className="mini-label">{items.length} item tersimpan untuk dropdown Step 3</div><div className="item-chip-list">{visible.map((item) => <span className="item-chip" key={item}>{item}</span>)}{items.length > visible.length ? <span className="item-chip muted">+{items.length - visible.length} lainnya</span> : null}</div></div>;
@@ -480,7 +553,7 @@ export function WizardStep1Page() {
       document.getElementById("projectName")?.focus();
       return;
     }
-    window.location.href = route("wizard-step2.html");
+    window.location.assign(route("wizard-step2.html"));
   }
   return <div className="wizard-shell"><WizardChrome step={1} actions={<><Link className="pixel-btn pixel-btn-ghost" href={route("workspace.html")}>Workspace</Link><button className="pixel-btn pixel-btn-ghost" onClick={() => { reset(); window.location.reload(); }}>Reset</button><button className="pixel-btn pixel-btn-accent" onClick={nextStep}>Lanjut</button></>} /><main className="wizard-page container-narrow"><div className="wizard-title-row"><div><div className="wizard-kicker">STEP 01</div><h1 className="wizard-title">PROJECT SETTING</h1><p className="wizard-subtitle">Satu workspace dapat menyimpan banyak project. Data instansi, pekerjaan, lokasi, dan item pekerjaan disimpan di level project agar bisa dipakai ulang pada laporan berikutnya.</p></div></div><div className="wizard-grid-2"><section className="card card-accent"><div className="form-grid"><div className="span-2"><label className="field-label">Nama Pekerjaan / Project <span className="req">*</span></label><input id="projectName" className={`field-input ${required ? "required-empty" : ""}`} value={state.project.name} placeholder="mis. Pembangunan Gedung Kantor Dinas A" onChange={(e) => updateProject({ name: e.target.value })} /></div><div><label className="field-label">Nama Instansi</label><input className="field-input" value={state.project.client} placeholder="mis. Dinas Pekerjaan Umum Kota X" onChange={(e) => updateProject({ client: e.target.value })} /></div><div><label className="field-label">Lokasi Kegiatan</label><input className="field-input" value={state.project.location} placeholder="mis. Jl. Sudirman No. 10" onChange={(e) => updateProject({ location: e.target.value })} /></div><div className="span-2"><label className="field-label">Paste Item Pekerjaan dari RAB</label><textarea className="field-textarea mono" rows={7} value={state.project.rabText} placeholder={"Paste baris RAB di sini. Contoh:\n1. Pekerjaan Persiapan\n2. Galian dan pembesian pondasi\n3. Pengecoran kolom lantai 1"} onChange={(e) => updateProject({ rabText: e.target.value })} /><ItemPreview items={getProjectItems(state)} max={12} /></div><div className="span-2"><label className="field-label">Logo yang ditampilkan</label><div className="toggle-row"><button className={`toggle-btn ${state.project.logoInstansi ? "active" : ""}`} type="button" onClick={() => updateProject({ logoInstansi: !state.project.logoInstansi })}>Logo Instansi</button><button className={`toggle-btn ${state.project.logoPerusahaan ? "active" : ""}`} type="button" onClick={() => updateProject({ logoPerusahaan: !state.project.logoPerusahaan })}>Logo Perusahaan</button></div></div><div className="span-2"><label className="field-label">Teks Header</label><textarea className="field-textarea" rows={4} value={state.project.headerText} placeholder={"DINAS PEKERJAAN UMUM\nLaporan Dokumentasi Proyek"} onChange={(e) => updateProject({ headerText: e.target.value })} /></div><div className="span-2"><label className="field-label">Tampilkan Header</label><div className="toggle-row"><button className={`toggle-btn ${state.project.headerMode === "all" ? "active" : ""}`} type="button" onClick={() => updateProject({ headerMode: "all" })}>Semua Halaman</button><button className={`toggle-btn ${state.project.headerMode === "first" ? "active" : ""}`} type="button" onClick={() => updateProject({ headerMode: "first" })}>Halaman Pertama</button></div></div></div></section><aside className="info-panel"><h3>Arah UX</h3><ul><li>Workspace menjadi rumah untuk project_1, project_2, dan seterusnya.</li><li>Project Setting menyimpan atribut utama project.</li><li>Item RAB otomatis menjadi dropdown di Step 3.</li></ul><ProjectSummary state={state} /></aside></div></main></div>;
 }
@@ -495,7 +568,7 @@ export function WizardStep2Page() {
       document.getElementById("reportName")?.focus();
       return;
     }
-    window.location.href = route("wizard-step3.html");
+    window.location.assign(route("wizard-step3.html"));
   }
   return <div className="wizard-shell"><WizardChrome step={2} actions={<><Link className="pixel-btn pixel-btn-ghost" href={route("wizard-step1.html")}>Kembali</Link><button className="pixel-btn pixel-btn-accent" onClick={nextStep}>Lanjut</button></>} /><main className="wizard-page container-narrow"><div className="wizard-title-row"><div><div className="wizard-kicker">STEP 02</div><h1 className="wizard-title">DETAIL LAPORAN</h1><p className="wizard-subtitle">Step ini sengaja ringkas. Layout, jumlah foto per halaman, dan gaya dokumen diputuskan di Preview agar tidak ada pilihan yang dobel.</p></div></div><div className="wizard-grid-2"><section className="card card-accent"><div><label className="field-label">Nama Laporan <span className="req">*</span></label><input id="reportName" className={`field-input ${required ? "required-empty" : ""}`} value={state.report.name} placeholder="mis. Laporan Mingguan Ke-3" onChange={(e) => updateReport({ name: e.target.value })} /></div><div><label className="field-label">Periode / Tanggal</label><input className="field-input" value={state.report.period} placeholder="mis. 1 - 7 Juni 2026" onChange={(e) => updateReport({ period: e.target.value })} /></div><div className="prototype-banner">Template belum dipilih di sini. User akan mencoba template di Step 4 dan melihat pagination langsung dari foto yang sudah dipilih.</div></section><aside className="info-panel"><h3>Data Saat Ini</h3><p>{state.project.name || "Project belum diisi"} - {state.project.location || "Lokasi belum diisi"}</p><ProjectSummary state={state} /></aside></div></main></div>;
 }
@@ -504,16 +577,26 @@ export function WizardStep3Page() {
   const { state, save } = useWizardState();
   const [fitId, setFitId] = useState<string | null>(null);
   const [geoId, setGeoId] = useState<string | null>(null);
+  const [pickerId, setPickerId] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
   const [cropY, setCropY] = useState(50);
-  const [geoPos, setGeoPos] = useState({ lat: -2.5916, lng: 140.669 });
   const [geoForm, setGeoForm] = useState<Geotag>({ address: "", lat: -2.5916, lng: 140.669, date: "2026-06-23", time: "09:00" });
   const fileRef = useRef<HTMLInputElement>(null);
-  const items = getReportItems(state);
-  const selected = new Set(state.reportPhotos.map((row) => row.photoId));
-  function updateReportPhoto(id: string, changes: Partial<ReportPhoto>) { save({ ...state, reportPhotos: state.reportPhotos.map((row) => row.id === id ? { ...row, ...changes } : row) }); }
-  function addToReport(photoId: string) {
-    if (selected.has(photoId)) return;
-    save({ ...state, reportPhotos: [...state.reportPhotos, { id: uid("rp"), photoId, nama: "", item: "", progress: "", fitMode: "crop", cropY: 50, aiExtended: false, geotag: null }] });
+  const rows = state.reportPhotos.map((row, index) => ({ ...row, index, photo: findPhoto(state, row.photoId) }));
+  const selectedMap = new Map(state.reportPhotos.filter((row) => row.photoId).map((row) => [row.photoId as string, row.id]));
+  const emptyRows = rows.filter((row) => !row.photo);
+
+  function saveRows(reportPhotos: ReportPhoto[]) { save({ ...state, reportPhotos }); }
+  function updateReportPhoto(id: string, changes: Partial<ReportPhoto>) { saveRows(state.reportPhotos.map((row) => row.id === id ? { ...row, ...changes } : row)); }
+  function createEmptySlot() {
+    const id = uid("rp");
+    saveRows([...state.reportPhotos, { id, photoId: null, nama: "", item: "", progress: "", fitMode: "crop", cropY: 50, aiExtended: false, geotag: null }]);
+    window.setTimeout(() => {
+      const el = document.getElementById(`photo-card-${id}`);
+      el?.focus({ preventScroll: false });
+      el?.scrollIntoView({ block: "center", inline: "nearest" });
+      window.location.hash = `photo-card-${id}`;
+    }, 80);
   }
   function movePhoto(id: string, direction: number) {
     const next = [...state.reportPhotos];
@@ -521,20 +604,32 @@ export function WizardStep3Page() {
     const target = idx + direction;
     if (idx < 0 || target < 0 || target >= next.length) return;
     [next[idx], next[target]] = [next[target], next[idx]];
-    save({ ...state, reportPhotos: next });
+    saveRows(next);
   }
-  function removePhoto(id: string) { save({ ...state, reportPhotos: state.reportPhotos.filter((row) => row.id !== id) }); }
+  function removePhoto(id: string) { saveRows(state.reportPhotos.filter((row) => row.id !== id)); }
   function openFit(id: string) {
     const item = state.reportPhotos.find((row) => row.id === id);
+    if (!item?.photoId) return;
     setFitId(id);
-    setCropY(item?.cropY ?? 50);
+    setCropY(item.cropY ?? 50);
   }
   function openGeo(id: string) {
     const item = state.reportPhotos.find((row) => row.id === id);
-    const geo = item?.geotag || { address: "", lat: -2.5916, lng: 140.669, date: new Date().toISOString().slice(0, 10), time: "09:00" };
+    if (!item?.photoId) return;
+    const geo = item.geotag || { address: "", lat: -2.5916, lng: 140.669, date: new Date().toISOString().slice(0, 10), time: "09:00" };
     setGeoId(id);
     setGeoForm(geo);
-    setGeoPos({ lat: geo.lat, lng: geo.lng });
+  }
+  function openPicker(id: string) { setPickerId(id); }
+  function pickPhoto(photoId: string) {
+    if (!pickerId) return;
+    const usedBy = selectedMap.get(photoId);
+    if (usedBy && usedBy !== pickerId) return;
+    saveRows(state.reportPhotos.map((row) => {
+      if (row.id !== pickerId) return row;
+      if (usedBy === pickerId) return { ...row, photoId: null, aiExtended: false, geotag: null };
+      return { ...row, photoId, fitMode: row.fitMode || "crop", cropY: typeof row.cropY === "number" ? row.cropY : 50 };
+    }));
   }
   async function uploadFiles(files: FileList | null) {
     if (!files) return;
@@ -559,16 +654,238 @@ export function WizardStep3Page() {
   function applyBulk() {
     const item = (document.getElementById("bulkItem") as HTMLSelectElement | null)?.value || "";
     const progress = (document.getElementById("bulkProgress") as HTMLInputElement | null)?.value || "";
-    save({ ...state, reportPhotos: state.reportPhotos.map((row) => ({ ...row, ...(item ? { item } : {}), ...(progress !== "" ? { progress } : {}) })) });
+    saveRows(state.reportPhotos.map((row) => ({ ...row, ...(item ? { item } : {}), ...(progress !== "" ? { progress } : {}) })));
   }
-  const fitItem = fitId ? items.find((row) => row.id === fitId) : null;
-  return <div className="wizard-shell"><WizardChrome step={3} actions={<><Link className="pixel-btn pixel-btn-ghost" href={route("wizard-step2.html")}>Kembali</Link><Link className="pixel-btn pixel-btn-accent" href={route("wizard-step4.html")}>Preview</Link></>} /><main className="wizard-page container"><div className="wizard-title-row"><div><div className="wizard-kicker">STEP 03</div><h1 className="wizard-title">FOTO & CAPTION</h1><p className="wizard-subtitle">Foto masuk dari galeri dulu, lalu dipilih ke laporan. Caption, urutan, fit, AI extend, dan geotag tersimpan per relasi foto-laporan.</p></div><StateChips items={[`Project: ${state.project.name}`, `Foto laporan: ${state.reportPhotos.length}`]} /></div><div className="gallery-layout"><aside className="gallery-panel info-panel"><h3>Galeri Foto</h3><p>Upload baru masuk galeri. Foto bukti lapangan tidak masuk laporan kecuali dipilih eksplisit.</p><div style={{ margin: "12px 0", display: "grid", gap: 8 }}><button className="pixel-btn pixel-btn-accent" style={{ justifyContent: "center" }} onClick={() => fileRef.current?.click()}>Upload Foto</button><input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={(e) => void uploadFiles(e.target.files)} /></div><div className="gallery-list">{state.gallery.map((photo) => <div className="gallery-item" key={photo.id}><div className="gallery-thumb"><img src={photo.url} alt="" /></div><div className="gallery-meta"><div className="gallery-name">{photo.filename}</div><div className="gallery-badge">{photo.sourceType === "bukti_lapangan" ? "BUKTI LAPANGAN" : "LAPORAN"} / {arLabel(photo)}</div><button className={`pixel-btn ${selected.has(photo.id) ? "pixel-btn-success" : "pixel-btn-ghost"}`} style={{ padding: "6px 9px", fontSize: 10, justifyContent: "center", boxShadow: "none" }} onClick={() => addToReport(photo.id)}>{selected.has(photo.id) ? "Sudah dipilih" : "Tambah ke laporan"}</button></div></div>)}</div></aside><section><div className="photo-workbar"><div><div className="pixel-heading" style={{ fontSize: 13 }}>FOTO DALAM LAPORAN</div><div className="text-muted" style={{ fontSize: 12, marginTop: 6 }}>{items.length} foto dipilih dari galeri</div></div><div className="bulk-box"><div><label className="mini-label">BULK ITEM</label><select className="field-input" id="bulkItem">{itemOptions("", true)}</select></div><div><label className="mini-label">BULK PROGRESS</label><input className="field-input mono" id="bulkProgress" type="number" min="0" max="100" placeholder="75" /></div><button className="pixel-btn pixel-btn-ghost" onClick={applyBulk}>Terapkan</button></div></div><div className="report-grid">{items.length ? items.map((item) => <PhotoCard key={item.id} item={item} itemOptions={itemOptions} update={updateReportPhoto} move={movePhoto} remove={removePhoto} openFit={openFit} openGeo={openGeo} />) : <div className="empty-state">Belum ada foto dalam laporan. Pilih foto dari galeri di sebelah kiri.</div>}</div></section></div></main><div className={`modal-overlay ${fitId ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setFitId(null); }}><div className="modal-box"><div className="modal-head"><div><div className="modal-title">Posisi Foto</div><div className="modal-sub">Pilih cara foto masuk ke frame 4:3.</div></div><button className="modal-close" onClick={() => setFitId(null)}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><div className="crop-stage">{fitItem ? <img src={fitItem.photo.url} style={imageFitStyle({ ...fitItem, cropY })} alt="Preview" /> : null}</div><div className="fit-options">{(["crop", "contain", "ai"] as const).map((mode) => <button key={mode} className={(mode === "ai" && fitItem?.aiExtended) || mode === fitItem?.fitMode ? "active" : ""} onClick={() => { if (!fitId) return; updateReportPhoto(fitId, mode === "ai" ? { fitMode: "crop", cropY, aiExtended: true } : { fitMode: mode, cropY, aiExtended: false }); setFitId(null); }}>{mode === "crop" ? "Crop 4:3" : mode === "contain" ? "Contain" : "AI Extend"}</button>)}</div>{fitItem?.fitMode !== "contain" ? <div className="style-row" style={{ marginTop: 12, marginBottom: 0 }}><div className="style-label">POSISI CROP VERTIKAL: <span className="mono">{cropY}%</span></div><input type="range" min="0" max="100" value={cropY} onChange={(e) => setCropY(Number(e.target.value))} /></div> : null}<div className="prototype-banner" style={{ marginTop: 12 }}>AI Extend di prototype hanya menandai state. Di production nanti memanggil Image Edit API setelah user konfirmasi kredit.</div></div></div><div className={`modal-overlay ${geoId ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setGeoId(null); }}><div className="modal-box"><div className="modal-head"><div><div className="modal-title">Geotag Overlay</div><div className="modal-sub">Metadata ini non-destructive dan ikut tampil di preview/export.</div></div><button className="modal-close" onClick={() => setGeoId(null)}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><label className="field-label">Alamat / Lokasi</label><input className="field-input" value={geoForm.address} placeholder="mis. Kota Jayapura" onChange={(e) => setGeoForm({ ...geoForm, address: e.target.value })} /><div className="map-fake" onClick={(event) => { const rect = event.currentTarget.getBoundingClientRect(); const xFrac = (event.clientX - rect.left) / rect.width; const yFrac = (event.clientY - rect.top) / rect.height; const next = { lat: geoPos.lat + (0.5 - yFrac) * 0.01, lng: geoPos.lng + (xFrac - 0.5) * 0.01 }; setGeoPos(next); setGeoForm({ ...geoForm, lat: next.lat, lng: next.lng }); }}><svg width="100%" height="100%" style={{ position: "absolute", inset: 0 }}><path d="M0,80 Q150,40 460,94" stroke="#fff" strokeWidth="6" fill="none" opacity="0.7" /><rect x="110" y="96" width="48" height="30" fill="#FFC299" opacity="0.65" rx="2" /><rect x="250" y="52" width="64" height="42" fill="#FFA41B" opacity="0.35" rx="2" /></svg><div className="map-pin-center"><PixelIcon name="mapPin" size={30} color="#E8331C" /></div><div className="map-coords">{geoForm.lat.toFixed(5)}, {geoForm.lng.toFixed(5)}</div></div><div className="form-grid" style={{ marginTop: 12 }}><div><label className="field-label">Latitude</label><input className="field-input mono" value={geoForm.lat.toFixed(5)} onChange={(e) => setGeoForm({ ...geoForm, lat: Number(e.target.value) })} /></div><div><label className="field-label">Longitude</label><input className="field-input mono" value={geoForm.lng.toFixed(5)} onChange={(e) => setGeoForm({ ...geoForm, lng: Number(e.target.value) })} /></div><div><label className="field-label">Tanggal</label><input className="field-input mono" type="date" value={geoForm.date} onChange={(e) => setGeoForm({ ...geoForm, date: e.target.value })} /></div><div><label className="field-label">Jam</label><input className="field-input mono" type="time" value={geoForm.time} onChange={(e) => setGeoForm({ ...geoForm, time: e.target.value })} /></div></div><div style={{ display: "flex", gap: 8, marginTop: 16 }}><button className="pixel-btn pixel-btn-ghost" style={{ flex: 1, justifyContent: "center" }} onClick={() => { if (geoId) updateReportPhoto(geoId, { geotag: null }); setGeoId(null); }}>Hapus</button><button className="pixel-btn pixel-btn-accent" style={{ flex: 2, justifyContent: "center" }} onClick={() => { if (geoId) updateReportPhoto(geoId, { geotag: { ...geoForm, address: geoForm.address || "Lokasi dipilih" } }); setGeoId(null); }}>Simpan Geotag</button></div></div></div></div>;
+  function goPreview() {
+    if (!state.reportPhotos.length) {
+      setWarning("Belum ada card foto. Tambahkan minimal satu foto laporan.");
+      return;
+    }
+    if (emptyRows.length) {
+      setWarning(`Masih ada ${emptyRows.length} card kosong. Pilih foto pada semua placeholder sebelum preview.`);
+      return;
+    }
+    window.location.assign(route("wizard-step4.html"));
+  }
+  const fitItem = fitId ? rows.find((row) => row.id === fitId && row.photo) : null;
+  return <div className="wizard-shell"><WizardChrome step={3} actions={<><Link className="pixel-btn pixel-btn-ghost" href={route("wizard-step2.html")}>Kembali</Link><button className="pixel-btn pixel-btn-accent" type="button" onClick={goPreview}>Preview</button></>} /><main className="wizard-page container"><div className="wizard-title-row"><div><div className="wizard-kicker">STEP 03</div><h1 className="wizard-title">FOTO & CAPTION</h1><p className="wizard-subtitle">Tambah card foto, pilih gambar dari galeri, lalu isi caption, urutan, fit, AI extend, dan geotag per card.</p></div><StateChips items={[`Project: ${state.project.name}`, `Slot foto: ${state.reportPhotos.length}`, `Kosong: ${emptyRows.length}`]} /></div><div className="gallery-layout report-only-layout"><section><div className="photo-workbar"><div><div className="pixel-heading" style={{ fontSize: 13 }}>FOTO DALAM LAPORAN</div><div className="text-muted" style={{ fontSize: 12, marginTop: 6 }}>{state.reportPhotos.length} card laporan / {emptyRows.length} placeholder kosong</div></div><div className="bulk-box"><div><label className="mini-label">BULK ITEM</label><select className="field-input" id="bulkItem">{itemOptions("", true)}</select></div><div><label className="mini-label">BULK PROGRESS</label><input className="field-input mono" id="bulkProgress" type="number" min="0" max="100" placeholder="75" /></div><button className="pixel-btn pixel-btn-ghost" type="button" onClick={applyBulk}>Terapkan</button></div></div><div className="report-grid">{rows.length ? rows.map((item) => <PhotoCard key={item.id} item={item} itemOptions={itemOptions} update={updateReportPhoto} move={movePhoto} remove={removePhoto} openFit={openFit} openGeo={openGeo} openPicker={openPicker} />) : <div className="empty-state">Belum ada card foto. Klik Add Foto untuk membuat placeholder.</div>}</div></section></div></main><input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={(e) => void uploadFiles(e.target.files)} /><button className="floating-add-photo pixel-btn pixel-btn-accent" type="button" aria-label="Tambah frame foto" onClick={createEmptySlot}><PixelIcon name="camera" size={15} color="#fff" /><span>Add Foto</span></button><PhotoPickerModal state={state} pickerId={pickerId} selectedMap={selectedMap} pickPhoto={pickPhoto} upload={() => fileRef.current?.click()} close={() => setPickerId(null)} />{warning ? <div className="modal-overlay show" onClick={(e) => { if (e.target === e.currentTarget) setWarning(null); }}><div className="modal-box warning-box"><div className="modal-head"><div><div className="modal-title">Foto belum lengkap</div><div className="modal-sub">Lengkapi semua card foto sebelum masuk ke preview.</div></div><button className="modal-close" type="button" onClick={() => setWarning(null)}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><div className="prototype-banner">{warning}</div><button className="pixel-btn pixel-btn-accent" type="button" style={{ marginTop: 14, width: "100%", justifyContent: "center" }} onClick={() => setWarning(null)}>Lengkapi Foto</button></div></div> : null}<div className={`modal-overlay ${fitId ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setFitId(null); }}><div className="modal-box"><div className="modal-head"><div><div className="modal-title">Posisi Foto</div><div className="modal-sub">Pilih cara foto masuk ke frame 4:3.</div></div><button className="modal-close" type="button" onClick={() => setFitId(null)}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><div className="crop-stage">{fitItem?.photo ? <img src={fitItem.photo.url} style={imageFitStyle({ ...fitItem, photo: fitItem.photo, cropY })} alt="Preview" /> : null}</div><div className="fit-options">{(["crop", "contain", "ai"] as const).map((mode) => <button key={mode} className={(mode === "ai" && fitItem?.aiExtended) || mode === fitItem?.fitMode ? "active" : ""} type="button" onClick={() => { if (!fitId) return; updateReportPhoto(fitId, mode === "ai" ? { fitMode: "crop", cropY, aiExtended: true } : { fitMode: mode, cropY, aiExtended: false }); setFitId(null); }}>{mode === "crop" ? "Crop 4:3" : mode === "contain" ? "Contain" : "AI Extend"}</button>)}</div>{fitItem?.fitMode !== "contain" ? <div className="style-row" style={{ marginTop: 12, marginBottom: 0 }}><div className="style-label">POSISI CROP VERTIKAL: <span className="mono">{cropY}%</span></div><input type="range" min="0" max="100" value={cropY} onChange={(e) => setCropY(Number(e.target.value))} /></div> : null}<div className="prototype-banner" style={{ marginTop: 12 }}>AI Extend di prototype hanya menandai state. Di production nanti memanggil Image Edit API setelah user konfirmasi kredit.</div></div></div><div className={`modal-overlay ${geoId ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setGeoId(null); }}><div className="modal-box geo-modal-box"><div className="modal-head"><div><div className="modal-title">Geotag Overlay</div><div className="modal-sub">Pilih titik lewat peta satelit Esri dan cari lokasi dengan Geoapify.</div></div><button className="modal-close" type="button" onClick={() => setGeoId(null)}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><GeotagMapPicker key={geoId || "geo"} value={geoForm} onChange={setGeoForm} /><div className="form-grid" style={{ marginTop: 12 }}><div><label className="field-label">Latitude</label><input className="field-input mono" value={geoForm.lat.toFixed(6)} onChange={(e) => { const lat = Number(e.target.value); if (Number.isFinite(lat)) setGeoForm({ ...geoForm, lat }); }} /></div><div><label className="field-label">Longitude</label><input className="field-input mono" value={geoForm.lng.toFixed(6)} onChange={(e) => { const lng = Number(e.target.value); if (Number.isFinite(lng)) setGeoForm({ ...geoForm, lng }); }} /></div><div><label className="field-label">Tanggal</label><input className="field-input mono" type="date" value={geoForm.date} onChange={(e) => setGeoForm({ ...geoForm, date: e.target.value })} /></div><div><label className="field-label">Jam</label><input className="field-input mono" type="time" value={geoForm.time} onChange={(e) => setGeoForm({ ...geoForm, time: e.target.value })} /></div></div><div style={{ display: "flex", gap: 8, marginTop: 16 }}><button className="pixel-btn pixel-btn-ghost" type="button" style={{ flex: 1, justifyContent: "center" }} onClick={() => { if (geoId) updateReportPhoto(geoId, { geotag: null }); setGeoId(null); }}>Hapus</button><button className="pixel-btn pixel-btn-accent" type="button" style={{ flex: 2, justifyContent: "center" }} onClick={() => { if (geoId) updateReportPhoto(geoId, { geotag: { ...geoForm, address: geoForm.address || "Lokasi dipilih" } }); setGeoId(null); }}>Simpan Geotag</button></div></div></div></div>;
+}
+type TileConfig = {
+  provider: string;
+  tileUrl: string;
+  attribution: string;
+  maxZoom: number;
+};
+
+type MapSearchResult = {
+  address: string;
+  location: { lat: number; lng: number };
+};
+
+type GeoTile = {
+  key: string;
+  x: number;
+  y: number;
+  left: number;
+  top: number;
+};
+
+const GEO_TILE_SIZE = 256;
+const GEO_MIN_ZOOM = 3;
+const GEO_DEFAULT_ZOOM = 16;
+
+type GeoDragState = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  startTileX: number;
+  startTileY: number;
+  moved: boolean;
+};
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
 }
 
-function PhotoCard({ item, itemOptions, update, move, remove, openFit, openGeo }: { item: ReportPhoto & { index: number; photo: GalleryPhoto }; itemOptions: (selectedItem?: string, includeEmpty?: boolean) => React.ReactNode; update: (id: string, changes: Partial<ReportPhoto>) => void; move: (id: string, direction: number) => void; remove: (id: string) => void; openFit: (id: string) => void; openGeo: (id: string) => void }) {
-  return <article className="photo-card"><div className="photo-frame"><img src={item.photo.url} style={imageFitStyle(item)} alt="" /><div className="photo-badge">{arLabel(item.photo)}{item.aiExtended ? " / AI" : ""}</div><div className="photo-index">#{String(item.index + 1).padStart(2, "0")}</div>{item.geotag ? <GeoOverlay geo={item.geotag} /> : null}</div><div className="photo-tools"><button onClick={() => move(item.id, -1)}>UP</button><button onClick={() => move(item.id, 1)}>DOWN</button><button className={item.fitMode ? "active" : ""} onClick={() => openFit(item.id)}>FIT</button><button className={item.aiExtended ? "done" : ""} onClick={() => update(item.id, { aiExtended: true, fitMode: "crop", cropY: 50 })}>AI</button><button className={item.geotag ? "active" : ""} onClick={() => openGeo(item.id)}>GEO</button><button onClick={() => remove(item.id)}>DEL</button></div><div className="photo-fields"><div><div className="mini-label">NAMA PEKERJAAN</div><input className="mini-input" value={item.nama} onChange={(e) => update(item.id, { nama: e.target.value })} /></div><div><div className="mini-label">ITEM PEKERJAAN</div><select className="mini-input item-dropdown" value={item.item} onChange={(e) => update(item.id, { item: e.target.value })}>{itemOptions(item.item, false)}</select></div><div><div className="mini-label">PROGRESS</div><div className="progress-row"><input className="mini-input" type="number" min="0" max="100" value={item.progress} onChange={(e) => update(item.id, { progress: e.target.value })} /><span className="mono" style={{ fontSize: 10 }}>%</span><div className="progress-quick">{[25, 50, 75, 100].map((value) => <button key={value} className={String(item.progress) === String(value) ? "active" : ""} onClick={() => update(item.id, { progress: value })}>{value}</button>)}</div></div></div></div></article>;
+function lonToTilePosition(lng: number, z: number) {
+  return ((lng + 180) / 360) * 2 ** z;
 }
 
+function latToTilePosition(lat: number, z: number) {
+  const rad = (lat * Math.PI) / 180;
+  return ((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) * 2 ** z;
+}
+
+function tileXToLon(x: number, z: number) {
+  return (x / 2 ** z) * 360 - 180;
+}
+
+function tileYToLat(y: number, z: number) {
+  const n = Math.PI - (2 * Math.PI * y) / 2 ** z;
+  return (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+}
+
+function buildTileUrl(template: string, z: number, x: number, y: number) {
+  return template.replace("{z}", String(z)).replace("{x}", String(x)).replace("{y}", String(y));
+}
+
+function wrapTileX(x: number, z: number) {
+  const max = 2 ** z;
+  return ((x % max) + max) % max;
+}
+
+function tilePositionToGeotag(base: Geotag, tileX: number, tileY: number, zoom: number) {
+  const maxTile = 2 ** zoom;
+  const clampedY = clamp(tileY, 0, maxTile - 1);
+  return {
+    ...base,
+    lat: tileYToLat(clampedY, zoom),
+    lng: tileXToLon(tileX, zoom),
+  };
+}
+
+function GeotagMapPicker({ value, onChange }: { value: Geotag; onChange: (next: Geotag) => void }) {
+  const [zoom, setZoom] = useState(GEO_DEFAULT_ZOOM);
+  const [config, setConfig] = useState<TileConfig | null>(null);
+  const [query, setQuery] = useState(value.address || "");
+  const [results, setResults] = useState<MapSearchResult[]>([]);
+  const [status, setStatus] = useState("Memuat peta satelit...");
+  const [dragging, setDragging] = useState(false);
+  const dragRef = useRef<GeoDragState | null>(null);
+  const maxZoom = config?.maxZoom || 19;
+  const tiles = useMemo<GeoTile[]>(() => {
+    const centerX = lonToTilePosition(value.lng, zoom);
+    const centerY = latToTilePosition(value.lat, zoom);
+    const baseX = Math.floor(centerX);
+    const baseY = Math.floor(centerY);
+    const fracX = centerX - baseX;
+    const fracY = centerY - baseY;
+    const maxTile = 2 ** zoom;
+    const offsets = [-2, -1, 0, 1, 2];
+
+    return offsets.flatMap((dy) => offsets.flatMap((dx) => {
+      const rawY = baseY + dy;
+      if (rawY < 0 || rawY >= maxTile) return [];
+      const rawX = baseX + dx;
+      return [{
+        key: `${zoom}-${rawX}-${rawY}`,
+        x: wrapTileX(rawX, zoom),
+        y: rawY,
+        left: (dx - fracX) * GEO_TILE_SIZE,
+        top: (dy - fracY) * GEO_TILE_SIZE,
+      }];
+    }));
+  }, [value.lat, value.lng, zoom]);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/maps/config")
+      .then((res) => res.json())
+      .then((data) => { if (alive) { setConfig(data); setStatus("Geser peta sampai titik berada di tengah, atau cari alamat."); } })
+      .catch(() => { if (alive) setStatus("Gagal memuat konfigurasi peta."); });
+    return () => { alive = false; };
+  }, []);
+
+  async function searchLocation() {
+    const text = query.trim();
+    if (!text) return;
+    setStatus("Mencari lokasi...");
+    const response = await fetch(`/api/maps/geocode?address=${encodeURIComponent(text)}`);
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setStatus(payload.error || "Pencarian lokasi gagal.");
+      return;
+    }
+    const rows = (payload.results || []) as MapSearchResult[];
+    setResults(rows);
+    if (rows[0]) {
+      onChange({ ...value, address: rows[0].address, lat: rows[0].location.lat, lng: rows[0].location.lng });
+      setQuery(rows[0].address);
+      setStatus(`Dipilih: ${rows[0].address}`);
+    } else {
+      setStatus("Lokasi tidak ditemukan.");
+    }
+  }
+
+  async function reverseLookup(next: Geotag) {
+    onChange(next);
+    setStatus("Membaca alamat dari koordinat...");
+    const response = await fetch(`/api/maps/geocode?lat=${encodeURIComponent(next.lat)}&lng=${encodeURIComponent(next.lng)}`);
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.results?.[0]) {
+      setStatus("Titik dipilih. Alamat tidak ditemukan otomatis.");
+      return;
+    }
+    onChange({ ...next, address: payload.results[0].address });
+    setQuery(payload.results[0].address);
+    setStatus(`Titik dipilih: ${payload.results[0].address}`);
+  }
+
+  function moveCenterFromDrag(event: React.PointerEvent<HTMLDivElement>, shouldReverse = false) {
+    const drag = dragRef.current;
+    if (!drag) return;
+    const dx = event.clientX - drag.startX;
+    const dy = event.clientY - drag.startY;
+    const moved = drag.moved || Math.abs(dx) > 3 || Math.abs(dy) > 3;
+    drag.moved = moved;
+    const nextTileX = drag.startTileX - dx / GEO_TILE_SIZE;
+    const nextTileY = drag.startTileY - dy / GEO_TILE_SIZE;
+    const next = tilePositionToGeotag(value, nextTileX, nextTileY, zoom);
+    if (shouldReverse && moved) {
+      void reverseLookup(next);
+    } else {
+      onChange(next);
+      if (moved) setStatus("Geser peta. Koordinat dipilih dari marker tengah.");
+    }
+  }
+
+  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startTileX: lonToTilePosition(value.lng, zoom),
+      startTileY: latToTilePosition(value.lat, zoom),
+      moved: false,
+    };
+    setDragging(true);
+  }
+
+  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (!dragRef.current || dragRef.current.pointerId !== event.pointerId) return;
+    moveCenterFromDrag(event);
+  }
+
+  function handlePointerEnd(event: React.PointerEvent<HTMLDivElement>) {
+    if (!dragRef.current || dragRef.current.pointerId !== event.pointerId) return;
+    moveCenterFromDrag(event, true);
+    dragRef.current = null;
+    setDragging(false);
+  }
+
+  function changeZoom(direction: number) {
+    setZoom((current) => clamp(current + direction, GEO_MIN_ZOOM, maxZoom));
+    setStatus("Zoom berubah. Marker tengah tetap menjadi titik koordinat.");
+  }
+
+  return <div className="geo-map-picker"><label className="field-label">Cari Lokasi</label><div className="geo-search-row"><input className="field-input" value={query} placeholder="mis. Kota Jayapura" onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void searchLocation(); }} /><button className="pixel-btn pixel-btn-ghost" type="button" onClick={() => void searchLocation()}>Cari</button></div><div className={`geo-map-real ${dragging ? "is-dragging" : ""}`} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerEnd} onPointerCancel={handlePointerEnd}>{config ? <div className="geo-tile-layer">{tiles.map((tile) => <img key={tile.key} src={buildTileUrl(config.tileUrl, zoom, tile.x, tile.y)} alt="" style={{ left: `calc(50% + ${tile.left}px)`, top: `calc(50% + ${tile.top}px)` }} />)}</div> : <div className="geo-map-loading">Memuat tile...</div>}<div className="geo-map-controls" onPointerDown={(e) => e.stopPropagation()}><button type="button" aria-label="Zoom in" onClick={(e) => { e.stopPropagation(); changeZoom(1); }}>+</button><button type="button" aria-label="Zoom out" onClick={(e) => { e.stopPropagation(); changeZoom(-1); }}>-</button></div><div className="map-pin-center"><PixelIcon name="mapPin" size={32} color="#E8331C" /></div><div className="geo-center-crosshair" /><div className="map-coords">{value.lat.toFixed(6)}, {value.lng.toFixed(6)} / Z{zoom}</div>{config ? <div className="geo-map-attribution">{config.attribution}</div> : null}</div><div className="geo-map-status">{status}</div>{results.length ? <div className="geo-result-list">{results.map((row) => <button key={`${row.location.lat}-${row.location.lng}`} type="button" onClick={() => { onChange({ ...value, address: row.address, lat: row.location.lat, lng: row.location.lng }); setQuery(row.address); setStatus(`Dipilih: ${row.address}`); }}><strong>{row.address}</strong><span>{row.location.lat.toFixed(6)}, {row.location.lng.toFixed(6)}</span></button>)}</div> : null}</div>;
+}
+type Step3Row = ReportPhoto & { index: number; photo?: GalleryPhoto };
+
+function PhotoToolButton({ icon, color = "#0A0A0A", label, shortLabel, disabled, active, done, danger, onClick }: { icon: IconName; color?: string; label: string; shortLabel: string; disabled?: boolean; active?: boolean; done?: boolean; danger?: boolean; onClick?: () => void }) {
+  return <button type="button" title={label} aria-label={label} disabled={disabled} className={`${active ? "active" : ""} ${done ? "done" : ""}`} onClick={onClick}><span className="tool-icon-solid"><PixelIcon name={icon} size={17} color={color} /></span><span className="tool-mini-label">{shortLabel}</span></button>;
+}
+
+function PhotoCard({ item, itemOptions, update, move, remove, openFit, openGeo, openPicker }: { item: Step3Row; itemOptions: (selectedItem?: string, includeEmpty?: boolean) => React.ReactNode; update: (id: string, changes: Partial<ReportPhoto>) => void; move: (id: string, direction: number) => void; remove: (id: string) => void; openFit: (id: string) => void; openGeo: (id: string) => void; openPicker: (id: string) => void }) {
+  const hasPhoto = Boolean(item.photo);
+  return <article id={`photo-card-${item.id}`} className={`photo-card ${hasPhoto ? "" : "is-empty"}`} tabIndex={-1}>{hasPhoto && item.photo ? <div className="photo-frame"><img src={item.photo.url} style={imageFitStyle({ ...item, photo: item.photo })} alt="" /><div className="photo-badge">{arLabel(item.photo)}{item.aiExtended ? " / AI" : ""}</div><div className="photo-index">#{String(item.index + 1).padStart(2, "0")}</div>{item.geotag ? <GeoOverlay geo={item.geotag} /> : null}</div> : <button className="photo-frame photo-frame-empty" type="button" onClick={() => openPicker(item.id)}><span className="empty-plus" /><span className="empty-status">EMPTY</span><span className="empty-help">Klik Add/Replace Foto</span></button>}<div className="photo-tools icon-tools"><PhotoToolButton icon={hasPhoto ? "solidReplace" : "solidPlus"} color={hasPhoto ? "#0A0A0A" : "#FF6B1A"} label={hasPhoto ? "Ganti foto" : "Add foto"} shortLabel={hasPhoto ? "GANTI" : "ADD"} onClick={() => openPicker(item.id)} /><PhotoToolButton icon="solidUp" label="Naikkan foto" shortLabel="NAIK" onClick={() => move(item.id, -1)} /><PhotoToolButton icon="solidDown" label="Turunkan foto" shortLabel="TURUN" onClick={() => move(item.id, 1)} /><PhotoToolButton icon="solidFit" color={item.fitMode && hasPhoto ? "#FF6B1A" : "#0A0A0A"} label="Atur fit foto" shortLabel="FIT" active={Boolean(item.fitMode && hasPhoto)} disabled={!hasPhoto} onClick={() => openFit(item.id)} /><PhotoToolButton icon="solidAi" color={item.aiExtended && hasPhoto ? "#2E9E5B" : "#0A0A0A"} label="AI extend" shortLabel="AI" done={Boolean(item.aiExtended && hasPhoto)} disabled={!hasPhoto} onClick={() => update(item.id, { aiExtended: true, fitMode: "crop", cropY: 50 })} /><PhotoToolButton icon="solidGeo" color={item.geotag && hasPhoto ? "#FF6B1A" : "#0A0A0A"} label="Geotag" shortLabel="GEO" active={Boolean(item.geotag && hasPhoto)} disabled={!hasPhoto} onClick={() => openGeo(item.id)} /><PhotoToolButton icon="solidTrash" color="#E8331C" label="Hapus card" shortLabel="HAPUS" danger onClick={() => remove(item.id)} /></div><div className="photo-fields"><div><div className="mini-label">NAMA PEKERJAAN</div><input className="mini-input" value={item.nama} onChange={(e) => update(item.id, { nama: e.target.value })} /></div><div><div className="mini-label">ITEM PEKERJAAN</div><select className="mini-input item-dropdown" value={item.item} onChange={(e) => update(item.id, { item: e.target.value })}>{itemOptions(item.item, true)}</select></div><div><div className="mini-label">PROGRESS</div><div className="progress-row"><input className="mini-input" type="number" min="0" max="100" value={item.progress} onChange={(e) => update(item.id, { progress: e.target.value })} /><span className="mono" style={{ fontSize: 10 }}>%</span><div className="progress-quick">{[25, 50, 75, 100].map((value) => <button type="button" key={value} className={String(item.progress) === String(value) ? "active" : ""} onClick={() => update(item.id, { progress: value })}>{value}</button>)}</div></div></div></div></article>;
+}
+
+function PhotoPickerModal({ state, pickerId, selectedMap, pickPhoto, upload, close }: { state: WizardState; pickerId: string | null; selectedMap: Map<string, string>; pickPhoto: (photoId: string) => void; upload: () => void; close: () => void }) {
+  if (!pickerId) return null;
+  return <div className="modal-overlay show" onClick={(event) => { if (event.target === event.currentTarget) close(); }}><div className="modal-box photo-picker-box"><div className="modal-head"><div><div className="modal-title">Pilih Foto Galeri</div><div className="modal-sub">Foto yang sudah dipakai ditandai abu-abu dengan centang hijau.</div></div><button className="modal-close" type="button" onClick={close}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><div className="picker-actions"><button className="pixel-btn pixel-btn-accent" type="button" onClick={upload}>Upload Foto</button><div className="text-muted" id="pickerHint">Pilih foto kosong untuk mengisi card aktif.</div></div><div className="photo-picker-grid">{state.gallery.length ? state.gallery.map((photo) => { const usedBy = selectedMap.get(photo.id); const isCurrent = usedBy === pickerId; const isUsed = Boolean(usedBy); return <button className={`picker-photo ${isUsed ? "is-used" : ""} ${isCurrent ? "is-current" : ""}`} key={photo.id} type="button" onClick={() => pickPhoto(photo.id)} disabled={Boolean(usedBy && usedBy !== pickerId)}><span className="picker-thumb"><img src={photo.url} alt="" /></span>{isUsed ? <span className="picker-check"><PixelIcon name="check" size={12} color="#fff" /></span> : null}<span className="picker-name">{photo.filename}</span><span className="picker-badge">{photo.sourceType === "bukti_lapangan" ? "BUKTI LAPANGAN" : "LAPORAN"} / {arLabel(photo)}</span></button>; }) : <div className="empty-state">Galeri masih kosong. Upload foto terlebih dahulu.</div>}</div></div></div>;
+}
 function GeoOverlay({ geo }: { geo: Geotag }) {
   return <div className="geo-overlay"><div>{geo.address}</div><div className="mono">{geo.lat.toFixed(5)}, {geo.lng.toFixed(5)}</div><div className="mono">{geo.date} {geo.time}</div></div>;
 }
@@ -710,3 +1027,11 @@ function GridCard({ item, state, withNumber, numberText }: { item: ReportPhoto &
   const border = state.preview.border ? `${state.preview.borderWidth}px solid ${state.preview.accentColor}` : "none";
   return <div className="preview-grid-card" style={{ border, borderRadius: state.preview.borderRadius }}>{withNumber ? <div style={{ position: "absolute", zIndex: 2, top: 0, left: 0, background: state.preview.accentColor, color: "#fff", fontSize: 6, fontFamily: "var(--font-mono)", fontWeight: 900, padding: "2px 5px" }}>{numberText}</div> : null}<div className={`preview-photo-frame43 grid-photo-frame ${item.geotag ? "has-grid-geo" : ""}`}><img src={item.photo.url} style={imageFitStyle(item)} alt="" /><GridGeoOverlay item={item} state={state} /></div><div className="grid-caption-row"><div className="grid-caption-text"><div style={{ fontSize: state.preview.fontSize, fontWeight: 900, lineHeight: 1.15 }}>{item.nama || "-"}</div><div style={{ fontSize: Math.max(6, state.preview.fontSize - 1), color: "#52524F", lineHeight: 1.15 }}>{item.item || "-"}</div></div><div className="grid-progress-box"><span className="mono">{item.progress || 0}%</span></div></div></div>;
 }
+
+
+
+
+
+
+
+

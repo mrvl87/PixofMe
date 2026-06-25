@@ -1,718 +1,1464 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pixforme — Laporan Dokumentasi Proyek, Selesai Dalam Menit</title>
-<link rel="stylesheet" href="assets/css/tokens.css">
-<style>
-  /* ── Hero ── */
-  .hero {
-    padding: 64px 24px 0;
-    position: relative;
-    overflow: hidden;
-  }
-  .hero-inner {
-    max-width: 1100px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
-    gap: 48px;
-    align-items: center;
-    padding-bottom: 56px;
-  }
-  .hero-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--accent-bg);
-    border: 2px solid var(--black);
-    padding: 5px 12px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    margin-bottom: 20px;
-  }
-  .hero h1 {
-    font-family: var(--font-pixel);
-    font-size: 26px;
-    line-height: 1.7;
-    color: var(--black);
-    margin-bottom: 20px;
-  }
-  .hero h1 .hi-orange { color: var(--orange); }
-  .hero p.lead {
-    font-size: 16px;
-    color: var(--text-muted);
-    line-height: 1.7;
-    margin-bottom: 28px;
-    max-width: 480px;
-  }
-  .hero-ctas { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-  .hero-meta { margin-top: 20px; font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
-
-  /* ── Hero visual: mock A4 page stack ── */
-  .hero-visual {
-    position: relative;
-    height: 420px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .mock-page {
-    position: absolute;
-    width: 260px;
-    height: 368px;
-    background: #fff;
-    border: 2px solid var(--black);
-    border-radius: 3px;
-    padding: 16px;
-  }
-  .mock-page.p1 { transform: rotate(-6deg) translate(-30px, 10px); z-index: 1; box-shadow: 6px 6px 0 0 var(--border); }
-  .mock-page.p2 { transform: rotate(3deg) translate(20px, -10px); z-index: 2; box-shadow: 6px 6px 0 0 var(--orange); }
-  .mock-header { display: flex; align-items: center; gap: 6px; border-bottom: 3px solid var(--orange); padding-bottom: 8px; margin-bottom: 10px; }
-  .mock-header-text { font-size: 7px; font-weight: 800; line-height: 1.4; }
-  .mock-header-sub { font-size: 6px; color: var(--text-muted); }
-  .mock-photo { background: linear-gradient(135deg, #FFD9B8, #FF9D5C); border-radius: 2px; height: 70px; margin-bottom: 6px; position: relative; }
-  .mock-photo .pin {
-    position: absolute; bottom: 4px; left: 4px;
-    background: rgba(232,51,28,0.9); border-radius: 2px; padding: 2px 4px;
-    font-size: 5px; color: #fff; font-weight: 700;
-  }
-  .mock-cap-line { height: 4px; background: var(--border); border-radius: 1px; margin-bottom: 4px; }
-  .mock-cap-line.w60 { width: 60%; }
-  .mock-cap-line.w40 { width: 40%; background: var(--orange); }
-  .mock-progress { display: flex; align-items: center; gap: 4px; margin-top: 6px; }
-  .mock-progress .pct { font-family: var(--font-mono); font-size: 9px; font-weight: 800; color: var(--orange); }
-  .mock-progress .bar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
-  .mock-progress .bar-fill { height: 100%; background: var(--orange); }
-
-  .floating-badge {
-    position: absolute;
-    background: var(--black);
-    color: #fff;
-    padding: 6px 10px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    box-shadow: 3px 3px 0 0 var(--orange);
-    z-index: 3;
-  }
-  .floating-badge.b1 { top: 10px; right: -10px; }
-  .floating-badge.b2 { bottom: 30px; left: -20px; background: var(--success); box-shadow: 3px 3px 0 0 #1E7A45; }
-
-  /* ── Problem strip ── */
-  .problem-strip { background: var(--black); padding: 14px 0; overflow: hidden; }
-  .marquee { display: flex; gap: 40px; white-space: nowrap; animation: scroll-left 28s linear infinite; }
-  .marquee span { color: #fff; font-family: var(--font-mono); font-size: 12px; opacity: 0.85; }
-  .marquee span b { color: var(--orange); }
-  @keyframes scroll-left { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-  @media (prefers-reduced-motion: reduce) { .marquee { animation: none; } }
-
-  /* ── Section generic ── */
-  .section { padding: 80px 24px; }
-  .section-head { max-width: 640px; margin: 0 auto 48px; text-align: center; }
-  .section-eyebrow {
-    font-size: 11px; font-weight: 800; letter-spacing: 0.08em;
-    color: var(--orange); text-transform: uppercase; margin-bottom: 10px;
-    display: block;
-  }
-  .section-head h2 {
-    font-family: var(--font-pixel);
-    font-size: 18px;
-    line-height: 1.7;
-    color: var(--black);
-    margin-bottom: 14px;
-  }
-  .section-head p { color: var(--text-muted); font-size: 15px; line-height: 1.6; }
-
-  /* ── Solution grid (4 masalah → solusi) ── */
-  .solutions-grid {
-    max-width: 1100px; margin: 0 auto;
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
-  }
-  .solution-card {
-    background: #fff; border: 2px solid var(--black); border-radius: 6px;
-    padding: 24px; box-shadow: 4px 4px 0 0 var(--border);
-    display: flex; flex-direction: column; gap: 12px;
-  }
-  .solution-icon-box {
-    width: 44px; height: 44px; background: var(--black); border-radius: 4px;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  }
-  .solution-num { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); font-weight: 700; }
-  .solution-card h3 { font-size: 15px; font-weight: 800; color: var(--black); }
-  .solution-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
-  .solution-tag {
-    display: inline-flex; align-self: flex-start;
-    background: var(--accent-bg); border: 1.5px solid var(--border);
-    padding: 3px 8px; border-radius: 3px; font-size: 10px; font-weight: 700; color: var(--text-muted);
-  }
-
-  /* ── How it works ── */
-  .steps-row { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; position: relative; }
-  .step-card { background: #fff; border: 2px solid var(--black); border-radius: 6px; padding: 22px 18px; position: relative; box-shadow: 3px 3px 0 0 var(--border); }
-  .step-card .step-num {
-    font-family: var(--font-pixel); font-size: 18px; color: var(--orange); margin-bottom: 14px;
-  }
-  .step-card h4 { font-size: 13px; font-weight: 800; margin-bottom: 6px; }
-  .step-card p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
-  /* ── Templates showcase ── */
-  .template-showcase {
-    padding: 0 24px;
-    min-height: 180vh;
-    position: relative;
-    background: #F7F7F3;
-    overflow: clip;
-    --tpl-progress: 0;
-  }
-  .template-sticky {
-    position: sticky;
-    top: 64px;
-    min-height: calc(100vh - 64px);
-    display: flex;
-    align-items: center;
-    padding: 54px 0 64px;
-  }
-  .template-stage {
-    width: min(1180px, 100%);
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-  }
-  .template-pixel-canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: calc(0.18 - (var(--tpl-progress) * 0.08));
-    pointer-events: none;
-    image-rendering: pixelated;
-  }
-  .template-copy {
-    max-width: 760px;
-    margin: 0 auto 44px;
-    text-align: center;
-    transform: translateY(calc(var(--tpl-progress) * -18px));
-  }
-  .template-copy .section-eyebrow { margin-bottom: 12px; }
-  .template-copy h2 {
-    font-family: var(--font-pixel);
-    font-size: 18px;
-    line-height: 1.75;
-    margin-bottom: 16px;
-  }
-  .template-copy p {
-    color: var(--text-muted);
-    font-size: 15px;
-    line-height: 1.7;
-  }
-  .template-copy::after {
-    content: "";
-    display: block;
-    width: 84px;
-    height: 3px;
-    margin: 24px auto 0;
-    background: var(--orange);
-  }
-  .tpl-row {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 14px;
-    transform: translateY(calc(32px - (var(--tpl-progress) * 32px)));
-  }
-  .tpl-thumb {
-    --delay: 0;
-    min-height: 188px;
-    background: rgba(255,255,255,0.94);
-    border: 1.5px solid rgba(10,10,10,0.82);
-    border-radius: 8px;
-    padding: 12px;
-    box-shadow: 0 12px 34px rgba(10,10,10,0.08), 2px 2px 0 0 rgba(10,10,10,0.08);
-    text-align: left;
-    transform: translateY(calc((1 - var(--tpl-progress)) * (12px + var(--delay) * 4px)));
-    opacity: calc(0.86 + (var(--tpl-progress) * 0.14));
-    transition: border-color .2s, box-shadow .2s, transform .2s;
-  }
-  .tpl-thumb.featured {
-    border-color: var(--orange);
-    background: #FFF7F1;
-    box-shadow: 0 14px 34px rgba(255,107,26,0.14), 0 -4px 0 0 var(--orange);
-  }
-  .tpl-thumb:hover {
-    border-color: var(--orange);
-    box-shadow: 0 16px 34px rgba(10,10,10,0.12), 0 -3px 0 0 var(--orange);
-  }
-  .tpl-preview {
-    height: 94px;
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    background: #fff;
-    padding: 5px;
-    display: grid;
-    gap: 4px;
-    overflow: hidden;
-    margin-bottom: 12px;
-  }
-  .tpl-preview.stack { grid-template-columns: 1.45fr .9fr; }
-  .tpl-preview.equal,
-  .tpl-preview.border { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
-  .tpl-preview.full { grid-template-columns: 1fr; }
-  .tpl-preview.split { grid-template-columns: 1fr 1fr; }
-  .tpl-photo {
-    background-size: cover;
-    background-position: center;
-    border-radius: 3px;
-    position: relative;
-    min-height: 0;
-  }
-  .tpl-photo::after {
-    content: "";
-    position: absolute;
-    inset: auto 4px 4px 4px;
-    height: 5px;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.82);
-  }
-  .tpl-preview.stack .tpl-text {
-    display: grid;
-    align-content: center;
-    gap: 5px;
-    padding: 4px;
-  }
-  .tpl-line {
-    height: 5px;
-    border-radius: 999px;
-    background: #DADAD4;
-  }
-  .tpl-line.strong { width: 78%; background: var(--black); }
-  .tpl-line.accent { width: 42%; background: var(--orange); }
-  .tpl-preview.border .tpl-photo { border: 1.5px solid var(--orange); }
-  .tpl-num {
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    background: var(--orange);
-    color: #fff;
-    font-family: var(--font-mono);
-    font-size: 7px;
-    font-weight: 900;
-    line-height: 1;
-    padding: 2px 4px;
-    border-radius: 2px;
-  }
-  .tpl-thumb h3 {
-    font-size: 12px;
-    font-weight: 900;
-    margin-bottom: 4px;
-  }
-  .tpl-thumb p {
-    font-size: 10.5px;
-    color: var(--text-muted);
-    line-height: 1.45;
-  }
-
-  /* ── Tools cards ── */
-  .tools-grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-  .tool-card {
-    border: 2px solid var(--black); border-radius: 6px; padding: 26px;
-    display: flex; flex-direction: column; gap: 12px;
-  }
-  .tool-card.featured { background: var(--black); color: #fff; box-shadow: 5px 5px 0 0 var(--orange); }
-  .tool-card:not(.featured) { background: #fff; box-shadow: 4px 4px 0 0 var(--border); }
-  .tool-card h3 { font-size: 15px; font-weight: 800; }
-  .tool-card p { font-size: 13px; line-height: 1.6; }
-  .tool-card.featured p { color: #D4D4D0; }
-  .tool-card:not(.featured) p { color: var(--text-muted); }
-  .tool-icon-box { width: 44px; height: 44px; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
-  .tool-card.featured .tool-icon-box { background: var(--orange); }
-  .tool-card:not(.featured) .tool-icon-box { background: var(--accent-bg); }
-
-  /* ── CTA banner ── */
-  .cta-banner {
-    max-width: 1100px; margin: 0 auto;
-    background: var(--orange); border: 2px solid var(--black);
-    border-radius: 8px; padding: 56px 48px;
-    box-shadow: 6px 6px 0 0 var(--black);
-    display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
-  }
-  .cta-banner h2 { font-family: var(--font-pixel); font-size: 16px; color: #fff; line-height: 1.7; }
-  .cta-banner p { color: #FFE5D5; font-size: 14px; margin-top: 8px; }
-
-  /* ── Footer ── */
-  .footer-inner { max-width: 1100px; margin: 0 auto; padding: 48px 24px 28px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 32px; }
-  .footer-brand p { font-size: 13px; color: var(--text-muted); margin-top: 10px; max-width: 260px; line-height: 1.6; }
-  .footer-col h5 { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 14px; color: var(--black); }
-  .footer-col a { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
-  .footer-col a:hover { color: var(--orange); }
-  .footer-bottom { border-top: 1.5px solid var(--border); padding: 18px 24px; text-align: center; font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
-
-  @media (max-width: 900px) {
-    .hero-inner { grid-template-columns: 1fr; }
-    .hero-visual { height: 320px; margin-top: 24px; }
-    .solutions-grid, .steps-row, .tools-grid { grid-template-columns: 1fr 1fr; }
-    .template-showcase { min-height: auto; padding: 80px 16px; }
-    .template-sticky { position: relative; top: auto; min-height: 0; padding: 0; }
-    .template-pixel-canvas { display: none; }
-    .tpl-row { grid-template-columns: repeat(2, 1fr); transform: none; }
-    .tpl-thumb { opacity: 1; transform: none; }
-    .footer-inner { grid-template-columns: 1fr 1fr; }
-  }
-  @media (max-width: 600px) {
-    .hero h1 { font-size: 19px; }
-    .solutions-grid, .steps-row, .tools-grid, .tpl-row { grid-template-columns: 1fr; }
-    .cta-banner { flex-direction: column; text-align: center; }
-    .footer-inner { grid-template-columns: 1fr; }
-  }
-</style>
-</head>
-<body>
-
-<nav class="topnav" id="topnav" data-active="home"></nav>
-
-<!-- ════════════════ HERO ════════════════ -->
-<section class="hero">
-  <div class="hero-inner">
-    <div>
-      <div class="hero-eyebrow">
-        <span data-pixel-icon="sparkle" data-pixel-size="12" data-pixel-color="#FF6B1A"></span>
-        DIBUAT UNTUK KONTRAKTOR INDONESIA
-      </div>
-      <h1>LAPORAN DOKUMENTASI<br>PROYEK, <span class="hi-orange">BUKAN<br>PEKERJAAN BERHARI-HARI.</span></h1>
-      <p class="lead">Susun foto progres lapangan jadi laporan pertanggungjawaban siap cetak — rapi, terstruktur, dan konsisten — tanpa drag-drop manual di Word atau Excel.</p>
-      <div class="hero-ctas">
-        <a href="wizard-step1.html" class="pixel-btn pixel-btn-accent pixel-btn-lg">
-          <span data-pixel-icon="arrowRight" data-pixel-size="14" data-pixel-color="#fff"></span>
-          Buat Laporan Pertama
-        </a>
-        <a href="product.html" class="pixel-btn pixel-btn-ghost pixel-btn-lg">Lihat Cara Kerja</a>
-      </div>
-      <div class="hero-meta">
-        <span data-pixel-icon="check" data-pixel-size="12" data-pixel-color="#2E9E5B"></span>
-        Tidak perlu kartu kredit · Export PDF gratis untuk laporan pertama
-      </div>
-    </div>
-
-    <div class="hero-visual">
-      <div class="floating-badge b1">
-        <span data-pixel-icon="mapPin" data-pixel-size="11" data-pixel-color="#fff"></span>
-        Geotag aktif
-      </div>
-      <div class="floating-badge b2">
-        <span data-pixel-icon="check" data-pixel-size="11" data-pixel-color="#fff"></span>
-        4 halaman siap
-      </div>
-
-      <div class="mock-page p1">
-        <div class="mock-header">
-          <div style="width:18px;height:18px;background:#0A0A0A;border-radius:2px;flex-shrink:0;"></div>
-          <div>
-            <div class="mock-header-text">DINAS PEKERJAAN UMUM</div>
-            <div class="mock-header-sub">Laporan Dokumentasi Proyek</div>
-          </div>
-        </div>
-        <div class="mock-photo"><div class="pin">📍 Jayapura</div></div>
-        <div class="mock-cap-line w60"></div>
-        <div class="mock-cap-line w40"></div>
-        <div class="mock-progress"><span class="pct">45%</span><div class="bar"><div class="bar-fill" style="width:45%"></div></div></div>
-      </div>
-
-      <div class="mock-page p2">
-        <div class="mock-header">
-          <div style="width:18px;height:18px;background:#0A0A0A;border-radius:2px;flex-shrink:0;"></div>
-          <div>
-            <div class="mock-header-text">DINAS PEKERJAAN UMUM</div>
-            <div class="mock-header-sub">Laporan Dokumentasi Proyek</div>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;">
-          <div class="mock-photo" style="height:50px;margin-bottom:0;background:linear-gradient(135deg,#B8E0D2,#6FC3A0);"></div>
-          <div class="mock-photo" style="height:50px;margin-bottom:0;"></div>
-        </div>
-        <div class="mock-cap-line w60"></div>
-        <div class="mock-progress"><span class="pct">80%</span><div class="bar"><div class="bar-fill" style="width:80%"></div></div></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ════════════════ PROBLEM MARQUEE ════════════════ -->
-<div class="problem-strip">
-  <div class="marquee">
-    <span><b>SEBELUM:</b> susun foto satu-satu di Word →</span>
-    <span><b>SESUDAH:</b> upload semua, layout otomatis →</span>
-    <span><b>SEBELUM:</b> foto portrait merusak estetika →</span>
-    <span><b>SESUDAH:</b> AI rapikan rasio dalam 1 klik →</span>
-    <span><b>SEBELUM:</b> watermark tanggal berantakan →</span>
-    <span><b>SESUDAH:</b> bersihkan bulk dalam hitungan detik →</span>
-    <span><b>SEBELUM:</b> susun foto satu-satu di Word →</span>
-    <span><b>SESUDAH:</b> upload semua, layout otomatis →</span>
-    <span><b>SEBELUM:</b> foto portrait merusak estetika →</span>
-    <span><b>SESUDAH:</b> AI rapikan rasio dalam 1 klik →</span>
-    <span><b>SEBELUM:</b> watermark tanggal berantakan →</span>
-    <span><b>SESUDAH:</b> bersihkan bulk dalam hitungan detik →</span>
-  </div>
-</div>
-
-<!-- ════════════════ SOLUTIONS (4 masalah) ════════════════ -->
-<section class="section">
-  <div class="section-head">
-    <span class="section-eyebrow">Masalah yang kami selesaikan</span>
-    <h2>EMPAT HAL YANG<br>MEMBUANG WAKTU ANDA</h2>
-    <p>Setiap fitur Pixforme dibangun dari keluhan nyata penyusun laporan lapangan — bukan asumsi.</p>
-  </div>
-  <div class="solutions-grid">
-    <div class="solution-card">
-      <div class="solution-icon-box"><span data-pixel-icon="layout" data-pixel-size="22" data-pixel-color="#fff"></span></div>
-      <span class="solution-num">MASALAH 01</span>
-      <h3>Susun foto manual di Word/Excel</h3>
-      <p>Drag satu-satu, atur keterangan di samping, ulangi puluhan kali. Pixforme menyusun otomatis dari template yang sudah profesional.</p>
-      <span class="solution-tag">Wizard 4 langkah</span>
-    </div>
-    <div class="solution-card">
-      <div class="solution-icon-box"><span data-pixel-icon="crop" data-pixel-size="22" data-pixel-color="#fff"></span></div>
-      <span class="solution-num">MASALAH 02</span>
-      <h3>Aspek rasio foto tidak seragam</h3>
-      <p>Foto portrait di tengah deretan landscape merusak estetika laporan. Sesuaikan posisi manual atau AI Extend otomatis.</p>
-      <span class="solution-tag">AI Extend · per foto</span>
-    </div>
-    <div class="solution-card">
-      <div class="solution-icon-box"><span data-pixel-icon="watermark" data-pixel-size="22" data-pixel-color="#fff"></span></div>
-      <span class="solution-num">MASALAH 03</span>
-      <h3>Watermark tanggal berantakan</h3>
-      <p>Foto dari berbagai sumber datang dengan watermark tanggal yang tidak konsisten. Bersihkan, ganti, atau tambahkan secara massal.</p>
-      <span class="solution-tag">AI Fix Tools</span>
-    </div>
-    <div class="solution-card">
-      <div class="solution-icon-box"><span data-pixel-icon="geo" data-pixel-size="22" data-pixel-color="#fff"></span></div>
-      <span class="solution-num">MASALAH 04</span>
-      <h3>Foto butuh geotag tapi tidak ada GPS</h3>
-      <p>Tambahkan koordinat, tanggal, dan jam secara manual lewat peta — non-destructive, tidak mengubah foto asli.</p>
-      <span class="solution-tag">Geotag overlay</span>
-    </div>
-  </div>
-</section>
-
-<!-- ════════════════ HOW IT WORKS ════════════════ -->
-<section class="section" style="background:var(--accent-bg);">
-  <div class="section-head">
-    <span class="section-eyebrow">Cara kerja</span>
-    <h2>EMPAT LANGKAH,<br>SATU LAPORAN SIAP CETAK</h2>
-  </div>
-  <div class="steps-row">
-    <div class="step-card">
-      <div class="step-num">01</div>
-      <h4>Buat Project</h4>
-      <p>Isi nama kontrak, klien, dan header laporan — logo instansi atau perusahaan Anda.</p>
-    </div>
-    <div class="step-card">
-      <div class="step-num">02</div>
-      <h4>Detail Laporan</h4>
-      <p>Nama laporan dan periode pelaporan. Satu project bisa punya banyak laporan.</p>
-    </div>
-    <div class="step-card">
-      <div class="step-num">03</div>
-      <h4>Foto & Caption</h4>
-      <p>Upload puluhan hingga ratusan foto. Isi item pekerjaan dan progres — manual atau massal.</p>
-    </div>
-    <div class="step-card">
-      <div class="step-num">04</div>
-      <h4>Preview & Export</h4>
-      <p>Pilih template, sesuaikan gaya, lihat hasil real-time, lalu export PDF siap cetak.</p>
-    </div>
-  </div>
-</section>
-
-<!-- ════════════════ TEMPLATES ════════════════ -->
-<section class="template-showcase" id="templateShowcase">
-  <canvas class="template-pixel-canvas" id="templatePixelCanvas" aria-hidden="true"></canvas>
-  <div class="template-sticky">
-    <div class="template-stage">
-      <div class="template-copy">
-        <span class="section-eyebrow">Template siap pakai</span>
-        <h2>LIMA GAYA LAYOUT,<br>SEMUA BISA DIKUSTOMISASI</h2>
-        <p>Pilih dari contoh laporan nyata, lalu sesuaikan warna aksen, spacing, border, dan header tanpa mengulang layout dari nol.</p>
-      </div>
-      <div class="tpl-row" aria-label="Pilihan template laporan">
-        <article class="tpl-thumb featured" style="--delay:0;">
-          <div class="tpl-preview stack">
-            <div class="tpl-photo" style="background-image:url('https://picsum.photos/seed/pixforme-pondasi/600/420');"></div>
-            <div class="tpl-text"><span class="tpl-line strong"></span><span class="tpl-line"></span><span class="tpl-line accent"></span></div>
-          </div>
-          <h3>Stack + Teks</h3>
-          <p>Foto besar di kiri, progres dan caption pekerjaan jelas di kanan.</p>
-        </article>
-        <article class="tpl-thumb" style="--delay:1;">
-          <div class="tpl-preview equal">
-            <div class="tpl-photo" style="background-image:url('https://picsum.photos/seed/pixforme-road/500/360');"></div>
-            <div class="tpl-photo" style="background-image:url('https://picsum.photos/seed/pixforme-atap/500/360');"></div>
-            <div class="tpl-photo" style="background-image:url('https://picsum.photos/seed/pixforme-beton/500/360');"></div>
-            <div class="tpl-photo" style="background-image:url('https://picsum.photos/seed/pixforme-tunnel/500/360');"></div>
-          </div>
-          <h3>Grid Equal</h3>
-          <p>Empat foto seimbang untuk laporan padat dan mudah dipindai.</p>
-        </article>
-        <article class="tpl-thumb" style="--delay:2;">
-          <div class="tpl-preview border">
-            <div class="tpl-photo" style="background-image:url('https://picsum.photos/seed/pixforme-grid-1/500/360');"><span class="tpl-num">01</span></div>
-            <div class="tpl-photo" style="background-image:url('https://picsum.photos/seed/pixforme-grid-2/500/360');"><span class="tpl-num">02</span></div>
-            <div class="tpl-photo" style="background-image:url('https://picsum.photos/seed/pixforme-grid-3/500/360');"><span class="tpl-num">03</span></div>
-            <div class="tpl-photo" style="background-image:url('https://picsum.photos/seed/pixforme-grid-4/500/360');"><span class="tpl-num">04</span></div>
-          </div>
-          <h3>Grid Border</h3>
-          <p>Nomor visual dan border tegas untuk dokumentasi yang butuh referensi cepat.</p>
-        </article>
-        <article class="tpl-thumb" style="--delay:3;">
-          <div class="tpl-preview full">
-            <div class="tpl-photo" style="background-image:url('https://picsum.photos/seed/pixforme-full-page/700/460');"></div>
-          </div>
-          <h3>Full Page</h3>
-          <p>Satu foto dominan per halaman untuk bukti visual utama.</p>
-        </article>
-        <article class="tpl-thumb" style="--delay:4;">
-          <div class="tpl-preview split">
-            <div class="tpl-photo" style="background-image:url('https://picsum.photos/seed/pixforme-landscape-a/500/360');"></div>
-            <div class="tpl-photo" style="background-image:url('https://picsum.photos/seed/pixforme-landscape-b/500/360');"></div>
-          </div>
-          <h3>Landscape Split</h3>
-          <p>Dua foto lebar dalam halaman landscape untuk perbandingan progres.</p>
-        </article>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ════════════════ AI FIX TOOLS ════════════════ -->
-<section class="section" style="background:var(--accent-bg);">
-  <div class="section-head">
-    <span class="section-eyebrow">Di luar wizard laporan</span>
-    <h2>AI FIX TOOLS UNTUK<br>KEBUTUHAN LAPANGAN</h2>
-    <p>Tool terpisah untuk foto bukti lapangan real-time — tidak tercampur dengan foto laporan resmi Anda.</p>
-  </div>
-  <div class="tools-grid">
-    <div class="tool-card featured">
-      <div class="tool-icon-box"><span data-pixel-icon="geo" data-pixel-size="22" data-pixel-color="#fff"></span></div>
-      <h3>AI Geotag Burn-in</h3>
-      <p>Bakar koordinat, tanggal, dan jam langsung ke piksel foto untuk bukti lapangan real-time — dengan kontrol prompt presisi.</p>
-      <a href="tools.html" class="pixel-btn pixel-btn-accent" style="margin-top:8px;align-self:flex-start;">Buka Tool</a>
-    </div>
-    <div class="tool-card">
-      <div class="tool-icon-box"><span data-pixel-icon="watermark" data-pixel-size="22" data-pixel-color="#0A0A0A"></span></div>
-      <h3>Watermark Manager</h3>
-      <p>Hapus, ganti, atau tambahkan watermark tanggal secara massal ke puluhan foto sekaligus.</p>
-      <a href="tools.html" class="pixel-btn pixel-btn-ghost" style="margin-top:8px;align-self:flex-start;">Buka Tool</a>
-    </div>
-    <div class="tool-card">
-      <div class="tool-icon-box"><span data-pixel-icon="image" data-pixel-size="22" data-pixel-color="#0A0A0A"></span></div>
-      <h3>Galeri Foto</h3>
-      <p>Semua foto Anda — asli maupun hasil AI Fix — tersimpan rapi dan bisa dipakai ulang di project manapun.</p>
-      <a href="tools.html" class="pixel-btn pixel-btn-ghost" style="margin-top:8px;align-self:flex-start;">Buka Galeri</a>
-    </div>
-  </div>
-</section>
-
-<!-- ════════════════ CTA ════════════════ -->
-<section class="section">
-  <div class="cta-banner">
-    <div>
-      <h2>SIAP BUAT LAPORAN<br>PERTAMA ANDA?</h2>
-      <p>Gratis untuk laporan pertama. Tidak perlu kartu kredit.</p>
-    </div>
-    <a href="wizard-step1.html" class="pixel-btn pixel-btn-primary pixel-btn-lg">
-      <span data-pixel-icon="arrowRight" data-pixel-size="14" data-pixel-color="#fff"></span>
-      Mulai Sekarang
-    </a>
-  </div>
-</section>
-
-<!-- ════════════════ FOOTER ════════════════ -->
-<footer class="site-footer">
-  <div class="footer-inner">
-    <div class="footer-brand">
-      <div style="display:flex;align-items:center;gap:9px;">
-        <span data-pixel-logo data-pixel-size="24"></span>
-        <span style="font-family:var(--font-pixel);font-size:12px;">PIXFORME</span>
-      </div>
-      <p>Tool laporan dokumentasi proyek untuk kontraktor dan instansi di Indonesia. Dibuat supaya laporan pertanggungjawaban tidak lagi memakan waktu berhari-hari.</p>
-    </div>
-    <div class="footer-col">
-      <h5>Produk</h5>
-      <a href="product.html">Cara Kerja</a>
-      <a href="wizard-step1.html">Buat Laporan</a>
-      <a href="pricing.html">Harga</a>
-    </div>
-    <div class="footer-col">
-      <h5>Tools</h5>
-      <a href="tools.html">AI Geotag Burn-in</a>
-      <a href="tools.html">Watermark Manager</a>
-      <a href="tools.html">Galeri Foto</a>
-    </div>
-    <div class="footer-col">
-      <h5>Perusahaan</h5>
-      <a href="#">Tentang</a>
-      <a href="#">Kontak</a>
-      <a href="#">Kebijakan Privasi</a>
-    </div>
-  </div>
-  <div class="footer-bottom">© 2026 PIXFORME.IO — DIBUAT UNTUK KONTRAKTOR INDONESIA</div>
-</footer>
-
-<script src="assets/js/pixel-icons.js"></script>
-<script src="assets/js/topnav.js"></script>
-<script>
-(function () {
-  var section = document.getElementById('templateShowcase');
-  var canvas = document.getElementById('templatePixelCanvas');
-  if (!section || !canvas) return;
-  var ctx = canvas.getContext('2d');
-  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var colors = ['#FF6B1A', '#E8331C', '#FFA41B', '#D0002A'];
-  function resizeCanvas() {
-    var rect = section.getBoundingClientRect();
-    var ratio = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.max(1, Math.floor(rect.width * ratio));
-    canvas.height = Math.max(1, Math.floor(rect.height * ratio));
-    canvas.style.width = rect.width + 'px';
-    canvas.style.height = rect.height + 'px';
-    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    draw(Number(section.style.getPropertyValue('--tpl-progress')) || 0);
-  }
-  function draw(progress) {
-    var w = canvas.clientWidth;
-    var h = canvas.clientHeight;
-    ctx.clearRect(0, 0, w, h);
-    var size = 54;
-    var cols = Math.ceil(w / size) + 2;
-    var rows = 4;
-    var offsetX = -size * 1.4 + progress * size * 2.2;
-    var offsetY = h * 0.27 + progress * h * 0.08;
-    for (var y = 0; y < rows; y++) {
-      for (var x = 0; x < cols; x++) {
-        if ((x + y) % 3 === 1) continue;
-        ctx.fillStyle = colors[(x + y) % colors.length];
-        ctx.globalAlpha = 0.9 - progress * 0.35;
-        ctx.fillRect(offsetX + x * size, offsetY + y * size, size - 1, size - 1);
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixforme — Laporan Dokumentasi Proyek, Selesai Dalam Menit</title>
+    <link rel="stylesheet" href="assets/css/tokens.css" />
+    <style>
+      /* ── Hero ── */
+      .hero {
+        padding: 64px 24px 0;
+        position: relative;
+        overflow: hidden;
       }
-    }
-    ctx.globalAlpha = 1;
-  }
-  function update() {
-    var rect = section.getBoundingClientRect();
-    var max = Math.max(1, rect.height - window.innerHeight);
-    var progress = Math.min(1, Math.max(0, -rect.top / max));
-    if (reduced) progress = 1;
-    section.style.setProperty('--tpl-progress', progress.toFixed(3));
-    draw(progress);
-  }
-  resizeCanvas();
-  update();
-  window.addEventListener('resize', resizeCanvas);
-  window.addEventListener('scroll', update, { passive: true });
-})();
-</script>
-</body>
+      .hero-inner {
+        max-width: 1100px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 48px;
+        align-items: center;
+        padding-bottom: 56px;
+      }
+      .hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--accent-bg);
+        border: 2px solid var(--black);
+        padding: 5px 12px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        margin-bottom: 20px;
+      }
+      .hero h1 {
+        font-family: var(--font-pixel);
+        font-size: 26px;
+        line-height: 1.7;
+        color: var(--black);
+        margin-bottom: 20px;
+      }
+      .hero h1 .hi-orange {
+        color: var(--orange);
+      }
+      .hero p.lead {
+        font-size: 16px;
+        color: var(--text-muted);
+        line-height: 1.7;
+        margin-bottom: 28px;
+        max-width: 480px;
+      }
+      .hero-ctas {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .hero-meta {
+        margin-top: 20px;
+        font-size: 12px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* ── Hero visual: mock A4 page stack ── */
+      .hero-visual {
+        position: relative;
+        height: 420px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .mock-page {
+        position: absolute;
+        width: 260px;
+        height: 368px;
+        background: #fff;
+        border: 2px solid var(--black);
+        border-radius: 3px;
+        padding: 16px;
+      }
+      .mock-page.p1 {
+        transform: rotate(-6deg) translate(-30px, 10px);
+        z-index: 1;
+        box-shadow: 6px 6px 0 0 var(--border);
+      }
+      .mock-page.p2 {
+        transform: rotate(3deg) translate(20px, -10px);
+        z-index: 2;
+        box-shadow: 6px 6px 0 0 var(--orange);
+      }
+      .mock-header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border-bottom: 3px solid var(--orange);
+        padding-bottom: 8px;
+        margin-bottom: 10px;
+      }
+      .mock-header-text {
+        font-size: 7px;
+        font-weight: 800;
+        line-height: 1.4;
+      }
+      .mock-header-sub {
+        font-size: 6px;
+        color: var(--text-muted);
+      }
+      .mock-photo {
+        background: linear-gradient(135deg, #ffd9b8, #ff9d5c);
+        border-radius: 2px;
+        height: 70px;
+        margin-bottom: 6px;
+        position: relative;
+      }
+      .mock-photo .pin {
+        position: absolute;
+        bottom: 4px;
+        left: 4px;
+        background: rgba(232, 51, 28, 0.9);
+        border-radius: 2px;
+        padding: 2px 4px;
+        font-size: 5px;
+        color: #fff;
+        font-weight: 700;
+      }
+      .mock-cap-line {
+        height: 4px;
+        background: var(--border);
+        border-radius: 1px;
+        margin-bottom: 4px;
+      }
+      .mock-cap-line.w60 {
+        width: 60%;
+      }
+      .mock-cap-line.w40 {
+        width: 40%;
+        background: var(--orange);
+      }
+      .mock-progress {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 6px;
+      }
+      .mock-progress .pct {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        font-weight: 800;
+        color: var(--orange);
+      }
+      .mock-progress .bar {
+        flex: 1;
+        height: 3px;
+        background: var(--border);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .mock-progress .bar-fill {
+        height: 100%;
+        background: var(--orange);
+      }
+
+      .floating-badge {
+        position: absolute;
+        background: var(--black);
+        color: #fff;
+        padding: 6px 10px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 3px 3px 0 0 var(--orange);
+        z-index: 3;
+      }
+      .floating-badge.b1 {
+        top: 10px;
+        right: -10px;
+      }
+      .floating-badge.b2 {
+        bottom: 30px;
+        left: -20px;
+        background: var(--success);
+        box-shadow: 3px 3px 0 0 #1e7a45;
+      }
+
+      /* ── Problem strip ── */
+      .problem-strip {
+        background: var(--black);
+        padding: 14px 0;
+        overflow: hidden;
+      }
+      .marquee {
+        display: flex;
+        gap: 40px;
+        white-space: nowrap;
+        animation: scroll-left 28s linear infinite;
+      }
+      .marquee span {
+        color: #fff;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        opacity: 0.85;
+      }
+      .marquee span b {
+        color: var(--orange);
+      }
+      @keyframes scroll-left {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-50%);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .marquee {
+          animation: none;
+        }
+      }
+
+      /* ── Section generic ── */
+      .section {
+        padding: 80px 24px;
+      }
+      .section-head {
+        max-width: 640px;
+        margin: 0 auto 48px;
+        text-align: center;
+      }
+      .section-eyebrow {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: var(--orange);
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        display: block;
+      }
+      .section-head h2 {
+        font-family: var(--font-pixel);
+        font-size: 18px;
+        line-height: 1.7;
+        color: var(--black);
+        margin-bottom: 14px;
+      }
+      .section-head p {
+        color: var(--text-muted);
+        font-size: 15px;
+        line-height: 1.6;
+      }
+
+      /* ── Solution grid (4 masalah → solusi) ── */
+      .solutions-section {
+        min-height: calc(100vh - 48px);
+        min-height: calc(100svh - 48px);
+        box-sizing: border-box;
+        padding: 54px 24px 96px;
+      }
+      .solutions-section .section-head {
+        max-width: 560px;
+        margin-bottom: 30px;
+      }
+      .solutions-section .section-head h2 {
+        font-size: 16px;
+        line-height: 1.65;
+        margin-bottom: 10px;
+      }
+      .solutions-section .section-head p {
+        font-size: 14px;
+        line-height: 1.55;
+      }
+      .solutions-grid {
+        max-width: 1080px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .solution-card {
+        background: #fff;
+        border: 2px solid var(--black);
+        border-radius: 6px;
+        padding: 18px;
+        box-shadow:
+          6px -6px 0 -2px #fff,
+          6px -6px 0 0 rgba(255, 107, 26, 0.55),
+          12px -12px 0 -2px #fff,
+          12px -12px 0 0 rgba(10, 10, 10, 0.12);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-height: 246px;
+        position: relative;
+        transition:
+          transform 180ms ease,
+          box-shadow 180ms ease;
+      }
+      .solution-card:hover {
+        transform: translate(4px, -4px);
+        box-shadow:
+          3px -3px 0 -2px #fff,
+          3px -3px 0 0 rgba(255, 107, 26, 0.7),
+          7px -7px 0 -2px #fff,
+          7px -7px 0 0 rgba(10, 10, 10, 0.16);
+      }
+      .solution-icon-box {
+        width: 38px;
+        height: 38px;
+        background: var(--black);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .solution-num {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 700;
+      }
+      .solution-card h3 {
+        font-size: 14px;
+        line-height: 1.25;
+        font-weight: 800;
+        color: var(--black);
+      }
+      .solution-card p {
+        font-size: 12px;
+        color: var(--text-muted);
+        line-height: 1.45;
+      }
+      .solution-tag {
+        display: inline-flex;
+        align-self: flex-start;
+        background: var(--accent-bg);
+        border: 1.5px solid var(--border);
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-muted);
+        margin-top: auto;
+      }
+
+      /* ── How it works ── */
+      .workflow-section {
+        min-height: calc(100vh - 48px);
+        min-height: calc(100svh - 48px);
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 74px 24px 94px;
+        overflow: hidden;
+      }
+      .workflow-section .section-head {
+        margin-bottom: 34px;
+      }
+      .steps-row {
+        width: min(1120px, 100%);
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: clamp(12px, 1.4vw, 18px);
+        position: relative;
+        align-items: stretch;
+        perspective: 1200px;
+      }
+      .step-card {
+        background: #fff;
+        border: 2px solid var(--black);
+        border-radius: 8px;
+        padding: 10px;
+        position: relative;
+        box-shadow: 3px 3px 0 0 var(--border);
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        overflow: hidden;
+        transform-origin: 50% 100%;
+        transform: translateY(calc(var(--i, 0) * 2px)) rotate(var(--rot, 0deg));
+        transition:
+          transform 220ms ease-out,
+          box-shadow 220ms ease-out;
+      }
+      .steps-row:hover .step-card {
+        transform: translateY(0) rotate(0deg);
+      }
+      .steps-row:hover .step-card:hover {
+        transform: translateY(-14px) rotate(0deg);
+        box-shadow: 6px 6px 0 0 var(--orange);
+      }
+      .step-visual {
+        height: clamp(168px, 28svh, 220px);
+        border: 2px solid var(--black);
+        border-radius: 5px;
+        overflow: hidden;
+        background: var(--accent-bg);
+      }
+      .step-visual img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+      .step-content {
+        padding: 14px 12px 10px;
+        display: grid;
+        gap: 7px;
+      }
+      .step-card .step-num {
+        font-family: var(--font-pixel);
+        font-size: 15px;
+        line-height: 1;
+        color: var(--orange);
+      }
+      .step-card h4 {
+        font-size: 13px;
+        line-height: 1.25;
+        font-weight: 800;
+      }
+      .step-card p {
+        font-size: 11.5px;
+        color: var(--text-muted);
+        line-height: 1.45;
+      }
+      /* ── Templates showcase ── */
+      .template-showcase {
+        padding: 0 24px;
+        min-height: 180vh;
+        position: relative;
+        background: #f7f7f3;
+        overflow: clip;
+        --tpl-progress: 0;
+      }
+      .template-sticky {
+        position: sticky;
+        top: 64px;
+        min-height: calc(100vh - 64px);
+        display: flex;
+        align-items: center;
+        padding: 54px 0 64px;
+      }
+      .template-stage {
+        width: min(1180px, 100%);
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+      }
+      .template-pixel-canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: calc(0.18 - (var(--tpl-progress) * 0.08));
+        pointer-events: none;
+        image-rendering: pixelated;
+      }
+      .template-copy {
+        max-width: 760px;
+        margin: 0 auto 44px;
+        text-align: center;
+        transform: translateY(calc(var(--tpl-progress) * -18px));
+      }
+      .template-copy .section-eyebrow {
+        margin-bottom: 12px;
+      }
+      .template-copy h2 {
+        font-family: var(--font-pixel);
+        font-size: 18px;
+        line-height: 1.75;
+        margin-bottom: 16px;
+      }
+      .template-copy p {
+        color: var(--text-muted);
+        font-size: 15px;
+        line-height: 1.7;
+      }
+      .template-copy::after {
+        content: "";
+        display: block;
+        width: 84px;
+        height: 3px;
+        margin: 24px auto 0;
+        background: var(--orange);
+      }
+      .tpl-row {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 14px;
+        transform: translateY(calc(32px - (var(--tpl-progress) * 32px)));
+      }
+      .tpl-thumb {
+        --delay: 0;
+        min-height: 188px;
+        background: rgba(255, 255, 255, 0.94);
+        border: 1.5px solid rgba(10, 10, 10, 0.82);
+        border-radius: 8px;
+        padding: 12px;
+        box-shadow:
+          0 12px 34px rgba(10, 10, 10, 0.08),
+          2px 2px 0 0 rgba(10, 10, 10, 0.08);
+        text-align: left;
+        transform: translateY(
+          calc((1 - var(--tpl-progress)) * (12px + var(--delay) * 4px))
+        );
+        opacity: calc(0.86 + (var(--tpl-progress) * 0.14));
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s,
+          transform 0.2s;
+      }
+      .tpl-thumb.featured {
+        border-color: var(--orange);
+        background: #fff7f1;
+        box-shadow:
+          0 14px 34px rgba(255, 107, 26, 0.14),
+          0 -4px 0 0 var(--orange);
+      }
+      .tpl-thumb:hover {
+        border-color: var(--orange);
+        box-shadow:
+          0 16px 34px rgba(10, 10, 10, 0.12),
+          0 -3px 0 0 var(--orange);
+      }
+      .tpl-preview {
+        height: 94px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: #fff;
+        padding: 5px;
+        display: grid;
+        gap: 4px;
+        overflow: hidden;
+        margin-bottom: 12px;
+      }
+      .tpl-preview.stack {
+        grid-template-columns: 1.45fr 0.9fr;
+      }
+      .tpl-preview.equal,
+      .tpl-preview.border {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 1fr 1fr;
+      }
+      .tpl-preview.full {
+        grid-template-columns: 1fr;
+      }
+      .tpl-preview.split {
+        grid-template-columns: 1fr 1fr;
+      }
+      .tpl-photo {
+        background-size: cover;
+        background-position: center;
+        border-radius: 3px;
+        position: relative;
+        min-height: 0;
+      }
+      .tpl-photo::after {
+        content: "";
+        position: absolute;
+        inset: auto 4px 4px 4px;
+        height: 5px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.82);
+      }
+      .tpl-preview.stack .tpl-text {
+        display: grid;
+        align-content: center;
+        gap: 5px;
+        padding: 4px;
+      }
+      .tpl-line {
+        height: 5px;
+        border-radius: 999px;
+        background: #dadad4;
+      }
+      .tpl-line.strong {
+        width: 78%;
+        background: var(--black);
+      }
+      .tpl-line.accent {
+        width: 42%;
+        background: var(--orange);
+      }
+      .tpl-preview.border .tpl-photo {
+        border: 1.5px solid var(--orange);
+      }
+      .tpl-num {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        background: var(--orange);
+        color: #fff;
+        font-family: var(--font-mono);
+        font-size: 7px;
+        font-weight: 900;
+        line-height: 1;
+        padding: 2px 4px;
+        border-radius: 2px;
+      }
+      .tpl-thumb h3 {
+        font-size: 12px;
+        font-weight: 900;
+        margin-bottom: 4px;
+      }
+      .tpl-thumb p {
+        font-size: 10.5px;
+        color: var(--text-muted);
+        line-height: 1.45;
+      }
+
+      /* ── Tools cards ── */
+      .tools-grid {
+        max-width: 1100px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+      .tool-card {
+        border: 2px solid var(--black);
+        border-radius: 6px;
+        padding: 26px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .tool-card.featured {
+        background: var(--black);
+        color: #fff;
+        box-shadow: 5px 5px 0 0 var(--orange);
+      }
+      .tool-card:not(.featured) {
+        background: #fff;
+        box-shadow: 4px 4px 0 0 var(--border);
+      }
+      .tool-card h3 {
+        font-size: 15px;
+        font-weight: 800;
+      }
+      .tool-card p {
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      .tool-card.featured p {
+        color: #d4d4d0;
+      }
+      .tool-card:not(.featured) p {
+        color: var(--text-muted);
+      }
+      .tool-icon-box {
+        width: 44px;
+        height: 44px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .tool-card.featured .tool-icon-box {
+        background: var(--orange);
+      }
+      .tool-card:not(.featured) .tool-icon-box {
+        background: var(--accent-bg);
+      }
+
+      /* ── CTA banner ── */
+      .cta-banner {
+        max-width: 1100px;
+        margin: 0 auto;
+        background: var(--orange);
+        border: 2px solid var(--black);
+        border-radius: 8px;
+        padding: 56px 48px;
+        box-shadow: 6px 6px 0 0 var(--black);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+      .cta-banner h2 {
+        font-family: var(--font-pixel);
+        font-size: 16px;
+        color: #fff;
+        line-height: 1.7;
+      }
+      .cta-banner p {
+        color: #ffe5d5;
+        font-size: 14px;
+        margin-top: 8px;
+      }
+
+      /* ── Footer ── */
+      .footer-inner {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 48px 24px 28px;
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr;
+        gap: 32px;
+      }
+      .footer-brand p {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-top: 10px;
+        max-width: 260px;
+        line-height: 1.6;
+      }
+      .footer-col h5 {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+        color: var(--black);
+      }
+      .footer-col a {
+        display: block;
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-bottom: 10px;
+      }
+      .footer-col a:hover {
+        color: var(--orange);
+      }
+      .footer-bottom {
+        border-top: 1.5px solid var(--border);
+        padding: 18px 24px;
+        text-align: center;
+        font-size: 11px;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+      }
+
+      @media (max-width: 900px) {
+        .hero-inner {
+          grid-template-columns: 1fr;
+        }
+        .hero-visual {
+          height: 320px;
+          margin-top: 24px;
+        }
+        .solutions-grid,
+        .steps-row,
+        .tools-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .solutions-section {
+          min-height: auto;
+          padding: 64px 18px 78px;
+        }
+        .workflow-section {
+          min-height: auto;
+          padding: 72px 18px 86px;
+          overflow: visible;
+        }
+        .workflow-section .section-head {
+          margin-bottom: 34px;
+        }
+        .step-card,
+        .steps-row:hover .step-card,
+        .steps-row:hover .step-card:hover {
+          transform: none;
+        }
+        .step-visual {
+          height: 190px;
+        }
+        .solution-card {
+          min-height: 0;
+          box-shadow: 4px 4px 0 0 var(--border);
+        }
+        .solution-card:hover {
+          transform: none;
+          box-shadow: 4px 4px 0 0 var(--border);
+        }
+        .template-showcase {
+          min-height: auto;
+          padding: 80px 16px;
+        }
+        .template-sticky {
+          position: relative;
+          top: auto;
+          min-height: 0;
+          padding: 0;
+        }
+        .template-pixel-canvas {
+          display: none;
+        }
+        .tpl-row {
+          grid-template-columns: repeat(2, 1fr);
+          transform: none;
+        }
+        .tpl-thumb {
+          opacity: 1;
+          transform: none;
+        }
+        .footer-inner {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 600px) {
+        .hero h1 {
+          font-size: 19px;
+        }
+        .solutions-grid,
+        .steps-row,
+        .tools-grid,
+        .tpl-row {
+          grid-template-columns: 1fr;
+        }
+        .cta-banner {
+          flex-direction: column;
+          text-align: center;
+        }
+        .footer-inner {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="topnav" id="topnav" data-active="home"></nav>
+
+    <!-- ════════════════ HERO ════════════════ -->
+    <section class="hero">
+      <div class="hero-inner">
+        <div>
+          <div class="hero-eyebrow">
+            <span
+              data-pixel-icon="sparkle"
+              data-pixel-size="12"
+              data-pixel-color="#FF6B1A"
+            ></span>
+            DIBUAT UNTUK KONTRAKTOR INDONESIA
+          </div>
+          <h1>
+            LAPORAN DOKUMENTASI<br />PROYEK,
+            <span class="hi-orange">BUKAN<br />PEKERJAAN BERHARI-HARI.</span>
+          </h1>
+          <p class="lead">
+            Susun foto progres lapangan jadi laporan pertanggungjawaban siap
+            cetak — rapi, terstruktur, dan konsisten — tanpa drag-drop manual di
+            Word atau Excel.
+          </p>
+          <div class="hero-ctas">
+            <a
+              href="wizard-step1.html"
+              class="pixel-btn pixel-btn-accent pixel-btn-lg"
+            >
+              <span
+                data-pixel-icon="arrowRight"
+                data-pixel-size="14"
+                data-pixel-color="#fff"
+              ></span>
+              Buat Laporan Pertama
+            </a>
+            <a
+              href="product.html"
+              class="pixel-btn pixel-btn-ghost pixel-btn-lg"
+              >Lihat Cara Kerja</a
+            >
+          </div>
+          <div class="hero-meta">
+            <span
+              data-pixel-icon="check"
+              data-pixel-size="12"
+              data-pixel-color="#2E9E5B"
+            ></span>
+            Tidak perlu kartu kredit · Export PDF gratis untuk laporan pertama
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="floating-badge b1">
+            <span
+              data-pixel-icon="mapPin"
+              data-pixel-size="11"
+              data-pixel-color="#fff"
+            ></span>
+            Geotag aktif
+          </div>
+          <div class="floating-badge b2">
+            <span
+              data-pixel-icon="check"
+              data-pixel-size="11"
+              data-pixel-color="#fff"
+            ></span>
+            4 halaman siap
+          </div>
+
+          <div class="mock-page p1">
+            <div class="mock-header">
+              <div
+                style="
+                  width: 18px;
+                  height: 18px;
+                  background: #0a0a0a;
+                  border-radius: 2px;
+                  flex-shrink: 0;
+                "
+              ></div>
+              <div>
+                <div class="mock-header-text">DINAS PEKERJAAN UMUM</div>
+                <div class="mock-header-sub">Laporan Dokumentasi Proyek</div>
+              </div>
+            </div>
+            <div class="mock-photo"><div class="pin">📍 Jayapura</div></div>
+            <div class="mock-cap-line w60"></div>
+            <div class="mock-cap-line w40"></div>
+            <div class="mock-progress">
+              <span class="pct">45%</span>
+              <div class="bar">
+                <div class="bar-fill" style="width: 45%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mock-page p2">
+            <div class="mock-header">
+              <div
+                style="
+                  width: 18px;
+                  height: 18px;
+                  background: #0a0a0a;
+                  border-radius: 2px;
+                  flex-shrink: 0;
+                "
+              ></div>
+              <div>
+                <div class="mock-header-text">DINAS PEKERJAAN UMUM</div>
+                <div class="mock-header-sub">Laporan Dokumentasi Proyek</div>
+              </div>
+            </div>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 4px;
+                margin-bottom: 6px;
+              "
+            >
+              <div
+                class="mock-photo"
+                style="
+                  height: 50px;
+                  margin-bottom: 0;
+                  background: linear-gradient(135deg, #b8e0d2, #6fc3a0);
+                "
+              ></div>
+              <div
+                class="mock-photo"
+                style="height: 50px; margin-bottom: 0"
+              ></div>
+            </div>
+            <div class="mock-cap-line w60"></div>
+            <div class="mock-progress">
+              <span class="pct">80%</span>
+              <div class="bar">
+                <div class="bar-fill" style="width: 80%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ PROBLEM MARQUEE ════════════════ -->
+    <div class="problem-strip">
+      <div class="marquee">
+        <span><b>SEBELUM:</b> susun foto satu-satu di Word →</span>
+        <span><b>SESUDAH:</b> upload semua, layout otomatis →</span>
+        <span><b>SEBELUM:</b> foto portrait merusak estetika →</span>
+        <span><b>SESUDAH:</b> AI rapikan rasio dalam 1 klik →</span>
+        <span><b>SEBELUM:</b> watermark tanggal berantakan →</span>
+        <span><b>SESUDAH:</b> bersihkan bulk dalam hitungan detik →</span>
+        <span><b>SEBELUM:</b> susun foto satu-satu di Word →</span>
+        <span><b>SESUDAH:</b> upload semua, layout otomatis →</span>
+        <span><b>SEBELUM:</b> foto portrait merusak estetika →</span>
+        <span><b>SESUDAH:</b> AI rapikan rasio dalam 1 klik →</span>
+        <span><b>SEBELUM:</b> watermark tanggal berantakan →</span>
+        <span><b>SESUDAH:</b> bersihkan bulk dalam hitungan detik →</span>
+      </div>
+    </div>
+
+    <!-- ════════════════ SOLUTIONS (4 masalah) ════════════════ -->
+    <section class="section solutions-section">
+      <div class="section-head">
+        <span class="section-eyebrow">Masalah yang kami selesaikan</span>
+        <h2>EMPAT HAL YANG<br />MEMBUANG WAKTU ANDA</h2>
+        <p>
+          Setiap fitur Pixforme dibangun dari keluhan nyata penyusun laporan
+          lapangan — bukan asumsi.
+        </p>
+      </div>
+      <div class="solutions-grid">
+        <div class="solution-card">
+          <div class="solution-icon-box">
+            <span
+              data-pixel-icon="layout"
+              data-pixel-size="22"
+              data-pixel-color="#fff"
+            ></span>
+          </div>
+          <span class="solution-num">MASALAH 01</span>
+          <h3>Susun foto manual di Word/Excel</h3>
+          <p>
+            Drag satu-satu, atur keterangan di samping, ulangi puluhan kali.
+            Pixforme menyusun otomatis dari template yang sudah profesional.
+          </p>
+          <span class="solution-tag">Wizard 4 langkah</span>
+        </div>
+        <div class="solution-card">
+          <div class="solution-icon-box">
+            <span
+              data-pixel-icon="crop"
+              data-pixel-size="22"
+              data-pixel-color="#fff"
+            ></span>
+          </div>
+          <span class="solution-num">MASALAH 02</span>
+          <h3>Aspek rasio foto tidak seragam</h3>
+          <p>
+            Foto portrait di tengah deretan landscape merusak estetika laporan.
+            Sesuaikan posisi manual atau AI Extend otomatis.
+          </p>
+          <span class="solution-tag">AI Extend · per foto</span>
+        </div>
+        <div class="solution-card">
+          <div class="solution-icon-box">
+            <span
+              data-pixel-icon="watermark"
+              data-pixel-size="22"
+              data-pixel-color="#fff"
+            ></span>
+          </div>
+          <span class="solution-num">MASALAH 03</span>
+          <h3>Watermark tanggal berantakan</h3>
+          <p>
+            Foto dari berbagai sumber datang dengan watermark tanggal yang tidak
+            konsisten. Bersihkan, ganti, atau tambahkan secara massal.
+          </p>
+          <span class="solution-tag">AI Fix Tools</span>
+        </div>
+        <div class="solution-card">
+          <div class="solution-icon-box">
+            <span
+              data-pixel-icon="geo"
+              data-pixel-size="22"
+              data-pixel-color="#fff"
+            ></span>
+          </div>
+          <span class="solution-num">MASALAH 04</span>
+          <h3>Foto butuh geotag tapi tidak ada GPS</h3>
+          <p>
+            Tambahkan koordinat, tanggal, dan jam secara manual lewat peta —
+            non-destructive, tidak mengubah foto asli.
+          </p>
+          <span class="solution-tag">Geotag overlay</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ HOW IT WORKS ════════════════ -->
+    <section class="section workflow-section" style="background: var(--accent-bg)">
+      <div class="section-head">
+        <span class="section-eyebrow">Cara kerja</span>
+        <h2>EMPAT LANGKAH,<br />SATU LAPORAN SIAP CETAK</h2>
+      </div>
+            <div class="steps-row">
+        <div class="step-card" style="--i: 0; --rot: -4deg">
+          <div class="step-visual">
+            <img src="cssstyleassets/%233/img/ChatGPT%20Image%20Jun%2024%2C%202026%2C%2012_51_38%20PM.png" alt="Representasi buat project laporan" />
+          </div>
+          <div class="step-content">
+            <div class="step-num">01</div>
+            <h4>Buat Project</h4>
+            <p>Siapkan identitas project, instansi, lokasi, dan header laporan.</p>
+          </div>
+        </div>
+        <div class="step-card" style="--i: 1; --rot: -1.5deg">
+          <div class="step-visual">
+            <img src="cssstyleassets/%233/img/ChatGPT%20Image%20Jun%2024%2C%202026%2C%2012_51_52%20PM.png" alt="Representasi detail laporan" />
+          </div>
+          <div class="step-content">
+            <div class="step-num">02</div>
+            <h4>Detail Laporan</h4>
+            <p>Atur periode, lokasi kegiatan, dan item pekerjaan untuk laporan.</p>
+          </div>
+        </div>
+        <div class="step-card" style="--i: 2; --rot: 1.5deg">
+          <div class="step-visual">
+            <img src="cssstyleassets/%233/img/ChatGPT%20Image%20Jun%2024%2C%202026%2C%2012_51_57%20PM.png" alt="Representasi foto dan caption" />
+          </div>
+          <div class="step-content">
+            <div class="step-num">03</div>
+            <h4>Foto & Caption</h4>
+            <p>Upload foto, isi caption, progres, tanggal, dan koordinat.</p>
+          </div>
+        </div>
+        <div class="step-card" style="--i: 3; --rot: 4deg">
+          <div class="step-visual">
+            <img src="cssstyleassets/%233/img/ChatGPT%20Image%20Jun%2024%2C%202026%2C%2012_52_02%20PM.png" alt="Representasi preview dan export laporan" />
+          </div>
+          <div class="step-content">
+            <div class="step-num">04</div>
+            <h4>Preview & Export</h4>
+            <p>Pilih template, cek preview, lalu export PDF siap cetak.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ TEMPLATES ════════════════ -->
+    <section class="template-showcase" id="templateShowcase">
+      <canvas
+        class="template-pixel-canvas"
+        id="templatePixelCanvas"
+        aria-hidden="true"
+      ></canvas>
+      <div class="template-sticky">
+        <div class="template-stage">
+          <div class="template-copy">
+            <span class="section-eyebrow">Template siap pakai</span>
+            <h2>LIMA GAYA LAYOUT,<br />SEMUA BISA DIKUSTOMISASI</h2>
+            <p>
+              Pilih dari contoh laporan nyata, lalu sesuaikan warna aksen,
+              spacing, border, dan header tanpa mengulang layout dari nol.
+            </p>
+          </div>
+          <div class="tpl-row" aria-label="Pilihan template laporan">
+            <article class="tpl-thumb featured" style="--delay: 0">
+              <div class="tpl-preview stack">
+                <div
+                  class="tpl-photo"
+                  style="
+                    background-image: url(&quot;https://picsum.photos/seed/pixforme-pondasi/600/420&quot;);
+                  "
+                ></div>
+                <div class="tpl-text">
+                  <span class="tpl-line strong"></span
+                  ><span class="tpl-line"></span
+                  ><span class="tpl-line accent"></span>
+                </div>
+              </div>
+              <h3>Stack + Teks</h3>
+              <p>
+                Foto besar di kiri, progres dan caption pekerjaan jelas di
+                kanan.
+              </p>
+            </article>
+            <article class="tpl-thumb" style="--delay: 1">
+              <div class="tpl-preview equal">
+                <div
+                  class="tpl-photo"
+                  style="
+                    background-image: url(&quot;https://picsum.photos/seed/pixforme-road/500/360&quot;);
+                  "
+                ></div>
+                <div
+                  class="tpl-photo"
+                  style="
+                    background-image: url(&quot;https://picsum.photos/seed/pixforme-atap/500/360&quot;);
+                  "
+                ></div>
+                <div
+                  class="tpl-photo"
+                  style="
+                    background-image: url(&quot;https://picsum.photos/seed/pixforme-beton/500/360&quot;);
+                  "
+                ></div>
+                <div
+                  class="tpl-photo"
+                  style="
+                    background-image: url(&quot;https://picsum.photos/seed/pixforme-tunnel/500/360&quot;);
+                  "
+                ></div>
+              </div>
+              <h3>Grid Equal</h3>
+              <p>Empat foto seimbang untuk laporan padat dan mudah dipindai.</p>
+            </article>
+            <article class="tpl-thumb" style="--delay: 2">
+              <div class="tpl-preview border">
+                <div
+                  class="tpl-photo"
+                  style="
+                    background-image: url(&quot;https://picsum.photos/seed/pixforme-grid-1/500/360&quot;);
+                  "
+                >
+                  <span class="tpl-num">01</span>
+                </div>
+                <div
+                  class="tpl-photo"
+                  style="
+                    background-image: url(&quot;https://picsum.photos/seed/pixforme-grid-2/500/360&quot;);
+                  "
+                >
+                  <span class="tpl-num">02</span>
+                </div>
+                <div
+                  class="tpl-photo"
+                  style="
+                    background-image: url(&quot;https://picsum.photos/seed/pixforme-grid-3/500/360&quot;);
+                  "
+                >
+                  <span class="tpl-num">03</span>
+                </div>
+                <div
+                  class="tpl-photo"
+                  style="
+                    background-image: url(&quot;https://picsum.photos/seed/pixforme-grid-4/500/360&quot;);
+                  "
+                >
+                  <span class="tpl-num">04</span>
+                </div>
+              </div>
+              <h3>Grid Border</h3>
+              <p>
+                Nomor visual dan border tegas untuk dokumentasi yang butuh
+                referensi cepat.
+              </p>
+            </article>
+            <article class="tpl-thumb" style="--delay: 3">
+              <div class="tpl-preview full">
+                <div
+                  class="tpl-photo"
+                  style="
+                    background-image: url(&quot;https://picsum.photos/seed/pixforme-full-page/700/460&quot;);
+                  "
+                ></div>
+              </div>
+              <h3>Full Page</h3>
+              <p>Satu foto dominan per halaman untuk bukti visual utama.</p>
+            </article>
+            <article class="tpl-thumb" style="--delay: 4">
+              <div class="tpl-preview split">
+                <div
+                  class="tpl-photo"
+                  style="
+                    background-image: url(&quot;https://picsum.photos/seed/pixforme-landscape-a/500/360&quot;);
+                  "
+                ></div>
+                <div
+                  class="tpl-photo"
+                  style="
+                    background-image: url(&quot;https://picsum.photos/seed/pixforme-landscape-b/500/360&quot;);
+                  "
+                ></div>
+              </div>
+              <h3>Landscape Split</h3>
+              <p>
+                Dua foto lebar dalam halaman landscape untuk perbandingan
+                progres.
+              </p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ AI FIX TOOLS ════════════════ -->
+    <section class="section" style="background: var(--accent-bg)">
+      <div class="section-head">
+        <span class="section-eyebrow">Di luar wizard laporan</span>
+        <h2>AI FIX TOOLS UNTUK<br />KEBUTUHAN LAPANGAN</h2>
+        <p>
+          Tool terpisah untuk foto bukti lapangan real-time — tidak tercampur
+          dengan foto laporan resmi Anda.
+        </p>
+      </div>
+      <div class="tools-grid">
+        <div class="tool-card featured">
+          <div class="tool-icon-box">
+            <span
+              data-pixel-icon="geo"
+              data-pixel-size="22"
+              data-pixel-color="#fff"
+            ></span>
+          </div>
+          <h3>AI Geotag Burn-in</h3>
+          <p>
+            Bakar koordinat, tanggal, dan jam langsung ke piksel foto untuk
+            bukti lapangan real-time — dengan kontrol prompt presisi.
+          </p>
+          <a
+            href="tools.html"
+            class="pixel-btn pixel-btn-accent"
+            style="margin-top: 8px; align-self: flex-start"
+            >Buka Tool</a
+          >
+        </div>
+        <div class="tool-card">
+          <div class="tool-icon-box">
+            <span
+              data-pixel-icon="watermark"
+              data-pixel-size="22"
+              data-pixel-color="#0A0A0A"
+            ></span>
+          </div>
+          <h3>Watermark Manager</h3>
+          <p>
+            Hapus, ganti, atau tambahkan watermark tanggal secara massal ke
+            puluhan foto sekaligus.
+          </p>
+          <a
+            href="tools.html"
+            class="pixel-btn pixel-btn-ghost"
+            style="margin-top: 8px; align-self: flex-start"
+            >Buka Tool</a
+          >
+        </div>
+        <div class="tool-card">
+          <div class="tool-icon-box">
+            <span
+              data-pixel-icon="image"
+              data-pixel-size="22"
+              data-pixel-color="#0A0A0A"
+            ></span>
+          </div>
+          <h3>Galeri Foto</h3>
+          <p>
+            Semua foto Anda — asli maupun hasil AI Fix — tersimpan rapi dan bisa
+            dipakai ulang di project manapun.
+          </p>
+          <a
+            href="tools.html"
+            class="pixel-btn pixel-btn-ghost"
+            style="margin-top: 8px; align-self: flex-start"
+            >Buka Galeri</a
+          >
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ CTA ════════════════ -->
+    <section class="section">
+      <div class="cta-banner">
+        <div>
+          <h2>SIAP BUAT LAPORAN<br />PERTAMA ANDA?</h2>
+          <p>Gratis untuk laporan pertama. Tidak perlu kartu kredit.</p>
+        </div>
+        <a
+          href="wizard-step1.html"
+          class="pixel-btn pixel-btn-primary pixel-btn-lg"
+        >
+          <span
+            data-pixel-icon="arrowRight"
+            data-pixel-size="14"
+            data-pixel-color="#fff"
+          ></span>
+          Mulai Sekarang
+        </a>
+      </div>
+    </section>
+
+    <!-- ════════════════ FOOTER ════════════════ -->
+    <footer class="site-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <div style="display: flex; align-items: center; gap: 9px">
+            <span data-pixel-logo data-pixel-size="24"></span>
+            <span style="font-family: var(--font-pixel); font-size: 12px"
+              >PIXFORME</span
+            >
+          </div>
+          <p>
+            Tool laporan dokumentasi proyek untuk kontraktor dan instansi di
+            Indonesia. Dibuat supaya laporan pertanggungjawaban tidak lagi
+            memakan waktu berhari-hari.
+          </p>
+        </div>
+        <div class="footer-col">
+          <h5>Produk</h5>
+          <a href="product.html">Cara Kerja</a>
+          <a href="wizard-step1.html">Buat Laporan</a>
+          <a href="pricing.html">Harga</a>
+        </div>
+        <div class="footer-col">
+          <h5>Tools</h5>
+          <a href="tools.html">AI Geotag Burn-in</a>
+          <a href="tools.html">Watermark Manager</a>
+          <a href="tools.html">Galeri Foto</a>
+        </div>
+        <div class="footer-col">
+          <h5>Perusahaan</h5>
+          <a href="#">Tentang</a>
+          <a href="#">Kontak</a>
+          <a href="#">Kebijakan Privasi</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        © 2026 PIXFORME.IO — DIBUAT UNTUK KONTRAKTOR INDONESIA
+      </div>
+    </footer>
+
+    <script src="assets/js/pixel-icons.js"></script>
+    <script src="assets/js/topnav.js"></script>
+    <script>
+      (function () {
+        var section = document.getElementById("templateShowcase");
+        var canvas = document.getElementById("templatePixelCanvas");
+        if (!section || !canvas) return;
+        var ctx = canvas.getContext("2d");
+        var reduced = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+        var colors = ["#FF6B1A", "#E8331C", "#FFA41B", "#D0002A"];
+        function resizeCanvas() {
+          var rect = section.getBoundingClientRect();
+          var ratio = Math.min(window.devicePixelRatio || 1, 2);
+          canvas.width = Math.max(1, Math.floor(rect.width * ratio));
+          canvas.height = Math.max(1, Math.floor(rect.height * ratio));
+          canvas.style.width = rect.width + "px";
+          canvas.style.height = rect.height + "px";
+          ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+          draw(Number(section.style.getPropertyValue("--tpl-progress")) || 0);
+        }
+        function draw(progress) {
+          var w = canvas.clientWidth;
+          var h = canvas.clientHeight;
+          ctx.clearRect(0, 0, w, h);
+          var size = 54;
+          var cols = Math.ceil(w / size) + 2;
+          var rows = 4;
+          var offsetX = -size * 1.4 + progress * size * 2.2;
+          var offsetY = h * 0.27 + progress * h * 0.08;
+          for (var y = 0; y < rows; y++) {
+            for (var x = 0; x < cols; x++) {
+              if ((x + y) % 3 === 1) continue;
+              ctx.fillStyle = colors[(x + y) % colors.length];
+              ctx.globalAlpha = 0.9 - progress * 0.35;
+              ctx.fillRect(
+                offsetX + x * size,
+                offsetY + y * size,
+                size - 1,
+                size - 1,
+              );
+            }
+          }
+          ctx.globalAlpha = 1;
+        }
+        function update() {
+          var rect = section.getBoundingClientRect();
+          var max = Math.max(1, rect.height - window.innerHeight);
+          var progress = Math.min(1, Math.max(0, -rect.top / max));
+          if (reduced) progress = 1;
+          section.style.setProperty("--tpl-progress", progress.toFixed(3));
+          draw(progress);
+        }
+        resizeCanvas();
+        update();
+        window.addEventListener("resize", resizeCanvas);
+        window.addEventListener("scroll", update, { passive: true });
+      })();
+    </script>
+  </body>
 </html>

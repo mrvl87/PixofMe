@@ -1,0 +1,158 @@
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+
+type Table<Row, Insert = Partial<Row>, Update = Partial<Row>> = {
+  Row: Row;
+  Insert: Insert;
+  Update: Update;
+  Relationships: [];
+};
+
+export type Database = {
+  public: {
+    Tables: {
+      profiles: Table<{
+        id: string;
+        email: string | null;
+        full_name: string | null;
+        plan: "free" | "pro" | "team";
+        ai_credit_balance: number;
+        created_at: string;
+        updated_at: string;
+      }>;
+      workspaces: Table<{
+        id: string;
+        owner_id: string;
+        name: string;
+        created_at: string;
+        updated_at: string;
+      }>;
+      projects: Table<{
+        id: string;
+        workspace_id: string;
+        owner_id: string;
+        name: string;
+        institution_name: string | null;
+        job_name: string | null;
+        activity_location: string | null;
+        header_text: string | null;
+        header_mode: "all" | "first";
+        show_logo_instansi: boolean;
+        show_logo_perusahaan: boolean;
+        rab_text: string | null;
+        status: "draft" | "active" | "archived";
+        created_at: string;
+        updated_at: string;
+      }>;
+      project_items: Table<{
+        id: string;
+        project_id: string;
+        owner_id: string;
+        sort_order: number;
+        name: string;
+        source: "rab" | "manual";
+        is_active: boolean;
+        created_at: string;
+        updated_at: string;
+      }>;
+      reports: Table<{
+        id: string;
+        project_id: string;
+        owner_id: string;
+        name: string;
+        period_text: string | null;
+        status: "draft" | "ready" | "exported" | "archived";
+        created_at: string;
+        updated_at: string;
+      }>;
+      gallery_photos: Table<{
+        id: string;
+        owner_id: string;
+        project_id: string | null;
+        source_type: "laporan" | "bukti_lapangan" | "ai_generated";
+        storage_path: string;
+        public_url: string | null;
+        filename: string;
+        mime_type: string | null;
+        width: number | null;
+        height: number | null;
+        size_bytes: number | null;
+        checksum_sha256: string | null;
+        original_photo_id: string | null;
+        metadata: Json;
+        created_at: string;
+        updated_at: string;
+      }>;
+      report_photos: Table<{
+        id: string;
+        report_id: string;
+        owner_id: string;
+        photo_id: string | null;
+        sort_order: number;
+        job_name: string | null;
+        project_item_id: string | null;
+        item_name: string | null;
+        progress: number | null;
+        fit_mode: "crop" | "contain";
+        crop_y: number;
+        ai_extended: boolean;
+        created_at: string;
+        updated_at: string;
+      }>;
+      report_photo_geotags: Table<{
+        report_photo_id: string;
+        owner_id: string;
+        address: string | null;
+        latitude: number;
+        longitude: number;
+        captured_date: string | null;
+        captured_time: string | null;
+        timezone: string;
+        created_at: string;
+        updated_at: string;
+      }>;
+      report_preview_settings: Table<{
+        report_id: string;
+        owner_id: string;
+        template_id: "t1" | "t2" | "t3" | "t4" | "t5";
+        paper_size: "a4" | "f4";
+        grid_geo_color: string;
+        grid_geo_size: number;
+        grid_geo_contrast_applied: boolean;
+        accent_color: string;
+        spacing: number;
+        font_size: number;
+        show_photo_border: boolean;
+        border_width: number;
+        border_radius: number;
+        settings: Json;
+        created_at: string;
+        updated_at: string;
+      }>;
+      ai_jobs: Table<{
+        id: string;
+        owner_id: string;
+        project_id: string | null;
+        report_photo_id: string | null;
+        job_type: "ai_extend" | "geotag_burn_in" | "watermark_remove" | "watermark_replace";
+        status: "queued" | "running" | "succeeded" | "failed" | "cancelled";
+        credit_reserved: number;
+        credit_spent: number;
+        provider: string | null;
+        model: string | null;
+        input_photo_id: string | null;
+        output_photo_id: string | null;
+        request_payload: Json;
+        result_payload: Json;
+        error_message: string | null;
+        started_at: string | null;
+        finished_at: string | null;
+        created_at: string;
+        updated_at: string;
+      }>;
+    };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
+  };
+};

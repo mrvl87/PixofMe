@@ -2,17 +2,17 @@
   "metadata": {
     "name": "Pixforme Prototype Design Tokens",
     "source": "prototype",
-    "generatedFor": "PixofMe docs",
+    "syncedAt": "2026-06-25",
     "prototypeBrandText": "PIXFORME",
-    "notes": "Values extracted from prototype/assets/css/tokens.css, prototype/assets/css/wizard.css, and page-level styles. This file documents the prototype and is not a redesign."
+    "notes": "Documents current prototype tokens and component constants. The prototype has no root styles.css/app.js; active styles/scripts are split across prototype/assets and page-level index.html."
   },
   "sourceFiles": [
+    "prototype/index.html",
     "prototype/assets/css/tokens.css",
     "prototype/assets/css/wizard.css",
-    "prototype/index.html",
-    "prototype/pricing.html",
-    "prototype/product.html",
-    "prototype/tools.html",
+    "prototype/assets/js/pixel-icons.js",
+    "prototype/assets/js/topnav.js",
+    "prototype/assets/js/wizard-state.js",
     "prototype/login.html",
     "prototype/workspace.html",
     "prototype/wizard-step1.html",
@@ -21,105 +21,40 @@
     "prototype/wizard-step4.html"
   ],
   "colors": {
-    "black": {
-      "value": "#0A0A0A",
-      "role": "Primary text, heavy outlines, primary button background"
-    },
-    "orange": {
-      "value": "#FF6B1A",
-      "role": "Primary accent, active states, shadows, progress"
-    },
-    "red": {
-      "value": "#E8331C",
-      "role": "Accent shadow, required/error marker"
-    },
-    "amber": {
-      "value": "#FFA41B",
-      "role": "Warning accent and required-empty input border"
-    },
-    "background": {
-      "value": "#FBFBF8",
-      "role": "Global page background"
-    },
-    "card": {
-      "value": "#FFFFFF",
-      "role": "Card, panel, nav, modal, paper preview surface"
-    },
-    "accentBackground": {
-      "value": "#F4F4F1",
-      "role": "Muted section backgrounds, icon wrappers, chips"
-    },
-    "textPrimary": {
-      "value": "#0A0A0A",
-      "role": "Main text"
-    },
-    "textMuted": {
-      "value": "#6B6B68",
-      "role": "Secondary text, helper text, inactive nav text"
-    },
-    "border": {
-      "value": "#E5E5E0",
-      "role": "Neutral borders and neutral hard shadows"
-    },
-    "success": {
-      "value": "#2E9E5B",
-      "role": "Done state and successful payment state"
-    },
-    "successBackground": {
-      "value": "#EAFAF1",
-      "role": "Success state background"
-    },
-    "warningBackground": {
-      "value": "#FFF7E8",
-      "role": "Warning/accent tint"
-    },
-    "activeOrangeBackground": {
-      "value": "#FFF1E8",
-      "role": "Active nav, active wizard step, selected template, active tools"
-    },
-    "documentMutedText": {
-      "value": "#52524F",
-      "role": "Preview document secondary text"
-    },
-    "blueAccent": {
-      "value": "#2563EB",
-      "role": "Preview accent swatch and gallery tool icon background"
-    },
-    "tealAccent": {
-      "value": "#0F766E",
-      "role": "Preview accent swatch"
-    },
-    "purpleAccent": {
-      "value": "#7C3AED",
-      "role": "Preview accent swatch"
-    },
-    "gridGeoYellow": {
-      "value": "#FFD600",
-      "role": "Grid coordinate overlay color option"
-    },
-    "gridGeoGreen": {
-      "value": "#20E82A",
-      "role": "Grid coordinate overlay color option"
-    }
+    "black": "#0A0A0A",
+    "orange": "#FF6B1A",
+    "red": "#E8331C",
+    "amber": "#FFA41B",
+    "background": "#FBFBF8",
+    "card": "#FFFFFF",
+    "accentBackground": "#F4F4F1",
+    "textPrimary": "#0A0A0A",
+    "textMuted": "#6B6B68",
+    "border": "#E5E5E0",
+    "success": "#2E9E5B",
+    "successBackground": "#EAFAF1",
+    "warningBackground": "#FFF7E8",
+    "activeOrangeBackground": "#FFF1E8",
+    "documentMutedText": "#52524F",
+    "previewBlue": "#2563EB",
+    "previewTeal": "#0F766E",
+    "previewPurple": "#7C3AED",
+    "gridGeoYellow": "#FFD600",
+    "gridGeoGreen": "#20E82A",
+    "modalOverlay": "rgba(10,10,10,0.74)",
+    "wizardGridLine": "rgba(10,10,10,0.035)",
+    "templateShowcaseBackground": "#F7F7F3"
   },
   "typography": {
     "fontFamilies": {
-      "pixel": {
-        "value": "'Press Start 2P', monospace",
-        "usage": "Brand wordmark, hero headings, section headings, wizard titles"
-      },
-      "body": {
-        "value": "'Inter', -apple-system, sans-serif",
-        "usage": "Primary UI and body text"
-      },
-      "mono": {
-        "value": "'Space Mono', monospace",
-        "usage": "Numbers, coordinates, labels, progress and metadata"
-      }
+      "pixel": "'Press Start 2P', monospace",
+      "body": "'Inter', -apple-system, sans-serif",
+      "mono": "'Space Mono', monospace"
     },
     "fontSizesPx": {
-      "micro": 8,
-      "mini": 9,
+      "geoTiny": 6,
+      "micro": 7,
+      "mini": 8,
       "label": 10,
       "small": 11,
       "bodySmall": 12,
@@ -127,13 +62,14 @@
       "input": 14,
       "lead": 15,
       "heroLead": 16,
+      "sectionHeading": 18,
       "wizardTitle": 18,
-      "pageHeroMobile": 19,
-      "pageHero": 22,
+      "mobileHero": 19,
+      "placeholderHero": 22,
       "homeHero": 26
     },
     "lineHeights": {
-      "tight": 1.15,
+      "tight": 1.08,
       "caption": 1.3,
       "normal": 1.5,
       "body": 1.6,
@@ -150,88 +86,47 @@
       "black": 900
     },
     "letterSpacing": {
-      "microLabel": "0.04em",
       "fieldLabel": "0.05em",
       "eyebrow": "0.06em",
-      "sectionEyebrow": "0.08em"
-    },
-    "textTransform": {
-      "labels": "uppercase",
-      "sectionEyebrows": "uppercase",
-      "modalTitles": "uppercase"
+      "sectionEyebrow": "0.08em",
+      "toolMiniLabel": "-0.02em"
     }
   },
   "spacing": {
     "baseUnitPx": 4,
-    "valuesPx": {
-      "2xs": 2,
-      "xs": 3,
-      "sm": 4,
-      "md": 6,
-      "lg": 8,
-      "xl": 10,
-      "2xl": 12,
-      "3xl": 14,
-      "4xl": 16,
-      "5xl": 18,
-      "6xl": 20,
-      "7xl": 22,
-      "8xl": 24,
-      "9xl": 26,
-      "10xl": 28,
-      "section": 80
-    },
-    "componentGapsPx": {
-      "buttonGap": 8,
-      "topnavGap": 24,
-      "wizardTopbarGap": 16,
-      "cardGap": 18,
-      "formGridGap": 14,
-      "galleryLayoutGap": 18,
-      "reportGridGap": 14,
-      "pagesWrapGap": 24,
-      "photoToolsColumns": 6
-    },
-    "paddingPx": {
-      "containerX": 24,
-      "containerXMobile": 16,
-      "button": "10px 20px",
-      "buttonLarge": "14px 28px",
-      "card": 26,
-      "infoPanel": 18,
-      "modal": 22,
-      "wizardPage": "28px 24px 48px",
-      "previewMain": 24,
-      "previewMainMobile": 16
-    }
+    "containerXDesktopPx": 24,
+    "containerXMobilePx": 16,
+    "publicSectionPadding": "80px 24px",
+    "solutionsSectionPadding": "54px 24px 96px",
+    "workflowSectionPadding": "74px 24px 94px",
+    "wizardPagePadding": "28px 24px 48px",
+    "previewMainPaddingPx": 24,
+    "modalPaddingPx": 22,
+    "cardPaddingPx": 26,
+    "infoPanelPaddingPx": 18,
+    "reportGridGapPx": 14,
+    "pagesWrapGapPx": 24,
+    "workspaceCardGridGapPx": 18
   },
   "radii": {
-    "tiny": "2px",
-    "mini": "3px",
-    "sm": "4px",
-    "md": "5px",
-    "card": "6px",
-    "lg": "8px",
+    "tinyPx": 2,
+    "miniPx": 3,
+    "smPx": 4,
+    "mdPx": 5,
+    "cardPx": 6,
+    "lgPx": 8,
     "pill": "999px",
-    "previewConfigRange": {
-      "minPx": 0,
-      "maxPx": 8,
-      "defaultPx": 3
-    }
+    "previewBorderRadiusRangePx": { "min": 0, "max": 8, "default": 3 }
   },
   "borders": {
-    "thin": "1px solid #E5E5E0",
+    "thinNeutral": "1px solid #E5E5E0",
     "neutral": "1.5px solid #E5E5E0",
     "black": "2px solid #0A0A0A",
     "topbar": "3px solid #0A0A0A",
     "modal": "3px solid #0A0A0A",
     "a4Header": "3px solid #FF6B1A",
     "focus": "3px solid #FF6B1A",
-    "previewPhotoBorder": {
-      "defaultEnabled": false,
-      "defaultWidthPx": 1,
-      "color": "accentColor"
-    }
+    "stackTableBorder": "3px solid accentColor"
   },
   "shadows": {
     "pixelNeutral": "4px 4px 0 0 #E5E5E0",
@@ -240,29 +135,20 @@
     "buttonPrimary": "4px 4px 0 0 #FF6B1A",
     "buttonAccent": "4px 4px 0 0 #E8331C",
     "buttonSuccess": "4px 4px 0 0 #1E7A45",
-    "buttonLarge": "5px 5px 0 0 currentColor",
     "cta": "6px 6px 0 0 #0A0A0A",
     "modal": "6px 6px 0 0 #FF6B1A",
     "a4Page": "5px 5px 0 0 #E5E5E0",
-    "smallCard": "2px 2px 0 0 #E5E5E0",
-    "photoCard": "3px 3px 0 0 #E5E5E0"
+    "photoCard": "3px 3px 0 0 #E5E5E0",
+    "floatingAddPhoto": "5px 5px 0 0 #0A0A0A",
+    "solutionLayered": "6px -6px 0 -2px #fff, 6px -6px 0 0 rgba(255,107,26,0.55), 12px -12px 0 -2px #fff, 12px -12px 0 0 rgba(10,10,10,0.12)",
+    "templateFeatured": "0 14px 34px rgba(255,107,26,0.14), 0 -4px 0 0 #FF6B1A"
   },
   "layout": {
     "containers": {
-      "default": {
-        "maxWidthPx": 1100,
-        "paddingXDesktopPx": 24,
-        "paddingXMobilePx": 16
-      },
-      "narrow": {
-        "maxWidthPx": 900,
-        "paddingXDesktopPx": 24,
-        "paddingXMobilePx": 16
-      },
-      "pricing": {
-        "maxWidthPx": 1000,
-        "paddingXDesktopPx": 24
-      }
+      "defaultMaxWidthPx": 1100,
+      "narrowMaxWidthPx": 900,
+      "pricingMaxWidthPx": 1000,
+      "templateStageMaxWidthPx": 1180
     },
     "topnav": {
       "heightPx": 64,
@@ -276,17 +162,20 @@
       "stickyTopPx": 0,
       "zIndex": 100
     },
-    "wizardBackgroundGrid": {
-      "sizePx": 24,
-      "lineColor": "rgba(10,10,10,0.035)"
-    },
     "columns": {
-      "wizardGrid2": "minmax(0, 1fr) 330px",
-      "galleryLayout": "300px minmax(0, 1fr)",
-      "previewLayout": "250px minmax(0, 1fr)",
-      "workspaceLayout": "270px minmax(0, 1fr)",
       "homeHero": "1.1fr 0.9fr",
-      "pricingGrid": "repeat(3, 1fr)"
+      "solutionsGrid": "repeat(4, minmax(0, 1fr))",
+      "workflowSteps": "repeat(4, minmax(0, 1fr))",
+      "templateThumbs": "repeat(5, minmax(0, 1fr))",
+      "workspaceCards": "repeat(auto-fill, minmax(240px, 1fr))",
+      "reportGrid": "repeat(auto-fill, minmax(320px, 1fr))",
+      "photoPickerGrid": "repeat(auto-fill, minmax(150px, 1fr))",
+      "previewLayout": "250px minmax(0, 1fr)"
+    },
+    "stickySections": {
+      "templateShowcaseMinHeight": "180vh",
+      "templateStickyTopPx": 64,
+      "templateStickyMinHeight": "calc(100vh - 64px)"
     }
   },
   "breakpoints": {
@@ -297,164 +186,68 @@
   },
   "components": {
     "pixelButton": {
-      "base": {
-        "display": "inline-flex",
-        "alignItems": "center",
-        "gapPx": 8,
-        "padding": "10px 20px",
-        "borderRadiusPx": 4,
-        "fontSizePx": 12,
-        "fontWeight": 700,
-        "whiteSpace": "nowrap",
-        "activeTransform": "translate(3px, 3px)",
-        "activeShadow": "0 0 0 0 transparent"
-      },
-      "variants": {
-        "primary": {
-          "background": "#0A0A0A",
-          "color": "#FFFFFF",
-          "shadow": "4px 4px 0 0 #FF6B1A"
-        },
-        "accent": {
-          "background": "#FF6B1A",
-          "color": "#FFFFFF",
-          "shadow": "4px 4px 0 0 #E8331C"
-        },
-        "success": {
-          "background": "#2E9E5B",
-          "color": "#FFFFFF",
-          "shadow": "4px 4px 0 0 #1E7A45"
-        },
-        "ghost": {
-          "background": "#FFFFFF",
-          "color": "#0A0A0A",
-          "border": "2px solid #0A0A0A",
-          "shadow": "4px 4px 0 0 #E5E5E0"
-        }
-      }
+      "padding": "10px 20px",
+      "largePadding": "14px 28px",
+      "borderRadiusPx": 4,
+      "fontSizePx": 12,
+      "activeTransform": "translate(3px, 3px)"
     },
-    "field": {
-      "label": {
-        "fontSizePx": 10,
-        "fontWeight": 700,
-        "letterSpacing": "0.05em",
-        "textTransform": "uppercase",
-        "requiredColor": "#E8331C"
-      },
-      "input": {
-        "padding": "10px 13px",
-        "borderRadiusPx": 4,
-        "fontSizePx": 14,
-        "border": "2px solid #E5E5E0",
-        "focusBorderColor": "#FF6B1A",
-        "requiredEmptyBorderColor": "#FFA41B"
-      }
-    },
-    "card": {
-      "background": "#FFFFFF",
+    "workspaceProjectCard": {
+      "minHeightPx": 210,
       "border": "2px solid #0A0A0A",
-      "borderRadiusPx": 6,
-      "paddingPx": 26,
+      "borderRadiusPx": 7,
+      "paddingPx": 18,
       "shadow": "4px 4px 0 0 #E5E5E0",
-      "accentShadow": "4px 4px 0 0 #FF6B1A"
+      "activeShadow": "4px 4px 0 0 #FF6B1A"
     },
-    "modal": {
-      "overlayBackground": "rgba(10,10,10,0.74)",
-      "zIndex": 3000,
-      "boxWidth": "min(460px, 100%)",
-      "boxBorder": "3px solid #0A0A0A",
-      "boxBorderRadiusPx": 8,
-      "boxShadow": "6px 6px 0 0 #FF6B1A",
-      "boxPaddingPx": 22
+    "photoPicker": {
+      "boxWidth": "min(880px, 100%)",
+      "maxHeight": "min(760px, calc(100vh - 36px))",
+      "thumbAspectRatio": "4 / 3",
+      "usedFilter": "grayscale(1)",
+      "usedOpacity": 0.62
     },
-    "stateChip": {
-      "border": "1.5px solid #E5E5E0",
-      "borderRadius": "999px",
-      "background": "#F4F4F1",
-      "color": "#6B6B68",
-      "padding": "5px 9px",
-      "fontSizePx": 11,
-      "fontWeight": 700
+    "solidPhotoTools": {
+      "columns": 7,
+      "buttonMinHeightPx": 50,
+      "iconBoxSizePx": 24,
+      "iconSizePx": 17,
+      "miniLabelFontSizePx": 7
+    },
+    "floatingAddPhoto": {
+      "position": "fixed",
+      "rightPx": 24,
+      "bottomPx": 24,
+      "zIndex": 2200,
+      "minWidthPx": 136
+    },
+    "gridGeoOverlay": {
+      "defaultColor": "#FFFFFF",
+      "defaultSizePx": 7,
+      "sizeRangePx": { "min": 6, "max": 12 },
+      "strokeRule": "white text uses black stroke; black text uses white stroke"
     }
   },
   "wizardPreview": {
     "storageKey": "pixforme.prototype.wizard.v3",
     "paperSizes": {
       "a4": {
-        "portrait": {
-          "widthPx": 300,
-          "heightPx": 424
-        },
-        "landscape": {
-          "widthPx": 424,
-          "heightPx": 300
-        },
-        "printMm": {
-          "width": 210,
-          "height": 297
-        }
+        "portrait": { "widthPx": 300, "heightPx": 424 },
+        "landscape": { "widthPx": 424, "heightPx": 300 },
+        "printMm": { "width": 210, "height": 297 }
       },
       "f4": {
-        "portrait": {
-          "widthPx": 300,
-          "heightPx": 472
-        },
-        "landscape": {
-          "widthPx": 472,
-          "heightPx": 300
-        },
-        "printMm": {
-          "width": 210,
-          "height": 330
-        }
+        "portrait": { "widthPx": 300, "heightPx": 472 },
+        "landscape": { "widthPx": 472, "heightPx": 300 },
+        "printMm": { "width": 210, "height": 330 }
       }
     },
     "templates": [
-      {
-        "id": "t1",
-        "label": "STACK + TEKS",
-        "orientation": "portrait",
-        "photosPerPage": {
-          "a4": 2,
-          "f4": 3
-        }
-      },
-      {
-        "id": "t2",
-        "label": "GRID EQUAL",
-        "orientation": "portrait",
-        "photosPerPage": {
-          "a4": 4,
-          "f4": 6
-        }
-      },
-      {
-        "id": "t3",
-        "label": "GRID BORDER",
-        "orientation": "portrait",
-        "photosPerPage": {
-          "a4": 4,
-          "f4": 6
-        }
-      },
-      {
-        "id": "t4",
-        "label": "FULL PAGE",
-        "orientation": "portrait",
-        "photosPerPage": {
-          "a4": 1,
-          "f4": 1
-        }
-      },
-      {
-        "id": "t5",
-        "label": "LANDSCAPE SPLIT",
-        "orientation": "landscape",
-        "photosPerPage": {
-          "a4": 2,
-          "f4": 3
-        }
-      }
+      { "id": "t1", "label": "STACK + TEKS", "orientation": "portrait", "photosPerPage": { "a4": 2, "f4": 3 } },
+      { "id": "t2", "label": "GRID EQUAL", "orientation": "portrait", "photosPerPage": { "a4": 4, "f4": 6 } },
+      { "id": "t3", "label": "GRID BORDER", "orientation": "portrait", "photosPerPage": { "a4": 4, "f4": 6 } },
+      { "id": "t4", "label": "FULL PAGE", "orientation": "portrait", "photosPerPage": { "a4": 1, "f4": 1 } },
+      { "id": "t5", "label": "LANDSCAPE SPLIT", "orientation": "landscape", "photosPerPage": { "a4": 2, "f4": 3 } }
     ],
     "defaultPreviewState": {
       "templateId": "t1",
@@ -468,75 +261,23 @@
       "border": false,
       "borderWidth": 1,
       "borderRadius": 3
-    },
-    "controlRanges": {
-      "gridGeoSizePx": {
-        "min": 6,
-        "max": 12,
-        "default": 7
-      },
-      "spacingPx": {
-        "min": 2,
-        "max": 18,
-        "default": 8
-      },
-      "fontSizePx": {
-        "min": 6,
-        "max": 12,
-        "default": 8
-      },
-      "borderRadiusPx": {
-        "min": 0,
-        "max": 8,
-        "default": 3
-      },
-      "cropYPercent": {
-        "min": 0,
-        "max": 100,
-        "default": 50
-      }
     }
   },
   "icons": {
     "type": "inline 7x7 grid SVG",
-    "defaultColor": "#0A0A0A",
-    "defaultSizePx": 16,
     "names": [
-      "folder",
-      "upload",
-      "check",
-      "chevR",
-      "chevL",
-      "download",
-      "mapPin",
-      "sparkle",
-      "crop",
-      "replace",
-      "trash",
-      "x",
-      "layout",
-      "sliders",
-      "bulk",
-      "clock",
-      "search",
-      "move",
-      "camera",
-      "geo",
-      "watermark",
-      "wand",
-      "image",
-      "arrowRight",
-      "star",
-      "grid",
-      "lock"
+      "folder", "upload", "check", "chevR", "chevL", "chevU", "chevD", "plus",
+      "solidPlus", "solidReplace", "solidUp", "solidDown", "solidFit", "solidAi", "solidGeo", "solidTrash",
+      "download", "mapPin", "sparkle", "crop", "replace", "trash", "x", "layout", "sliders", "bulk", "clock",
+      "search", "move", "camera", "geo", "watermark", "wand", "image", "arrowRight", "star", "grid", "lock"
     ]
   },
   "motion": {
     "buttonTransition": "transform 0.08s, box-shadow 0.08s",
-    "marquee": {
-      "animation": "scroll-left 28s linear infinite",
-      "disabledWhen": "prefers-reduced-motion: reduce"
-    },
+    "marquee": "scroll-left 28s linear infinite",
+    "solutionCardTransition": "transform 180ms ease, box-shadow 180ms ease",
+    "stepCardTransition": "transform 220ms ease-out, box-shadow 220ms ease-out",
+    "templateCanvas": "scroll-linked --tpl-progress update",
     "reducedMotionRule": "All animation and transition are disabled under prefers-reduced-motion: reduce."
   }
 }
