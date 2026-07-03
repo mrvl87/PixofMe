@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wizard 4 - Preview & Export - Pixforme</title>
 <link rel="stylesheet" href="assets/css/tokens.css">
-<link rel="stylesheet" href="assets/css/wizard.css?v=mistralTpl1">
+<link rel="stylesheet" href="assets/css/wizard.css?v=descHeader1">
 </head>
 <body class="wizard-shell">
 <div class="wizard-topbar" id="wizardChrome"></div>
@@ -33,7 +33,7 @@
 </div>
 
 <script src="assets/js/pixel-icons.js"></script>
-<script src="assets/js/wizard-state.js?v=mistralTpl1"></script>
+<script src="assets/js/wizard-state.js?v=descHeader1"></script>
 <script>
   var state = PixWizard.loadState();
   var panel = 'template';
@@ -150,7 +150,7 @@
     } else {
       var colors = ['#0A0A0A', '#FF6B1A', '#E8331C', '#FFA41B', '#2563EB', '#0F766E', '#7C3AED'];
       content.innerHTML = '<div class="style-row"><div class="style-label">UKURAN KERTAS</div><div class="toggle-row"><button class="toggle-btn ' + ((state.preview.paperSize || 'a4') === 'a4' ? 'active' : '') + '" data-paper="a4" type="button">A4</button><button class="toggle-btn ' + ((state.preview.paperSize || 'a4') === 'f4' ? 'active' : '') + '" data-paper="f4" type="button">F4</button></div></div>' +
-        '<div class="prototype-banner" style="margin-bottom:14px;">Kapasitas foto mengikuti ukuran kertas. F4 memberi ruang ekstra: stack bisa 3 foto, grid bisa 6 foto.</div>' +
+        '<div class="prototype-banner" style="margin-bottom:14px;">Header deskriptif project otomatis tampil hanya pada halaman pertama.</div>' +
         '<div class="style-row"><div class="style-label">WARNA AKSEN</div><div class="swatch-row">' +
         colors.map(function (color) { return '<button class="swatch-btn ' + (state.preview.accentColor === color ? 'active' : '') + '" data-color="' + color + '" style="background:' + color + ';"></button>'; }).join('') +
         '</div></div>' +
@@ -159,8 +159,7 @@
         '<div class="style-row"><div class="style-label">JARAK FOTO: <span class="mono">' + state.preview.spacing + 'px</span></div><input id="spacingRange" type="range" min="2" max="18" value="' + state.preview.spacing + '"></div>' +
         '<div class="style-row"><div class="style-label">UKURAN TEKS: <span class="mono">' + state.preview.fontSize + 'px</span></div><input id="fontRange" type="range" min="6" max="12" value="' + state.preview.fontSize + '"></div>' +
         '<div class="style-row"><div class="style-label">BORDER FOTO</div><button class="toggle-btn ' + (state.preview.border ? 'active' : '') + '" id="borderToggle" type="button">' + (state.preview.border ? 'Aktif' : 'Nonaktif') + '</button></div>' +
-        '<div class="style-row"><div class="style-label">RADIUS SUDUT: <span class="mono">' + state.preview.borderRadius + 'px</span></div><input id="radiusRange" type="range" min="0" max="8" value="' + state.preview.borderRadius + '"></div>' +
-        '<div class="style-row"><div class="style-label">HEADER</div><div class="toggle-row"><button class="toggle-btn ' + (state.project.headerMode === 'all' ? 'active' : '') + '" data-header="all" type="button">Semua</button><button class="toggle-btn ' + (state.project.headerMode === 'first' ? 'active' : '') + '" data-header="first" type="button">Hal. 1</button></div></div>';
+        '<div class="style-row"><div class="style-label">RADIUS SUDUT: <span class="mono">' + state.preview.borderRadius + 'px</span></div><input id="radiusRange" type="range" min="0" max="8" value="' + state.preview.borderRadius + '"></div>';
 
       document.querySelectorAll('[data-paper]').forEach(function (btn) {
         btn.addEventListener('click', function () { state.preview.paperSize = btn.getAttribute('data-paper'); savePreview(); });
@@ -176,9 +175,6 @@
       document.getElementById('fontRange').addEventListener('input', function (event) { state.preview.fontSize = Number(event.target.value); savePreview(); });
       document.getElementById('radiusRange').addEventListener('input', function (event) { state.preview.borderRadius = Number(event.target.value); savePreview(); });
       document.getElementById('borderToggle').addEventListener('click', function () { state.preview.border = !state.preview.border; savePreview(); });
-      document.querySelectorAll('[data-header]').forEach(function (btn) {
-        btn.addEventListener('click', function () { state.project.headerMode = btn.getAttribute('data-header'); savePreview(); });
-      });
     }
 
     renderSummary();
@@ -321,19 +317,264 @@
     return '';
   }
 
+  function classifyHeaderLineLevel(text, index) {
+    var upper = String(text || '').toUpperCase();
+    var lower = String(text || '').toLowerCase();
+    if (/alamat|jalan|jl\.|tlp|telp|email|@/.test(lower)) return 3;
+    if (/^KEMENTE?RIAN\b/.test(upper) || upper === 'DAN PERUMAHAN RAKYAT') return 1;
+    if (upper.indexOf('DIREKTORAT') === 0) return 2;
+    if (upper.indexOf('BALAI') === 0 || upper.indexOf('SATUAN') === 0) return 3;
+    if (index === 0) return 1;
+    if (index === 1) return 2;
+    return 3;
+  }
+
+  function headerKeyForText(text, index) {
+    var upper = String(text || '').toUpperCase();
+    var lower = String(text || '').toLowerCase();
+    if (/alamat|jalan|jl\.|tlp|telp|email|@/.test(lower)) return 'address';
+    if (/^KEMENTE?RIAN\b/.test(upper) || upper === 'DAN PERUMAHAN RAKYAT') return 'mainInstitution';
+    if (upper.indexOf('DIREKTORAT') === 0) return 'directorate';
+    if (upper.indexOf('BALAI') === 0) return 'office';
+    if (upper.indexOf('SATUAN') === 0) return 'unit';
+    return 'line-' + index;
+  }
+
+  function splitBalancedText(text, maxLines) {
+    var words = String(text || '').trim().split(/\s+/).filter(Boolean);
+    if (maxLines <= 1 || words.length <= 3) return text.trim() ? [text.trim()] : [];
+    var lines = [];
+    var wordsPerLine = Math.ceil(words.length / maxLines);
+    for (var i = 0; i < words.length; i += wordsPerLine) lines.push(words.slice(i, i + wordsPerLine).join(' '));
+    return lines;
+  }
+
+  function splitInstitutionSmart(text) {
+    var source = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!source) return [];
+    var semanticParts = source
+      .replace(/\s+(?=DIREKTORAT\b)/gi, '|')
+      .replace(/\s+(?=DINAS\b)/gi, '|')
+      .replace(/\s+(?=BIDANG\b)/gi, '|')
+      .replace(/\s+(?=BALAI\b)/gi, '|')
+      .replace(/\s+(?=SATUAN\s+KERJA\b)/gi, '|')
+      .replace(/\s+(?=ALAMAT\b|JL\.\b|JALAN\b)/gi, '|')
+      .split('|')
+      .map(function (line) { return line.trim(); })
+      .filter(Boolean);
+    return semanticParts.reduce(function (acc, part) {
+      var ministryBreak = part.search(/\s+DAN\s+PERUMAHAN\s+RAKYAT\b/i);
+      if (/^KEMENTE?RIAN\b/i.test(part) && ministryBreak > 0) {
+        acc.push(part.slice(0, ministryBreak).trim(), part.slice(ministryBreak).trim());
+      } else {
+        acc.push(part);
+      }
+      return acc.filter(Boolean);
+    }, []);
+  }
+
+  function headerBaseFont(level, variant, baseSize) {
+    if (variant === 'compact-box') {
+      if (level === 1) return Math.min(8.2, Math.max(6.8, baseSize + 0.2));
+      if (level === 2) return Math.min(7.2, Math.max(6.4, baseSize - 0.2));
+      return Math.min(6.8, Math.max(5.8, baseSize - 0.6));
+    }
+    if (level === 1) return baseSize + 3;
+    if (level === 2) return baseSize + 1.1;
+    return Math.max(5, baseSize - 1.2);
+  }
+
+  function headerMinFont(level, variant) {
+    if (variant === 'compact-box') {
+      if (level === 1) return 5.8;
+      if (level === 2) return 5.6;
+      return 5.2;
+    }
+    if (level === 1) return 5.9;
+    if (level === 2) return 5.2;
+    return 4.7;
+  }
+
+  function headerLineLimit(level, variant) {
+    if (variant === 'compact-box') return level === 1 ? 29 : level === 2 ? 38 : 44;
+    if (variant === 'official-logo-left') return level === 1 ? 38 : level === 2 ? 48 : 70;
+    return level === 1 ? 36 : level === 2 ? 46 : 66;
+  }
+
+  function splitHeaderLineByWords(text, maxChars) {
+    var words = String(text || '').split(/\s+/).filter(Boolean);
+    var lines = [];
+    var current = '';
+    words.forEach(function (word) {
+      var next = current ? current + ' ' + word : word;
+      if (current && next.length > maxChars) {
+        lines.push(current);
+        current = word;
+      } else {
+        current = next;
+      }
+    });
+    if (current) lines.push(current);
+    return lines.length ? lines : [text];
+  }
+
+  function estimateHeaderLength(text) {
+    return String(text || '').split('').reduce(function (total, char) {
+      if (char === ' ') return total + 0.38;
+      if (/[I1.,:]/.test(char)) return total + 0.42;
+      if (/[MW]/.test(char)) return total + 0.95;
+      if (/[A-Z0-9]/.test(char)) return total + 0.72;
+      return total + 0.62;
+    }, 0);
+  }
+
+  function headerCapacity(source, fontSize, letterSpacing) {
+    var base = headerLineLimit(source.level, source.variant);
+    var fontGain = source.preferredFontSize / fontSize;
+    var spacingGain = 1 + Math.max(0, source.letterSpacing - letterSpacing) * 0.22;
+    return base * fontGain * spacingGain;
+  }
+
+  function fitHeaderCandidate(source, text) {
+    var fontSize = source.preferredFontSize;
+    var letterSpacing = source.letterSpacing;
+    var textLength = estimateHeaderLength(text);
+    while (textLength > headerCapacity(source, fontSize, letterSpacing) && fontSize > source.minFontSize) fontSize = Math.max(source.minFontSize, Math.round((fontSize - 0.2) * 10) / 10);
+    while (textLength > headerCapacity(source, fontSize, letterSpacing) && letterSpacing > source.minLetterSpacing) letterSpacing = Math.max(source.minLetterSpacing, Math.round((letterSpacing - 0.05) * 100) / 100);
+    return {
+      fits: textLength <= headerCapacity(source, fontSize, letterSpacing),
+      line: { key: source.key, text: text, level: source.level, fontSize: fontSize, minFontSize: source.minFontSize, fontWeight: 800, lineHeight: source.lineHeight, letterSpacing: letterSpacing, minLetterSpacing: source.minLetterSpacing, nowrap: true }
+    };
+  }
+
+  function layoutHeaderSourceLine(source) {
+    if (source.splitStrategy === 'manual' && source.manualLines && source.manualLines.length) return source.manualLines.map(function (line) { return fitHeaderCandidate(source, line).line; });
+    var single = fitHeaderCandidate(source, source.text);
+    if (single.fits) return [single.line];
+    var maxLines = Math.max(2, source.maxLines);
+    var pieces = source.splitStrategy === 'balanced' ? splitBalancedText(source.text, maxLines) : splitHeaderLineByWords(source.text, Math.max(14, Math.floor(headerCapacity(source, source.minFontSize, source.minLetterSpacing))));
+    return pieces.reduce(function (acc, piece) {
+      var fitted = fitHeaderCandidate(source, piece);
+      if (fitted.fits) {
+        acc.push(fitted.line);
+      } else {
+        splitHeaderLineByWords(piece, Math.max(12, Math.floor(headerCapacity(source, source.minFontSize, source.minLetterSpacing)))).forEach(function (line) {
+          acc.push(Object.assign({}, fitHeaderCandidate(source, line).line, { nowrap: true }));
+        });
+      }
+      return acc;
+    }, []);
+  }
+
+  function buildHeaderSourceLines(variant) {
+    var baseSize = Number(state.project.headerFontSize || 7);
+    var rawLines = String(state.project.headerText || '').split(/\r?\n/).map(function (line) { return line.trim(); }).filter(Boolean);
+    var semanticLines = rawLines.reduce(function (acc, line) { return acc.concat(splitInstitutionSmart(line)); }, []);
+    var sourceLines = semanticLines.length ? semanticLines : [state.project.client || state.project.instansi || state.project.name || '-'];
+    return sourceLines.map(function (text, index) {
+      var level = classifyHeaderLineLevel(text, index);
+      var key = headerKeyForText(text, index);
+      var isCompact = variant === 'compact-box';
+      var preferredFontSize = headerBaseFont(level, variant, baseSize);
+      return {
+        key: key,
+        text: text,
+        level: level,
+        variant: variant,
+        preferredFontSize: preferredFontSize,
+        minFontSize: headerMinFont(level, variant),
+        maxLines: key === 'mainInstitution' || key === 'unit' || key === 'address' ? 2 : 1,
+        lineHeight: isCompact ? (level === 1 ? 1.05 : 1.06) : (level === 3 ? Math.max(1.05, Number(state.project.headerLineSpacing || 1.25) - 0.15) : Number(state.project.headerLineSpacing || 1.25)),
+        letterSpacing: isCompact ? -0.15 : 0,
+        minLetterSpacing: isCompact ? -0.45 : -0.25,
+        splitStrategy: key === 'mainInstitution' || key === 'unit' || text.length > headerLineLimit(level, variant) ? 'balanced' : 'single-line'
+      };
+    });
+  }
+
+  function buildHeaderLayout(variant) {
+    return buildHeaderSourceLines(variant).reduce(function (acc, source) { return acc.concat(layoutHeaderSourceLine(source)); }, []);
+  }
+
   function logoHTML(label) {
-    return '<div class="logo-box">' + label + '</div>';
+    return '<div class="logo-box report-logo-box">' + label + '</div>';
   }
 
   function headerHTML(pageIndex) {
     var shouldShow = state.project.headerMode === 'all' || (state.project.headerMode === 'first' && pageIndex === 0);
     if (!shouldShow) return '';
-    var logos = '';
-    if (state.project.logoInstansi) logos += logoHTML('INS');
-    if (state.project.logoPerusahaan) logos += logoHTML('PT');
-    return '<div class="a4-header" style="border-bottom-color:' + state.preview.accentColor + ';">' + logos + '<div class="a4-header-text">' + esc(state.project.headerText || '').replace(/\n/g, '<br>') + '</div><div class="mono" style="font-size:6.5px;color:var(--text-muted);">' + esc(state.report.period || '') + '</div></div>';
+    var variant = state.project.headerVariant || 'official-center';
+    if (variant === 'custom') return PixHeaderBuilder.render(PixHeaderBuilder.ensureConfig(state));
+    var align = variant === 'official-center' || variant === 'compact-box' ? 'center' : (state.project.headerAlign || 'left');
+    if (align === 'justify') align = 'center';
+    var baseWeight = state.project.headerWeight === 'normal' ? 650 : 900;
+    var lines = buildHeaderLayout(variant).map(function (line, index) {
+      var weight = line.level === 3 ? Math.max(500, baseWeight - 250) : baseWeight;
+      return '<div class="a4-header-line header-line-level-' + line.level + '" data-min-font="' + line.minFontSize + '" data-min-letter="' + line.minLetterSpacing + '" style="font-size:' + line.fontSize + 'px;font-weight:' + weight + ';line-height:' + line.lineHeight + ';letter-spacing:' + line.letterSpacing + 'px;white-space:nowrap;">' + esc(line.text) + '</div>';
+    }).join('');
+    return '<header class="a4-header report-header report-header-' + variant + '" style="--report-accent:' + state.preview.accentColor + ';">' +
+      '<div class="report-header-grid">' +
+        '<div class="a4-header-left">' + (state.project.logoInstansi ? logoHTML('INS') : '') + '</div>' +
+        '<div class="a4-header-text" style="text-align:' + align + ';"><div class="report-header-lines">' + lines + '</div></div>' +
+        '<div class="a4-header-right">' + (state.project.logoPerusahaan ? logoHTML('PT') : '') + '</div>' +
+      '</div><div class="report-header-accent-line"></div></header>';
   }
 
+  function headerPeriodHTML(pageIndex) {
+    var shouldShow = state.project.headerMode === 'all' || (state.project.headerMode === 'first' && pageIndex === 0);
+    if (!shouldShow || !String(state.report.period || '').trim()) return '';
+    return '<div class="a4-period-row"><span class="mono">' + esc(state.report.period || '') + '</span></div>';
+  }
+
+  function fitHeaderLines() {
+    var run = function () {
+      document.querySelectorAll('.report-header-lines').forEach(function (wrap) {
+        var availableWidth = wrap.clientWidth;
+        if (!availableWidth) return;
+        wrap.querySelectorAll('.a4-header-line').forEach(function (el) {
+          var fontSize = parseFloat(el.style.fontSize || '7');
+          var minFont = parseFloat(el.getAttribute('data-min-font') || '5');
+          var letterSpacing = parseFloat(el.style.letterSpacing || '0') || 0;
+          var minLetter = parseFloat(el.getAttribute('data-min-letter') || '-0.25');
+          el.style.whiteSpace = 'nowrap';
+          while (el.scrollWidth > availableWidth && fontSize > minFont) {
+            fontSize = Math.max(minFont, Math.round((fontSize - 0.2) * 10) / 10);
+            el.style.fontSize = fontSize + 'px';
+          }
+          while (el.scrollWidth > availableWidth && letterSpacing > minLetter) {
+            letterSpacing = Math.max(minLetter, Math.round((letterSpacing - 0.05) * 100) / 100);
+            el.style.letterSpacing = letterSpacing + 'px';
+          }
+          el.style.whiteSpace = el.scrollWidth > availableWidth + 1 ? 'normal' : 'nowrap';
+        });
+      });
+    };
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(run); else window.setTimeout(run, 0);
+  }
+
+  function projectMetaValue(value) {
+    value = String(value || '').trim();
+    return value || '-';
+  }
+
+  function projectDescriptionHeaderHTML(pageIndex) {
+    if (pageIndex !== 0) return '';
+    var instansi = state.project.client || state.project.instansi;
+    var rows = [
+      ['Nama Paket Pekerjaan', state.project.name || state.project.pekerjaan],
+      ['Jenis Pekerjaan', state.project.jobType || state.project.jenisPekerjaan],
+      ['Lokasi Proyek', state.project.location || state.project.lokasi],
+      ['Periode', state.project.period || state.project.periode || state.report.period]
+    ];
+    return '<section class="project-description-block">' +
+      '<div class="project-description-heading"><div class="project-description-instansi">' + esc(projectMetaValue(instansi)) + '</div><div class="project-description-title">Laporan Dokumentasi Proyek</div></div>' +
+      '<div class="project-description-header">' +
+        rows.map(function (row) {
+          return '<div class="project-description-row"><div class="project-description-label">' + esc(row[0]) + '</div><div class="project-description-separator">:</div><div class="project-description-value">' + esc(projectMetaValue(row[1])) + '</div></div>';
+        }).join('') +
+      '</div>' +
+    '</section>';
+  }
   function renderPages() {
     var items = PixWizard.getReportItems(state);
     var tpl = activeTemplate();
@@ -344,8 +585,9 @@
     if (!pages.length) pages.push([]);
 
     document.getElementById('pagesWrap').innerHTML = pages.map(function (pageItems, idx) {
-      return '<div class="page-col"><div class="page-label">HAL. ' + (idx + 1) + '</div><div class="a4-page" style="width:' + dim.w + 'px;height:' + dim.h + 'px;">' + headerHTML(idx) + '<div class="a4-content">' + renderPageContent(tpl, pageItems) + '</div><div class="a4-footer"><span>' + esc(state.project.name || '-') + '</span><span class="mono" style="color:' + state.preview.accentColor + ';font-weight:900;">' + (idx + 1) + '/' + pages.length + '</span></div></div></div>';
+      return '<div class="page-col"><div class="page-label">HAL. ' + (idx + 1) + '</div><div class="a4-page" style="width:' + dim.w + 'px;height:' + dim.h + 'px;">' + projectDescriptionHeaderHTML(idx) + '<div class="a4-content">' + renderPageContent(tpl, pageItems) + '</div><div class="a4-footer"><span>' + esc(state.project.name || '-') + '</span><span class="mono" style="color:' + state.preview.accentColor + ';font-weight:900;">' + (idx + 1) + '/' + pages.length + '</span></div></div></div>';
     }).join('');
+    fitHeaderLines();
     renderSummary();
   }
 

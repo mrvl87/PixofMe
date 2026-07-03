@@ -15,8 +15,19 @@
       name: "Pembangunan Gedung Kantor Dinas A",
       client: "Dinas Pekerjaan Umum Kota X",
       location: "Jl. Sudirman No. 10",
+      contractNumber: "620/001/KONTRAK/2026",
+      jobType: "Pekerjaan Konstruksi",
+      period: "1 - 7 Juni 2026",
+      nomorKontrak: "620/001/KONTRAK/2026",
+      jenisPekerjaan: "Pekerjaan Konstruksi",
+      periode: "1 - 7 Juni 2026",
       headerText: "DINAS PEKERJAAN UMUM\nLaporan Dokumentasi Proyek",
       headerMode: "all",
+      headerAlign: "left",
+      headerFontSize: 7,
+      headerWeight: "bold",
+      headerLineSpacing: 1.35,
+      headerVariant: "official-center",
       logoInstansi: true,
       logoPerusahaan: true,
       instansi: "Dinas Pekerjaan Umum Kota X",
@@ -93,16 +104,16 @@
     var value = String(line || "").replace(/\t+/g, "  ").trim();
     if (!value) return "";
     var parts = value.split(/\s{2,}/).map(function (part) { return part.trim(); }).filter(Boolean);
-    var candidate = parts.find(function (part) { return /[A-Za-zÀ-ÿ]/.test(part) && !/^\d+([.,]\d+)?$/.test(part); }) || value;
+    var candidate = parts.find(function (part) { return /[A-Za-z]/.test(part) && !/^\d+([.,]\d+)?$/.test(part); }) || value;
     candidate = candidate
-      .replace(/^[-•]+\s*/, "")
+      .replace(/^[-Ã¢â‚¬Â¢]+\s*/, "")
       .replace(/^[A-Z]\.?\s+/, "")
       .replace(/^\d+(?:[.)]|(?:\.\d+)*\.?)\s*/, "")
       .replace(/\s+(LS|M2|M3|M|KG|UNIT|BH|BUAH|SET)\s+.*$/i, "")
       .replace(/\s+/g, " ")
       .trim();
     if (/^(no|uraian|pekerjaan|volume|satuan|harga|jumlah)$/i.test(candidate)) return "";
-    if (!/[A-Za-zÀ-ÿ]/.test(candidate)) return "";
+    if (!/[A-Za-z]/.test(candidate)) return "";
     return candidate;
   }
 
@@ -122,8 +133,22 @@
     project.instansi = project.instansi || project.client;
     project.location = project.location || project.lokasi || "";
     project.lokasi = project.lokasi || project.location;
+    project.contractNumber = project.contractNumber || project.nomorKontrak || "";
+    project.nomorKontrak = project.nomorKontrak || project.contractNumber;
+    project.jobType = project.jobType || project.jenisPekerjaan || "";
+    project.jenisPekerjaan = project.jenisPekerjaan || project.jobType;
+    project.period = project.period || project.periode || "";
+    project.periode = project.periode || project.period;
     if (!Array.isArray(project.items) || !project.items.length) project.items = defaultProjectItems.slice();
     if (!project.rabText) project.rabText = project.items.join("\n");
+    project.headerMode = project.headerMode || "all";
+    project.headerAlign = project.headerAlign || "left";
+    project.headerFontSize = Number(project.headerFontSize || 7);
+    project.headerWeight = project.headerWeight || "bold";
+    project.headerLineSpacing = Number(project.headerLineSpacing || 1.35);
+    project.headerVariant = project.headerVariant || "official-center";
+    if (typeof project.logoInstansi !== "boolean") project.logoInstansi = true;
+    if (typeof project.logoPerusahaan !== "boolean") project.logoPerusahaan = true;
     return project;
   }
   function clone(value) {
@@ -311,6 +336,8 @@
     return "<div class=\"state-chip-row\">" +
       "<span class=\"state-chip\">Project: " + escapeHtml(state.project.name || "Belum diisi") + "</span>" +
       "<span class=\"state-chip\">Instansi: " + escapeHtml(state.project.client || state.project.instansi || "-") + "</span>" +
+      "<span class=\"state-chip\">Kontrak: " + escapeHtml(state.project.contractNumber || state.project.nomorKontrak || "-") + "</span>" +
+      "<span class=\"state-chip\">Periode: " + escapeHtml(state.project.period || state.project.periode || state.report.period || "-") + "</span>" +
       "<span class=\"state-chip\">Item: " + getProjectItems(state).length + "</span>" +
       "<span class=\"state-chip\">Foto laporan: " + state.reportPhotos.length + "</span>" +
       "</div>";

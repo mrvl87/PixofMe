@@ -13,7 +13,11 @@ export type Database = {
       profiles: Table<{
         id: string;
         email: string | null;
+        username: string | null;
+        first_name: string | null;
+        last_name: string | null;
         full_name: string | null;
+        email_verified_at: string | null;
         plan: "free" | "pro" | "team";
         ai_credit_balance: number;
         created_at: string;
@@ -128,7 +132,45 @@ export type Database = {
         created_at: string;
         updated_at: string;
       }>;
-      ai_jobs: Table<{
+      ai_credit_ledger: Table<{
+        id: string;
+        owner_id: string;
+        source_type: "free_grant" | "purchase" | "reserve" | "refund" | "usage" | "adjustment";
+        delta: number;
+        balance_after: number;
+        reference_type: string | null;
+        reference_id: string | null;
+        notes: string | null;
+        created_at: string;
+      }>;
+      billing_orders: Table<{
+        id: string;
+        owner_id: string;
+        provider: "midtrans";
+        order_id: string;
+        sku: string;
+        amount: number;
+        currency: string;
+        transaction_status: string;
+        payment_type: string | null;
+        fraud_status: string | null;
+        snap_token: string | null;
+        redirect_url: string | null;
+        raw_payload: Json;
+        paid_at: string | null;
+        created_at: string;
+        updated_at: string;
+      }>;
+      billing_webhook_events: Table<{
+        id: string;
+        provider: "midtrans";
+        order_id: string | null;
+        event_key: string | null;
+        payload: Json;
+        received_at: string;
+        processed_at: string | null;
+        processing_error: string | null;
+      }>;      ai_jobs: Table<{
         id: string;
         owner_id: string;
         project_id: string | null;

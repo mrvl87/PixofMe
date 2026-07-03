@@ -95,11 +95,11 @@ Project:
 
 - `prototype/login.html` redirects login/free-start actions to `prototype/workspace.html`.
 - `prototype/workspace.html` shows project cards only and a create-project modal.
-- On create, state is saved in localStorage and page redirects to `wizard-step1.html`.
+- On create, project is inserted under the authenticated user workspace and page redirects to `wizard-step1.html`.
 - `wizard-step1.html` owns project settings and RAB item parsing.
 
 ## Current Next.js Delta
 
 - `app/pixforme.tsx` still has the older workspace with project list plus settings form.
 - `TopNav` still routes `Mulai Gratis` directly to wizard.
-- Next implementation should update login/workspace routing only after approval.
+- Next implementation now routes login/workspace through Supabase-backed auth and workspace/project APIs.

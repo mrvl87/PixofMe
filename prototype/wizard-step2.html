@@ -43,7 +43,7 @@
 </main>
 
 <script src="assets/js/pixel-icons.js"></script>
-<script src="assets/js/wizard-state.js"></script>
+<script src="assets/js/wizard-state.js?v=descHeader1"></script>
 <script>
   var state = PixWizard.loadState();
   PixWizard.renderWizardChrome(2, '<a class="pixel-btn pixel-btn-ghost" href="wizard-step1.html">Kembali</a><button class="pixel-btn pixel-btn-accent" id="nextStep">Lanjut</button>');
@@ -51,11 +51,13 @@
   var nameInput = document.getElementById('reportName');
   var periodInput = document.getElementById('reportPeriod');
   nameInput.value = state.report.name || '';
-  periodInput.value = state.report.period || '';
+  periodInput.value = state.project.period || state.project.periode || state.report.period || '';
 
   function persist() {
     state.report.name = nameInput.value.trim();
     state.report.period = periodInput.value.trim();
+    state.project.period = state.report.period;
+    state.project.periode = state.report.period;
     PixWizard.saveState(state);
     document.getElementById('summaryBox').innerHTML = PixWizard.projectSummary(state);
     document.getElementById('projectLine').textContent = (state.project.name || 'Project belum diisi') + ' - ' + (state.project.location || 'Lokasi belum diisi');

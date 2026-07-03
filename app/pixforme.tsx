@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { getPasswordChecks, getPasswordStrength, normalizeUsername } from "../lib/auth/password";
 
 type IconName =
   | "folder" | "upload" | "check" | "chevR" | "chevL" | "chevU" | "chevD" | "plus"
@@ -75,26 +76,50 @@ function route(path: string) {
   return path === "index.html" ? "/" : `/${path}`;
 }
 
+type NavUser = { email?: string | null; name?: string | null; username?: string | null; aiCreditBalance?: number };
+
 function TopNav({ active }: { active: "home" | "product" | "tools" | "pricing" }) {
+  const [user, setUser] = useState<NavUser | null>(null);
+  const [checked, setChecked] = useState(false);
   const links = [
     { id: "product", label: "Produk", href: "product.html" },
     { id: "tools", label: "AI Fix Tools", href: "tools.html" },
     { id: "pricing", label: "Harga", href: "pricing.html" },
   ] as const;
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : { user: null })
+      .then((payload) => { if (alive) setUser(payload.user || null); })
+      .catch(() => { if (alive) setUser(null); })
+      .finally(() => { if (alive) setChecked(true); });
+    return () => { alive = false; };
+  }, []);
   return (
     <nav className="topnav">
       <Link href="/" className="topnav-logo"><PixelLogo size={26} /><span>PIXFORME</span></Link>
       <div className="topnav-links">
         {links.map((link) => <Link key={link.id} href={route(link.href)} className={active === link.id ? "active" : ""}>{link.label}</Link>)}
       </div>
-      <div className="topnav-actions">
-        <Link href={route("login.html")} className="pixel-btn pixel-btn-ghost" style={{ padding: "8px 16px" }}>Masuk</Link>
-        <Link href={route("login.html")} className="pixel-btn pixel-btn-accent" style={{ padding: "8px 16px" }}>Mulai Gratis</Link>
-      </div>
+      {checked && user ? (
+        <div className="topnav-profile">
+          <button className="personal-trigger" type="button">Personal <span>{user.aiCreditBalance ?? 0} kredit</span></button>
+          <div className="personal-menu">
+            <div className="personal-meta">{user.username || user.name || user.email || "User"}</div>
+            <Link href={route("workspace.html")}>Workspace</Link>
+            <Link href={route("kredit.html")}>Kredit</Link>
+            <a href="/auth/sign-out">Logout</a>
+          </div>
+        </div>
+      ) : checked ? (
+        <div className="topnav-actions">
+          <Link href={route("login.html")} className="pixel-btn pixel-btn-ghost" style={{ padding: "8px 16px" }}>Masuk</Link>
+          <Link href={route("signup.html")} className="pixel-btn pixel-btn-accent" style={{ padding: "8px 16px" }}>Mulai Gratis</Link>
+        </div>
+      ) : <div className="topnav-actions topnav-actions-placeholder" aria-hidden="true" />}
     </nav>
   );
 }
-
 function Footer({ full = true }: { full?: boolean }) {
   return (
     <footer className="site-footer">
@@ -116,13 +141,23 @@ function Footer({ full = true }: { full?: boolean }) {
   );
 }
 
+type HeaderAlign = "left" | "center" | "right" | "justify";
+type HeaderWeight = "normal" | "bold";
+type HeaderVariant = "official-logo-left" | "official-center" | "compact-box";
+type HeaderLineLevel = 1 | 2 | 3;
+type HeaderSplitStrategy = "single-line" | "balanced" | "manual";
+type HeaderSourceLine = { key: string; text: string; level: HeaderLineLevel; variant: HeaderVariant; preferredFontSize: number; minFontSize: number; maxLines: number; lineHeight: number; letterSpacing: number; minLetterSpacing: number; splitStrategy: HeaderSplitStrategy; manualLines?: string[] };
+type ReportHeaderLine = { key: string; text: string; level: HeaderLineLevel; fontSize: number; minFontSize: number; fontWeight: number; lineHeight: number; letterSpacing: number; minLetterSpacing: number; nowrap: boolean };
+type ReportHeaderConfig = { variant: HeaderVariant; align: HeaderAlign; showLogoInstansi: boolean; showLogoPerusahaan: boolean; accentColor: string; lines: ReportHeaderLine[] };
 type Project = {
   name: string; client: string; location: string; headerText: string; headerMode: "all" | "first";
+  headerAlign: HeaderAlign; headerFontSize: number; headerWeight: HeaderWeight; headerLineSpacing: number; headerVariant: HeaderVariant;
+  savedGeotag: Geotag | null;
   logoInstansi: boolean; logoPerusahaan: boolean; instansi: string; pekerjaan: string; lokasi: string; rabText: string; items: string[];
 };
-type WorkspaceProject = { id: string; name: string; instansi: string; location: string; status: string; items?: string[]; rabText?: string };
-type GalleryPhoto = { id: string; url: string; filename: string; w: number; h: number; sourceType: "laporan" | "bukti_lapangan" };
-type Geotag = { address: string; lat: number; lng: number; date: string; time: string };
+type WorkspaceProject = { id: string; name: string; instansi: string; location: string; status: string; items?: string[]; rabText?: string; headerText?: string; headerMode?: "all" | "first"; logoInstansi?: boolean; logoPerusahaan?: boolean; headerAlign?: HeaderAlign; headerFontSize?: number; headerWeight?: HeaderWeight; headerLineSpacing?: number; headerVariant?: HeaderVariant; savedGeotag?: Geotag | null };
+type GalleryPhoto = { id: string; url: string; filename: string; w: number; h: number; sourceType: "laporan" | "bukti_lapangan"; bucket?: string; storagePath?: string; mimeType?: string; sizeBytes?: number; originalSizeBytes?: number; resized?: boolean; publicBucket?: boolean };
+type Geotag = { address: string; providerAddress?: string; addressMode?: "provider" | "manual"; lat: number; lng: number; date: string; time: string };
 type ReportPhoto = { id: string; photoId: string | null; nama: string; item: string; progress: string | number; fitMode: "crop" | "contain"; cropY: number; aiExtended: boolean; geotag: Geotag | null };
 type Preview = { templateId: string; paperSize: "a4" | "f4"; gridGeoColor: string; gridGeoSize: number; gridGeoContrastApplied: boolean; accentColor: string; spacing: number; fontSize: number; border: boolean; borderWidth: number; borderRadius: number };
 type WizardState = { project: Project; workspace: { name: string; activeProjectId: string; projects: WorkspaceProject[] }; report: { name: string; period: string }; gallery: GalleryPhoto[]; reportPhotos: ReportPhoto[]; preview: Preview };
@@ -130,26 +165,16 @@ type WizardState = { project: Project; workspace: { name: string; activeProjectI
 const STORAGE_KEY = "pixforme.prototype.wizard.v3";
 const defaultProjectItems = ["Galian dan pembesian pondasi", "Pengecoran kolom lantai 1", "Plester dinding sisi utara", "Pemasangan rangka atap", "Pekerjaan finishing", "Instalasi listrik"];
 const defaultState: WizardState = {
-  project: { name: "Pembangunan Gedung Kantor Dinas A", client: "Dinas Pekerjaan Umum Kota X", location: "Jl. Sudirman No. 10", headerText: "DINAS PEKERJAAN UMUM\nLaporan Dokumentasi Proyek", headerMode: "all", logoInstansi: true, logoPerusahaan: true, instansi: "Dinas Pekerjaan Umum Kota X", pekerjaan: "Pembangunan Gedung Kantor Dinas A", lokasi: "Jl. Sudirman No. 10", rabText: defaultProjectItems.join("\n"), items: [...defaultProjectItems] },
+  project: { name: "Pembangunan Gedung Kantor Dinas A", client: "Dinas Pekerjaan Umum Kota X", location: "Jl. Sudirman No. 10", headerText: "DINAS PEKERJAAN UMUM\nLaporan Dokumentasi Proyek", headerMode: "all", headerAlign: "left", headerFontSize: 7, headerWeight: "bold", headerLineSpacing: 1.35, headerVariant: "official-center", savedGeotag: null, logoInstansi: true, logoPerusahaan: true, instansi: "Dinas Pekerjaan Umum Kota X", pekerjaan: "Pembangunan Gedung Kantor Dinas A", lokasi: "Jl. Sudirman No. 10", rabText: defaultProjectItems.join("\n"), items: [...defaultProjectItems] },
   workspace: { name: "Workspace Utama", activeProjectId: "project_1", projects: [{ id: "project_1", name: "Pembangunan Gedung Kantor Dinas A", instansi: "Dinas Pekerjaan Umum Kota X", location: "Jl. Sudirman No. 10", status: "Aktif", items: [...defaultProjectItems], rabText: defaultProjectItems.join("\n") }, { id: "project_2", name: "Project Berikutnya", instansi: "Belum diatur", location: "-", status: "Draft", items: [], rabText: "" }] },
   report: { name: "Laporan Mingguan Ke-3", period: "1 - 7 Juni 2026" },
-  gallery: [
-    { id: "g1", url: "https://picsum.photos/seed/pixforme-pondasi/900/650", filename: "pondasi.jpg", w: 900, h: 650, sourceType: "laporan" },
-    { id: "g2", url: "https://picsum.photos/seed/pixforme-beton/1000/750", filename: "beton.jpg", w: 1000, h: 750, sourceType: "laporan" },
-    { id: "g3", url: "https://picsum.photos/seed/pixforme-plester/650/980", filename: "portrait-plester.jpg", w: 650, h: 980, sourceType: "laporan" },
-    { id: "g4", url: "https://picsum.photos/seed/pixforme-atap/900/640", filename: "atap.jpg", w: 900, h: 640, sourceType: "laporan" },
-    { id: "g5", url: "https://picsum.photos/seed/pixforme-finishing/900/650", filename: "finishing.jpg", w: 900, h: 650, sourceType: "laporan" },
-    { id: "g6", url: "https://picsum.photos/seed/pixforme-listrik/900/650", filename: "listrik.jpg", w: 900, h: 650, sourceType: "laporan" },
-    { id: "g7", url: "https://picsum.photos/seed/pixforme-bukti/900/650", filename: "bukti-lapangan-ai.jpg", w: 900, h: 650, sourceType: "bukti_lapangan" },
-  ],
-  reportPhotos: [
-    { id: "rp1", photoId: "g1", nama: "Pekerjaan Pondasi", item: "Galian dan pembesian pondasi", progress: 30, fitMode: "crop", cropY: 50, aiExtended: false, geotag: null },
-    { id: "rp2", photoId: "g2", nama: "Pekerjaan Struktur Beton", item: "Pengecoran kolom lantai 1", progress: 55, fitMode: "crop", cropY: 50, aiExtended: false, geotag: null },
-    { id: "rp3", photoId: "g3", nama: "Pekerjaan Plesteran", item: "Plester dinding sisi utara", progress: 70, fitMode: "crop", cropY: 50, aiExtended: false, geotag: { address: "Kota Jayapura", lat: -2.5916, lng: 140.669, date: "2026-06-21", time: "09:00" } },
-    { id: "rp4", photoId: "g4", nama: "Pekerjaan Atap", item: "Pemasangan rangka atap", progress: 45, fitMode: "crop", cropY: 50, aiExtended: false, geotag: null },
-  ],
+  gallery: [],
+  reportPhotos: [],
   preview: { templateId: "t1", paperSize: "a4", gridGeoColor: "#FFFFFF", gridGeoSize: 7, gridGeoContrastApplied: true, accentColor: "#FF6B1A", spacing: 8, fontSize: 8, border: false, borderWidth: 1, borderRadius: 3 },
 };
+
+const SAMPLE_GALLERY_IDS = new Set(["g1", "g2", "g3", "g4", "g5", "g6", "g7"]);
+function isSamplePhotoId(id: string | null) { return Boolean(id && SAMPLE_GALLERY_IDS.has(id)); }
 
 const templates = [
   { id: "t1", label: "STACK + TEKS", desc: "2 foto per halaman, caption kanan", orientation: "portrait" },
@@ -204,14 +229,16 @@ function mergeState(saved: Partial<WizardState>) {
   project.lokasi = project.lokasi || project.location;
   if (!project.items?.length) project.items = [...defaultProjectItems];
   if (!project.rabText) project.rabText = project.items.join("\n");
+  const savedGallery = (saved.gallery || []).filter((photo) => !SAMPLE_GALLERY_IDS.has(photo.id));
+  const savedReportPhotos = (saved.reportPhotos || []).filter((row) => !isSamplePhotoId(row.photoId));
   return {
     ...base,
     ...saved,
     project,
     workspace: { ...base.workspace, ...(saved.workspace || {}), projects: saved.workspace?.projects?.length ? saved.workspace.projects : base.workspace.projects },
     report: { ...base.report, ...(saved.report || {}) },
-    gallery: saved.gallery?.length ? saved.gallery : base.gallery,
-    reportPhotos: saved.reportPhotos?.length ? saved.reportPhotos : base.reportPhotos,
+    gallery: savedGallery,
+    reportPhotos: savedReportPhotos,
     preview: { ...base.preview, ...(saved.preview || {}) },
   } as WizardState;
 }
@@ -311,7 +338,7 @@ export function HomePage() {
         <div className="hero-eyebrow"><PixelIcon name="sparkle" size={12} color="#FF6B1A" />DIBUAT UNTUK KONTRAKTOR INDONESIA</div>
         <h1>LAPORAN DOKUMENTASI<br />PROYEK, <span className="hi-orange">BUKAN<br />PEKERJAAN BERHARI-HARI.</span></h1>
         <p className="lead">Susun foto progres lapangan jadi laporan pertanggungjawaban siap cetak - rapi, terstruktur, dan konsisten - tanpa drag-drop manual di Word atau Excel.</p>
-        <div className="hero-ctas"><Link href={route("login.html")} className="pixel-btn pixel-btn-accent pixel-btn-lg"><PixelIcon name="arrowRight" size={14} color="#fff" />Buat Laporan Pertama</Link><Link href={route("product.html")} className="pixel-btn pixel-btn-ghost pixel-btn-lg">Lihat Cara Kerja</Link></div>
+        <div className="hero-ctas"><Link href={route("signup.html")} className="pixel-btn pixel-btn-accent pixel-btn-lg"><PixelIcon name="arrowRight" size={14} color="#fff" />Buat Laporan Pertama</Link><Link href={route("product.html")} className="pixel-btn pixel-btn-ghost pixel-btn-lg">Lihat Cara Kerja</Link></div>
         <div className="hero-meta"><PixelIcon name="check" size={12} color="#2E9E5B" />Tidak perlu kartu kredit - Export PDF gratis untuk laporan pertama</div>
       </div><MockReportStack /></div></section>
       <ProblemMarquee />
@@ -319,7 +346,7 @@ export function HomePage() {
       <HowItWorksSection />
       <TemplatesSection />
       <HomeToolsSection />
-      <section className="section"><div className="cta-banner"><div><h2>SIAP BUAT LAPORAN<br />PERTAMA ANDA?</h2><p>Gratis untuk laporan pertama. Tidak perlu kartu kredit.</p></div><Link href={route("login.html")} className="pixel-btn pixel-btn-primary pixel-btn-lg"><PixelIcon name="arrowRight" size={14} color="#fff" />Mulai Sekarang</Link></div></section>
+      <section className="section"><div className="cta-banner"><div><h2>SIAP BUAT LAPORAN<br />PERTAMA ANDA?</h2><p>Gratis untuk laporan pertama. Tidak perlu kartu kredit.</p></div><Link href={route("signup.html")} className="pixel-btn pixel-btn-primary pixel-btn-lg"><PixelIcon name="arrowRight" size={14} color="#fff" />Mulai Sekarang</Link></div></section>
       <Footer />
     </>
   );
@@ -434,8 +461,59 @@ export function ToolsPage() {
   return <><TopNav active="tools" /><section className="ph-hero"><h1>AI FIX TOOLS</h1><p>Tool terpisah dari wizard laporan - untuk bukti lapangan real-time dan pengelolaan foto massal. Hasilnya tersimpan di galeri Anda, terpisah dari foto laporan resmi.</p></section><div className="tool-route-grid">{tools.map(([icon, bg, title, text]) => <div className="tool-route-card coming" key={title}><div className="tool-route-icon" style={{ background: bg }}><PixelIcon name={icon as IconName} size={24} color="#fff" /></div><span className="badge-status badge-soon">SEGERA HADIR</span><h3>{title}</h3><p>{text}</p><button className="pixel-btn pixel-btn-ghost" disabled style={{ alignSelf: "flex-start" }}>Buka Tool</button></div>)}</div><Footer full={false} /></>;
 }
 
+function AuthPasswordPage({ mode }: { mode: "login" | "signup" }) {
+  const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState<{ message: string; type: "error" | "success" } | null>(null);
+  const isSignup = mode === "signup";
+  const passwordChecks = getPasswordChecks(password);
+  const passwordStrength = getPasswordStrength(password);
+  const passwordLabel = passwordStrength >= 5 ? "STRONG" : passwordStrength >= 3 ? "MEDIUM" : "WEAK";
+
+  async function submit() {
+    if (busy) return;
+    if (isSignup && password !== confirmPassword) {
+      const message = "Konfirmasi password tidak sama.";
+      setStatus({ type: "error", message });
+      window.alert(message);
+      return;
+    }
+    setBusy(true);
+    setStatus(null);
+    try {
+      const response = await fetch("/api/auth/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode, username, firstName, lastName, email, password, confirmPassword }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "Auth gagal.");
+      if (payload.needsEmailConfirmation) {
+        setStatus({ type: "success", message: "Akun dibuat. Cek email verifikasi sebelum masuk." });
+        return;
+      }
+      const next = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("next") : "";
+      window.location.assign(next || route("workspace.html"));
+    } catch (error) {
+      setStatus({ type: "error", message: error instanceof Error ? error.message : "Auth gagal." });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return <div className="login-page"><div className="login-wrap"><div className="login-box auth-box-wide"><Link href="/" className="logo-row"><PixelLogo size={26} /><span className="brand">PIXFORME</span></Link><div className="card card-accent"><h1>{isSignup ? "Buat akun baru" : "Masuk ke akun Anda"}</h1><p className="sub">{isSignup ? "Daftar untuk membuat dokumentasi gratis dengan free tier." : "Login untuk membuat dokumentasi gratis dengan free tier."}</p>{isSignup ? <><div><label className="field-label">Username</label><input className="field-input" type="text" value={username} placeholder="contoh: andi_project" autoComplete="username" onChange={(event) => setUsername(normalizeUsername(event.target.value))} /></div><div className="auth-name-grid"><div><label className="field-label">Nama Pertama</label><input className="field-input" type="text" value={firstName} placeholder="Andi" autoComplete="given-name" onChange={(event) => setFirstName(event.target.value)} /></div><div><label className="field-label">Nama Kedua</label><input className="field-input" type="text" value={lastName} placeholder="Saputra" autoComplete="family-name" onChange={(event) => setLastName(event.target.value)} /></div></div></> : null}<div><label className="field-label">Email</label><input className="field-input" type="email" value={email} placeholder="nama@perusahaan.com" autoComplete="email" onChange={(event) => setEmail(event.target.value)} /></div><div><label className="field-label">Kata Sandi</label><input className="field-input" type="password" value={password} placeholder={isSignup ? "minimal 10 karakter" : "password"} autoComplete={isSignup ? "new-password" : "current-password"} onChange={(event) => setPassword(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !isSignup) void submit(); }} /></div>{isSignup ? <><div className={`password-meter strength-${passwordLabel.toLowerCase()}`}><div className="password-meter-top"><span>Password strength</span><strong>{passwordLabel}</strong></div><div className="password-meter-bar"><span style={{ width: `${Math.min(100, passwordStrength * 20)}%` }} /></div><div className="password-checks"><span className={passwordChecks.length ? "ok" : ""}>10+ karakter</span><span className={passwordChecks.upper ? "ok" : ""}>Huruf besar</span><span className={passwordChecks.lower ? "ok" : ""}>Huruf kecil</span><span className={passwordChecks.number ? "ok" : ""}>Angka</span><span className={passwordChecks.symbol ? "ok" : ""}>Simbol</span></div></div><div><label className="field-label">Konfirmasi Kata Sandi</label><input className={`field-input ${confirmPassword && password !== confirmPassword ? "required-empty" : ""}`} type="password" value={confirmPassword} placeholder="ulangi password" autoComplete="new-password" onChange={(event) => setConfirmPassword(event.target.value)} onBlur={() => { if (confirmPassword && password !== confirmPassword) setStatus({ type: "error", message: "Konfirmasi password tidak sama." }); }} onKeyDown={(event) => { if (event.key === "Enter") void submit(); }} /></div></> : null}{status ? <div className={`auth-status ${status.type}`}>{status.message}</div> : null}<button className="pixel-btn pixel-btn-accent" type="button" disabled={busy} style={{ justifyContent: "center", width: "100%", padding: 12 }} onClick={() => void submit()}>{busy ? "Memproses..." : isSignup ? "Buat Akun & Verifikasi Email" : "Masuk"}</button><div className="auth-switch">{isSignup ? <>Sudah punya akun? <Link href={route("login.html")}>Masuk</Link></> : <>Belum punya akun? <Link href={route("signup.html")}>Daftar gratis</Link></>}</div></div></div></div></div>;
+}
 export function LoginPage() {
-  return <div className="login-page"><div className="login-wrap"><div className="login-box"><Link href="/" className="logo-row"><PixelLogo size={26} /><span className="brand">PIXFORME</span></Link><div className="card card-accent"><h1>Masuk ke akun Anda</h1><p className="sub">Login untuk membuat dokumentasi gratis dengan free tier.</p><div><label className="field-label">Email</label><input className="field-input" type="email" placeholder="nama@perusahaan.com" /></div><div><label className="field-label">Kata Sandi</label><input className="field-input" type="password" placeholder="password" /></div><Link href={route("workspace.html")} className="pixel-btn pixel-btn-accent" style={{ justifyContent: "center", width: "100%", padding: 12 }}>Masuk</Link><div style={{ textAlign: "center", fontSize: 12, color: "var(--text-muted)" }}>Belum punya akun? <Link href={route("workspace.html")} style={{ color: "var(--orange)", fontWeight: 700 }}>Mulai gratis</Link></div></div></div></div></div>;
+  return <AuthPasswordPage mode="login" />;
+}
+
+export function SignupPage() {
+  return <AuthPasswordPage mode="signup" />;
 }
 export function PricingPage() {
   const [status, setStatus] = useState<{ message: string; type?: "success" | "error" } | null>(null);
@@ -481,6 +559,37 @@ export function PricingPage() {
   return <><TopNav active="pricing" /><section className="ph-hero"><h1>HARGA YANG SEPADAN<br />DENGAN WAKTU YANG ANDA HEMAT</h1><p>Subscription untuk pemakaian rutin, kredit untuk fitur AI sesuai kebutuhan. Detail final masih disusun - berikut gambaran strukturnya.</p></section><div className="pricing-grid"><PriceCard title="Gratis" amount="Rp0" period="/bulan" features={["1 laporan aktif", "Hingga 30 foto", "Export PDF dengan watermark"]} button="Mulai Gratis" /><PriceCard featured title="Pro" amount="Segera" features={["Project & laporan tanpa batas", "Ratusan foto per laporan", "Export PDF tanpa watermark", "Kredit AI bulanan termasuk"]} button="Segera Hadir" disabled /><div className="price-card"><h3>Kredit AI</h3><div><span className="price-amount">Rp29.000</span> <span className="price-period">/paket test</span></div><ul className="price-features">{["50 kredit AI", "AI Extend aspek rasio", "AI Geotag Burn-in", "Sandbox Snap: GoPay, QRIS, VA"].map((feature) => <li key={feature}><PixelIcon name="check" size={12} color="#2E9E5B" />{feature}</li>)}</ul><button id="snapPayBtn" className="pixel-btn pixel-btn-ghost" style={{ marginTop: "auto", justifyContent: "center" }} onClick={openSnap} disabled={busy}>Uji Bayar</button><div className={`payment-status ${status ? "active" : ""} ${status?.type || ""}`} role="status" aria-live="polite">{status?.message}</div></div></div><div className="payment-note">Token Snap dibuat di server agar server key Midtrans tidak bocor ke browser.</div><Footer full={false} /></>;
 }
 
+
+type CreditLedgerItem = { id: string; source_type: string; delta: number; balance_after: number; notes: string | null; created_at: string };
+
+export function KreditPage() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [balance, setBalance] = useState(0);
+  const [ledger, setLedger] = useState<CreditLedgerItem[]>([]);
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/credits", { cache: "no-store" })
+      .then(async (response) => {
+        const payload = await response.json().catch(() => ({}));
+        if (response.status === 401) {
+          window.location.assign(`${route("login.html")}?next=${encodeURIComponent(route("kredit.html"))}`);
+          return null;
+        }
+        if (!response.ok) throw new Error(payload.error || "Data kredit gagal dimuat.");
+        return payload as { balance: number; ledger: CreditLedgerItem[] };
+      })
+      .then((payload) => {
+        if (!alive || !payload) return;
+        setBalance(payload.balance || 0);
+        setLedger(payload.ledger || []);
+      })
+      .catch((err) => { if (alive) setError(err instanceof Error ? err.message : "Data kredit gagal dimuat."); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, []);
+  return <><TopNav active="pricing" /><main className="wizard-page container-narrow credit-page"><div className="wizard-title-row"><div><div className="wizard-kicker">PERSONAL</div><h1 className="wizard-title">KREDIT AI</h1><p className="wizard-subtitle">Route ini menampilkan saldo dan catatan pembelian/pemakaian kredit user.</p></div><StateChips items={[`Saldo: ${balance}`, `${ledger.length} riwayat`]} /></div>{loading ? <div className="prototype-banner">Memuat data kredit...</div> : null}{error ? <div className="prototype-banner error">{error}</div> : null}<section className="credit-summary-card"><div><div className="mini-label">SALDO SAAT INI</div><div className="credit-balance mono">{balance}</div></div><Link className="pixel-btn pixel-btn-accent" href={route("pricing.html")}>Beli Kredit</Link></section><section className="card"><h2 className="pixel-heading" style={{ fontSize: 16 }}>Riwayat Kredit</h2>{ledger.length ? <div className="credit-ledger-list">{ledger.map((item) => <div className="credit-ledger-row" key={item.id}><div><strong>{item.source_type}</strong><span>{item.notes || "-"}</span></div><div className="mono credit-delta">{item.delta > 0 ? "+" : ""}{item.delta}</div><div className="mono credit-after">Saldo {item.balance_after}</div><div className="mono credit-date">{new Date(item.created_at).toLocaleString("id-ID")}</div></div>)}</div> : <div className="empty-state">Belum ada transaksi kredit.</div>}</section></main><Footer full={false} /></>;
+}
 function PriceCard({ title, amount, period, features, button, featured, disabled }: { title: string; amount: string; period?: string; features: string[]; button: string; featured?: boolean; disabled?: boolean }) {
   return <div className={`price-card ${featured ? "featured" : ""}`}><h3 style={featured ? { color: "var(--orange)" } : undefined}>{title}</h3><div><span className="price-amount">{amount}</span> {period ? <span className="price-period">{period}</span> : null}</div><ul className="price-features">{features.map((feature) => <li key={feature}><PixelIcon name="check" size={12} color={featured ? "#FF6B1A" : "#2E9E5B"} />{feature}</li>)}</ul><button className={`pixel-btn ${featured ? "pixel-btn-accent" : "pixel-btn-ghost"}`} style={{ marginTop: "auto", justifyContent: "center" }} disabled={disabled}>{button}</button></div>;
 }
@@ -490,15 +599,53 @@ export function WorkspacePage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const [loadingWorkspace, setLoadingWorkspace] = useState(true);
+  const [workspaceError, setWorkspaceError] = useState<string | null>(null);
   const activeId = state.workspace.activeProjectId || "project_1";
 
-  function activateProject(id: string) {
+  useEffect(() => {
+    let alive = true;
+    async function loadWorkspace() {
+      setLoadingWorkspace(true);
+      setWorkspaceError(null);
+      try {
+        const response = await fetch("/api/workspace", { cache: "no-store" });
+        if (response.status === 401) {
+          window.location.assign(`${route("login.html")}?next=${encodeURIComponent(route("workspace.html"))}`);
+          return;
+        }
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || "Workspace Supabase belum siap.");
+        if (!alive) return;
+        const projects = payload.workspace?.projects?.length ? payload.workspace.projects : [];
+        const activeProject = projects.find((project: WorkspaceProject) => project.id === payload.workspace.activeProjectId) || projects[0];
+        const next = cloneState(state);
+        next.workspace = { name: payload.workspace.name || "Workspace Utama", activeProjectId: activeProject?.id || "", projects };
+        if (activeProject) {
+          next.project = { ...next.project, name: activeProject.name || "", pekerjaan: activeProject.name || "", client: activeProject.instansi || "", instansi: activeProject.instansi || "", location: activeProject.location || "", lokasi: activeProject.location || "", items: activeProject.items?.length ? [...activeProject.items] : [], rabText: activeProject.rabText || activeProject.items?.join("\n") || "", headerText: activeProject.headerText ?? next.project.headerText, headerMode: activeProject.headerMode || next.project.headerMode, logoInstansi: typeof activeProject.logoInstansi === "boolean" ? activeProject.logoInstansi : next.project.logoInstansi, logoPerusahaan: typeof activeProject.logoPerusahaan === "boolean" ? activeProject.logoPerusahaan : next.project.logoPerusahaan, headerAlign: activeProject.headerAlign || next.project.headerAlign, headerFontSize: activeProject.headerFontSize || next.project.headerFontSize, headerWeight: activeProject.headerWeight || next.project.headerWeight, headerLineSpacing: activeProject.headerLineSpacing || next.project.headerLineSpacing, headerVariant: activeProject.headerVariant || next.project.headerVariant, savedGeotag: activeProject.savedGeotag ?? next.project.savedGeotag ?? null };
+        }
+        save(next);
+      } catch (error) {
+        if (alive) setWorkspaceError(error instanceof Error ? error.message : "Workspace gagal dimuat.");
+      } finally {
+        if (alive) setLoadingWorkspace(false);
+      }
+    }
+    void loadWorkspace();
+    return () => { alive = false; };
+  }, []);
+  async function activateProject(id: string) {
+    setWorkspaceError(null);
+    const response = await fetch("/api/workspace/projects", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "activate", projectId: id }) });
+    if (response.status === 401) { window.location.assign(`${route("login.html")}?next=${encodeURIComponent(route("workspace.html"))}`); return; }
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) { setWorkspaceError(payload.error || "Project gagal diaktifkan."); return; }
     const next = cloneState(state);
     const project = next.workspace.projects.find((row) => row.id === id);
     if (!project) return;
     next.workspace.activeProjectId = id;
     next.workspace.projects = next.workspace.projects.map((row) => ({ ...row, status: row.id === id ? "Aktif" : row.status === "Aktif" ? "Draft" : row.status }));
-    next.project = { ...next.project, name: project.name || "", pekerjaan: project.name || "", client: project.instansi || "", instansi: project.instansi || "", location: project.location || "", lokasi: project.location || "", items: project.items?.length ? [...project.items] : [], rabText: project.rabText || project.items?.join("\n") || "" };
+    next.project = { ...next.project, name: project.name || "", pekerjaan: project.name || "", client: project.instansi || "", instansi: project.instansi || "", location: project.location || "", lokasi: project.location || "", items: project.items?.length ? [...project.items] : [], rabText: project.rabText || project.items?.join("\n") || "", headerText: project.headerText ?? next.project.headerText, headerMode: project.headerMode || next.project.headerMode, logoInstansi: typeof project.logoInstansi === "boolean" ? project.logoInstansi : next.project.logoInstansi, logoPerusahaan: typeof project.logoPerusahaan === "boolean" ? project.logoPerusahaan : next.project.logoPerusahaan, headerAlign: project.headerAlign || next.project.headerAlign, headerFontSize: project.headerFontSize || next.project.headerFontSize, headerWeight: project.headerWeight || next.project.headerWeight, headerLineSpacing: project.headerLineSpacing || next.project.headerLineSpacing, headerVariant: project.headerVariant || next.project.headerVariant, savedGeotag: project.savedGeotag ?? next.project.savedGeotag ?? null };
     save(next);
     window.location.assign(route("wizard-step1.html"));
   }
@@ -509,23 +656,28 @@ export function WorkspacePage() {
     window.setTimeout(() => inputRef.current?.focus(), 40);
   }
 
-  function createProject() {
+  async function createProject() {
     const name = newProjectName.trim();
     if (!name) {
       inputRef.current?.focus();
       return;
     }
+    setWorkspaceError(null);
+    const response = await fetch("/api/workspace/projects", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
+    if (response.status === 401) { window.location.assign(`${route("login.html")}?next=${encodeURIComponent(route("workspace.html"))}`); return; }
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.projectId) { setWorkspaceError(payload.error || "Project gagal dibuat."); return; }
     const next = cloneState(state);
-    const id = `project_${Date.now().toString(36)}`;
+    const id = payload.projectId as string;
     next.workspace.projects = next.workspace.projects.map((row) => ({ ...row, status: row.status === "Aktif" ? "Draft" : row.status }));
-    next.workspace.projects.unshift({ id, name, instansi: "Belum diatur", location: "-", status: "Aktif", items: [], rabText: "" });
+    next.workspace.projects.unshift({ id, name, instansi: "Belum diatur", location: "-", status: "Aktif", items: [], rabText: "", headerText: defaultState.project.headerText, headerMode: "all", headerVariant: "official-center", logoInstansi: true, logoPerusahaan: true, savedGeotag: null });
     next.workspace.activeProjectId = id;
-    next.project = { ...next.project, name, pekerjaan: name, client: "", instansi: "", location: "", lokasi: "", items: [], rabText: "" };
+    next.project = { ...defaultState.project, name, pekerjaan: name, client: "", instansi: "", location: "", lokasi: "", items: [], rabText: "", savedGeotag: null };
     save(next);
     window.location.assign(route("wizard-step1.html"));
   }
 
-  return <div className="wizard-shell"><WizardChrome step={0} actions={<><Link className="pixel-btn pixel-btn-ghost" href="/">Home</Link><button className="pixel-btn pixel-btn-accent" type="button" onClick={openCreate}>Create Project</button></>} /><main className="wizard-page container workspace-page-only"><div className="wizard-title-row"><div><div className="wizard-kicker">WORKSPACE</div><h1 className="wizard-title">PROJECT ANDA</h1><p className="wizard-subtitle">Pilih project yang sudah ada, atau buat project baru untuk mulai dokumentasi gratis pada free tier.</p></div><StateChips items={["Free Tier", `Project: ${state.workspace.projects.length}`]} /></div><section className="workspace-card-grid">{state.workspace.projects.map((project) => <button className={`workspace-project-card ${project.id === activeId ? "active" : ""}`} key={project.id} onClick={() => activateProject(project.id)} type="button"><span className="project-card-top"><span className="mono project-card-id">{project.id}</span><span className="project-card-status">{project.status || "Draft"}</span></span><span className="project-card-title">{project.name || project.id}</span><span className="project-card-meta">{project.instansi || "Belum diatur"}</span><span className="project-card-meta">{project.location || "-"}</span><span className="project-card-cta">Buka Wizard</span></button>)}<button className="workspace-project-card create-card" type="button" onClick={openCreate}><span className="create-card-plus">+</span><span className="project-card-title">Create Project</span><span className="project-card-meta">Mulai dokumentasi gratis</span></button></section></main><div className={`modal-overlay ${createOpen ? "show" : ""}`} onClick={(event) => { if (event.target === event.currentTarget) setCreateOpen(false); }}><div className="modal-box create-project-box"><div className="modal-head"><div><div className="modal-title">Create Project</div><div className="modal-sub">Isi nama project. Detail instansi, pekerjaan, lokasi, dan item RAB diatur pada wizard step 1.</div></div><button className="modal-close" type="button" onClick={() => setCreateOpen(false)}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><label className="field-label">Nama Project</label><input ref={inputRef} className="field-input" value={newProjectName} placeholder="Contoh: Pembangunan Gedung Kantor Dinas A" onChange={(event) => setNewProjectName(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") createProject(); }} /><div className="dialog-actions"><button className="pixel-btn pixel-btn-ghost" type="button" onClick={() => setCreateOpen(false)}>Batal</button><button className="pixel-btn pixel-btn-accent" type="button" onClick={createProject}>Create & Masuk Wizard</button></div></div></div></div>;
+  return <div className="wizard-shell"><WizardChrome step={0} actions={<><Link className="pixel-btn pixel-btn-ghost" href="/">Home</Link><button className="pixel-btn pixel-btn-accent" type="button" onClick={openCreate}>Create Project</button></>} /><main className="wizard-page container workspace-page-only"><div className="wizard-title-row"><div><div className="wizard-kicker">WORKSPACE</div><h1 className="wizard-title">PROJECT ANDA</h1><p className="wizard-subtitle">Pilih project yang sudah ada, atau buat project baru untuk mulai dokumentasi gratis pada free tier.</p></div><StateChips items={["Free Tier", `Project: ${state.workspace.projects.length}`]} /></div>{loadingWorkspace ? <div className="prototype-banner">Memuat workspace user...</div> : null}{workspaceError ? <div className="prototype-banner error">{workspaceError}</div> : null}<section className="workspace-card-grid">{state.workspace.projects.map((project) => <button className={`workspace-project-card ${project.id === activeId ? "active" : ""}`} key={project.id} onClick={() => void activateProject(project.id)} type="button"><span className="project-card-top"><span className="mono project-card-id">{project.id}</span><span className="project-card-status">{project.status || "Draft"}</span></span><span className="project-card-title">{project.name || project.id}</span><span className="project-card-meta">{project.instansi || "Belum diatur"}</span><span className="project-card-meta">{project.location || "-"}</span><span className="project-card-cta">Buka Wizard</span></button>)}<button className="workspace-project-card create-card" type="button" onClick={openCreate}><span className="create-card-plus">+</span><span className="project-card-title">Create Project</span><span className="project-card-meta">Mulai dokumentasi gratis</span></button></section></main><div className={`modal-overlay ${createOpen ? "show" : ""}`} onClick={(event) => { if (event.target === event.currentTarget) setCreateOpen(false); }}><div className="modal-box create-project-box"><div className="modal-head"><div><div className="modal-title">Create Project</div><div className="modal-sub">Isi nama project. Detail instansi, pekerjaan, lokasi, dan item RAB diatur pada wizard step 1.</div></div><button className="modal-close" type="button" onClick={() => setCreateOpen(false)}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><label className="field-label">Nama Project</label><input ref={inputRef} className="field-input" value={newProjectName} placeholder="Contoh: Pembangunan Gedung Kantor Dinas A" onChange={(event) => setNewProjectName(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") void createProject(); }} /><div className="dialog-actions"><button className="pixel-btn pixel-btn-ghost" type="button" onClick={() => setCreateOpen(false)}>Batal</button><button className="pixel-btn pixel-btn-accent" type="button" onClick={() => void createProject()}>Create & Masuk Wizard</button></div></div></div></div>;
 }
 function ItemPreview({ items, max = Infinity }: { items: string[]; max?: number }) {
   const visible = items.slice(0, max);
@@ -535,6 +687,7 @@ function ItemPreview({ items, max = Infinity }: { items: string[]; max?: number 
 export function WizardStep1Page() {
   const { state, save, reset } = useWizardState();
   const [required, setRequired] = useState(false);
+  const syncTimerRef = useRef<number | null>(null);
   function updateProject(changes: Partial<Project>) {
     const next = cloneState(state);
     next.project = { ...next.project, ...changes };
@@ -544,8 +697,17 @@ export function WizardStep1Page() {
     if (changes.rabText !== undefined) next.project.items = parseRabItems(changes.rabText);
     const activeId = next.workspace.activeProjectId;
     const activeProject = next.workspace.projects.find((project) => project.id === activeId);
-    if (activeProject) Object.assign(activeProject, { name: next.project.name || "-", instansi: next.project.client || "-", location: next.project.location || "-", status: "Aktif", items: [...next.project.items], rabText: next.project.rabText });
+    if (activeProject) Object.assign(activeProject, { name: next.project.name || "-", instansi: next.project.client || "-", location: next.project.location || "-", status: "Aktif", items: [...next.project.items], rabText: next.project.rabText, headerText: next.project.headerText, headerMode: next.project.headerMode, logoInstansi: next.project.logoInstansi, logoPerusahaan: next.project.logoPerusahaan, headerAlign: next.project.headerAlign, headerFontSize: next.project.headerFontSize, headerWeight: next.project.headerWeight, headerLineSpacing: next.project.headerLineSpacing, headerVariant: next.project.headerVariant, savedGeotag: next.project.savedGeotag });
     save(next);
+    if (syncTimerRef.current) window.clearTimeout(syncTimerRef.current);
+    syncTimerRef.current = window.setTimeout(() => {
+      if (!activeId) return;
+      void fetch("/api/workspace/projects", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "update", projectId: activeId, changes: next.project }),
+      }).catch(() => {});
+    }, 450);
   }
   function nextStep() {
     if (!state.project.name.trim()) {
@@ -555,7 +717,7 @@ export function WizardStep1Page() {
     }
     window.location.assign(route("wizard-step2.html"));
   }
-  return <div className="wizard-shell"><WizardChrome step={1} actions={<><Link className="pixel-btn pixel-btn-ghost" href={route("workspace.html")}>Workspace</Link><button className="pixel-btn pixel-btn-ghost" onClick={() => { reset(); window.location.reload(); }}>Reset</button><button className="pixel-btn pixel-btn-accent" onClick={nextStep}>Lanjut</button></>} /><main className="wizard-page container-narrow"><div className="wizard-title-row"><div><div className="wizard-kicker">STEP 01</div><h1 className="wizard-title">PROJECT SETTING</h1><p className="wizard-subtitle">Satu workspace dapat menyimpan banyak project. Data instansi, pekerjaan, lokasi, dan item pekerjaan disimpan di level project agar bisa dipakai ulang pada laporan berikutnya.</p></div></div><div className="wizard-grid-2"><section className="card card-accent"><div className="form-grid"><div className="span-2"><label className="field-label">Nama Pekerjaan / Project <span className="req">*</span></label><input id="projectName" className={`field-input ${required ? "required-empty" : ""}`} value={state.project.name} placeholder="mis. Pembangunan Gedung Kantor Dinas A" onChange={(e) => updateProject({ name: e.target.value })} /></div><div><label className="field-label">Nama Instansi</label><input className="field-input" value={state.project.client} placeholder="mis. Dinas Pekerjaan Umum Kota X" onChange={(e) => updateProject({ client: e.target.value })} /></div><div><label className="field-label">Lokasi Kegiatan</label><input className="field-input" value={state.project.location} placeholder="mis. Jl. Sudirman No. 10" onChange={(e) => updateProject({ location: e.target.value })} /></div><div className="span-2"><label className="field-label">Paste Item Pekerjaan dari RAB</label><textarea className="field-textarea mono" rows={7} value={state.project.rabText} placeholder={"Paste baris RAB di sini. Contoh:\n1. Pekerjaan Persiapan\n2. Galian dan pembesian pondasi\n3. Pengecoran kolom lantai 1"} onChange={(e) => updateProject({ rabText: e.target.value })} /><ItemPreview items={getProjectItems(state)} max={12} /></div><div className="span-2"><label className="field-label">Logo yang ditampilkan</label><div className="toggle-row"><button className={`toggle-btn ${state.project.logoInstansi ? "active" : ""}`} type="button" onClick={() => updateProject({ logoInstansi: !state.project.logoInstansi })}>Logo Instansi</button><button className={`toggle-btn ${state.project.logoPerusahaan ? "active" : ""}`} type="button" onClick={() => updateProject({ logoPerusahaan: !state.project.logoPerusahaan })}>Logo Perusahaan</button></div></div><div className="span-2"><label className="field-label">Teks Header</label><textarea className="field-textarea" rows={4} value={state.project.headerText} placeholder={"DINAS PEKERJAAN UMUM\nLaporan Dokumentasi Proyek"} onChange={(e) => updateProject({ headerText: e.target.value })} /></div><div className="span-2"><label className="field-label">Tampilkan Header</label><div className="toggle-row"><button className={`toggle-btn ${state.project.headerMode === "all" ? "active" : ""}`} type="button" onClick={() => updateProject({ headerMode: "all" })}>Semua Halaman</button><button className={`toggle-btn ${state.project.headerMode === "first" ? "active" : ""}`} type="button" onClick={() => updateProject({ headerMode: "first" })}>Halaman Pertama</button></div></div></div></section><aside className="info-panel"><h3>Arah UX</h3><ul><li>Workspace menjadi rumah untuk project_1, project_2, dan seterusnya.</li><li>Project Setting menyimpan atribut utama project.</li><li>Item RAB otomatis menjadi dropdown di Step 3.</li></ul><ProjectSummary state={state} /></aside></div></main></div>;
+  return <div className="wizard-shell"><WizardChrome step={1} actions={<><Link className="pixel-btn pixel-btn-ghost" href={route("workspace.html")}>Workspace</Link><button className="pixel-btn pixel-btn-ghost" onClick={() => { reset(); window.location.reload(); }}>Reset</button><button className="pixel-btn pixel-btn-accent" onClick={nextStep}>Lanjut</button></>} /><main className="wizard-page container-narrow"><div className="wizard-title-row"><div><div className="wizard-kicker">STEP 01</div><h1 className="wizard-title">PROJECT SETTING</h1><p className="wizard-subtitle">Satu workspace dapat menyimpan banyak project. Data instansi, pekerjaan, lokasi, dan item pekerjaan disimpan di level project agar bisa dipakai ulang pada laporan berikutnya.</p></div></div><div className="wizard-grid-2"><section className="card card-accent"><div className="form-grid"><div className="span-2"><label className="field-label">Nama Pekerjaan / Project <span className="req">*</span></label><input id="projectName" className={`field-input ${required ? "required-empty" : ""}`} value={state.project.name} placeholder="mis. Pembangunan Gedung Kantor Dinas A" onChange={(e) => updateProject({ name: e.target.value })} /></div><div><label className="field-label">Nama Instansi</label><input className="field-input" value={state.project.client} placeholder="mis. Dinas Pekerjaan Umum Kota X" onChange={(e) => updateProject({ client: e.target.value })} /></div><div><label className="field-label">Lokasi Kegiatan</label><input className="field-input" value={state.project.location} placeholder="mis. Jl. Sudirman No. 10" onChange={(e) => updateProject({ location: e.target.value })} /></div><div className="span-2"><label className="field-label">Paste Item Pekerjaan dari RAB</label><textarea className="field-textarea mono" rows={7} value={state.project.rabText} placeholder={"Paste baris RAB di sini. Contoh:\n1. Pekerjaan Persiapan\n2. Galian dan pembesian pondasi\n3. Pengecoran kolom lantai 1"} onChange={(e) => updateProject({ rabText: e.target.value })} /><ItemPreview items={getProjectItems(state)} max={12} /></div><div className="span-2"><label className="field-label">Logo yang ditampilkan</label><div className="toggle-row"><button className={`toggle-btn ${state.project.logoInstansi ? "active" : ""}`} type="button" onClick={() => updateProject({ logoInstansi: !state.project.logoInstansi })}>Logo Instansi</button><button className={`toggle-btn ${state.project.logoPerusahaan ? "active" : ""}`} type="button" onClick={() => updateProject({ logoPerusahaan: !state.project.logoPerusahaan })}>Logo Perusahaan</button></div></div><div className="span-2"><label className="field-label">Teks Header</label><textarea className="field-textarea" rows={6} value={state.project.headerText} placeholder={"KEMENTRIAN PEKERJAAN UMUM DAN PERUMAHAN RAKYAT\nDIREKTORAT JENDERAL SUMBER DAYA AIR\nBALAI WILAYAH SUNGAI PAPUA\nSATUAN KERJA BALAI WILAYAH SUNGAI PAPUA\nAlamat jalan padang bulan nomor 28 B Jayapura, Tlp 9051, email: bwskntl@kntl.com"} onChange={(e) => updateProject({ headerText: e.target.value })} /></div><div className="span-2"><label className="field-label">Tampilkan Header</label><div className="toggle-row"><button className={`toggle-btn ${state.project.headerMode === "all" ? "active" : ""}`} type="button" onClick={() => updateProject({ headerMode: "all" })}>Semua Halaman</button><button className={`toggle-btn ${state.project.headerMode === "first" ? "active" : ""}`} type="button" onClick={() => updateProject({ headerMode: "first" })}>Halaman Pertama</button></div></div></div></section><aside className="info-panel"><h3>Arah UX</h3><ul><li>Workspace menjadi rumah untuk project_1, project_2, dan seterusnya.</li><li>Project Setting menyimpan atribut utama project.</li><li>Item RAB otomatis menjadi dropdown di Step 3.</li></ul><ProjectSummary state={state} /></aside></div></main></div>;
 }
 
 export function WizardStep2Page() {
@@ -573,18 +735,119 @@ export function WizardStep2Page() {
   return <div className="wizard-shell"><WizardChrome step={2} actions={<><Link className="pixel-btn pixel-btn-ghost" href={route("wizard-step1.html")}>Kembali</Link><button className="pixel-btn pixel-btn-accent" onClick={nextStep}>Lanjut</button></>} /><main className="wizard-page container-narrow"><div className="wizard-title-row"><div><div className="wizard-kicker">STEP 02</div><h1 className="wizard-title">DETAIL LAPORAN</h1><p className="wizard-subtitle">Step ini sengaja ringkas. Layout, jumlah foto per halaman, dan gaya dokumen diputuskan di Preview agar tidak ada pilihan yang dobel.</p></div></div><div className="wizard-grid-2"><section className="card card-accent"><div><label className="field-label">Nama Laporan <span className="req">*</span></label><input id="reportName" className={`field-input ${required ? "required-empty" : ""}`} value={state.report.name} placeholder="mis. Laporan Mingguan Ke-3" onChange={(e) => updateReport({ name: e.target.value })} /></div><div><label className="field-label">Periode / Tanggal</label><input className="field-input" value={state.report.period} placeholder="mis. 1 - 7 Juni 2026" onChange={(e) => updateReport({ period: e.target.value })} /></div><div className="prototype-banner">Template belum dipilih di sini. User akan mencoba template di Step 4 dan melihat pagination langsung dari foto yang sudah dipilih.</div></section><aside className="info-panel"><h3>Data Saat Ini</h3><p>{state.project.name || "Project belum diisi"} - {state.project.location || "Lokasi belum diisi"}</p><ProjectSummary state={state} /></aside></div></main></div>;
 }
 
+const UPLOAD_IMAGE_MAX_EDGE = 2200;
+const UPLOAD_IMAGE_QUALITY = 0.9;
+const UPLOAD_IMAGE_TARGET_BYTES = 4.5 * 1024 * 1024;
+
+type PreparedUpload = { file: File; w: number; h: number; originalBytes: number; resized: boolean };
+
+function uploadBaseName(name: string) {
+  return name.replace(/\.[^.]+$/, "").replace(/[^a-z0-9._-]+/gi, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "foto";
+}
+
+function loadImageForResize(file: File) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(img);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error(`Gagal membaca gambar ${file.name}.`));
+    };
+    img.src = url;
+  });
+}
+
+async function prepareUploadImage(file: File): Promise<PreparedUpload> {
+  const image = await loadImageForResize(file);
+  const sourceW = image.naturalWidth || image.width || 900;
+  const sourceH = image.naturalHeight || image.height || 650;
+  const longEdge = Math.max(sourceW, sourceH);
+  const shouldResize = longEdge > UPLOAD_IMAGE_MAX_EDGE || file.size > UPLOAD_IMAGE_TARGET_BYTES;
+  if (!shouldResize) return { file, w: sourceW, h: sourceH, originalBytes: file.size, resized: false };
+
+  const scale = Math.min(1, UPLOAD_IMAGE_MAX_EDGE / longEdge);
+  const targetW = Math.max(1, Math.round(sourceW * scale));
+  const targetH = Math.max(1, Math.round(sourceH * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = targetW;
+  canvas.height = targetH;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return { file, w: sourceW, h: sourceH, originalBytes: file.size, resized: false };
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(image, 0, 0, targetW, targetH);
+
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", UPLOAD_IMAGE_QUALITY));
+  if (!blob || blob.size >= file.size) return { file, w: sourceW, h: sourceH, originalBytes: file.size, resized: false };
+
+  const nextFile = new File([blob], `${uploadBaseName(file.name)}-${targetW}x${targetH}.jpg`, { type: "image/jpeg", lastModified: file.lastModified });
+  return { file: nextFile, w: targetW, h: targetH, originalBytes: file.size, resized: true };
+}
+
+function newReportPhotoFromUpload(photoId: string, fileName: string): ReportPhoto {
+  return {
+    id: uid("rp"),
+    photoId,
+    nama: uploadBaseName(fileName).replace(/[-_]+/g, " ").trim(),
+    item: "",
+    progress: "",
+    fitMode: "crop",
+    cropY: 50,
+    aiExtended: false,
+    geotag: null,
+  };
+}
 export function WizardStep3Page() {
-  const { state, save } = useWizardState();
+  const { state, save, ready } = useWizardState();
   const [fitId, setFitId] = useState<string | null>(null);
   const [geoId, setGeoId] = useState<string | null>(null);
   const [pickerId, setPickerId] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string | null>(null);
   const [cropY, setCropY] = useState(50);
   const [geoForm, setGeoForm] = useState<Geotag>({ address: "", lat: -2.5916, lng: 140.669, date: "2026-06-23", time: "09:00" });
   const fileRef = useRef<HTMLInputElement>(null);
   const rows = state.reportPhotos.map((row, index) => ({ ...row, index, photo: findPhoto(state, row.photoId) }));
   const selectedMap = new Map(state.reportPhotos.filter((row) => row.photoId).map((row) => [row.photoId as string, row.id]));
   const emptyRows = rows.filter((row) => !row.photo);
+
+  useEffect(() => {
+    if (!ready) return;
+    let alive = true;
+    const projectId = state.workspace.activeProjectId;
+    const url = projectId ? `/api/storage/photos?projectId=${encodeURIComponent(projectId)}` : "/api/storage/photos";
+    fetch(url, { cache: "no-store" })
+      .then(async (response) => {
+        const payload = await response.json().catch(() => ({}));
+        if (response.status === 401) { window.location.assign(`${route("login.html")}?next=${encodeURIComponent(route("wizard-step3.html"))}`); return null; }
+        if (!response.ok) throw new Error(payload.error || "Galeri Supabase gagal dimuat.");
+        return payload as { photos: GalleryPhoto[] };
+      })
+      .then((payload) => {
+        if (!alive) return;
+        if (!payload) return;
+        const photos = (payload.photos || []).filter((photo) => photo.url);
+        const next = cloneState(state);
+        next.gallery = photos;
+        const realIds = new Set(photos.map((photo) => photo.id));
+        const hasUsableReportPhoto = next.reportPhotos.some((row) => row.photoId && realIds.has(row.photoId));
+        if (photos.length && (!next.reportPhotos.length || !hasUsableReportPhoto)) {
+          next.reportPhotos = photos.map((photo) => newReportPhotoFromUpload(photo.id, photo.filename));
+        } else {
+          next.reportPhotos = next.reportPhotos
+            .filter((row) => !isSamplePhotoId(row.photoId))
+            .map((row) => row.photoId && !realIds.has(row.photoId) ? { ...row, photoId: null, geotag: null, aiExtended: false } : row);
+        }
+        save(next);
+      })
+      .catch((error) => setWarning(error instanceof Error ? error.message : "Galeri Supabase gagal dimuat."));
+    return () => { alive = false; };
+  }, [ready, state.workspace.activeProjectId]);
 
   function saveRows(reportPhotos: ReportPhoto[]) { save({ ...state, reportPhotos }); }
   function updateReportPhoto(id: string, changes: Partial<ReportPhoto>) { saveRows(state.reportPhotos.map((row) => row.id === id ? { ...row, ...changes } : row)); }
@@ -616,11 +879,26 @@ export function WizardStep3Page() {
   function openGeo(id: string) {
     const item = state.reportPhotos.find((row) => row.id === id);
     if (!item?.photoId) return;
-    const geo = item.geotag || { address: "", lat: -2.5916, lng: 140.669, date: new Date().toISOString().slice(0, 10), time: "09:00" };
+    const geo = item.geotag || state.project.savedGeotag || { address: "", lat: -2.5916, lng: 140.669, date: new Date().toISOString().slice(0, 10), time: "09:00" };
     setGeoId(id);
     setGeoForm(geo);
   }
   function openPicker(id: string) { setPickerId(id); }
+  function clearCurrentGeotag() {
+    if (geoId) updateReportPhoto(geoId, { geotag: null });
+    setGeoId(null);
+  }
+  function saveCurrentGeotag() {
+    if (!geoId) return;
+    const geotag: Geotag = { ...geoForm, address: geoForm.address || "Lokasi dipilih" };
+    const next = cloneState(state);
+    next.project = { ...next.project, savedGeotag: geotag };
+    next.reportPhotos = next.reportPhotos.map((row) => row.id === geoId ? { ...row, geotag } : row);
+    const activeProject = next.workspace.projects.find((project) => project.id === next.workspace.activeProjectId);
+    if (activeProject) activeProject.savedGeotag = geotag;
+    save(next);
+    setGeoId(null);
+  }
   function pickPhoto(photoId: string) {
     if (!pickerId) return;
     const usedBy = selectedMap.get(photoId);
@@ -631,23 +909,80 @@ export function WizardStep3Page() {
       return { ...row, photoId, fitMode: row.fitMode || "crop", cropY: typeof row.cropY === "number" ? row.cropY : 50 };
     }));
   }
-  async function uploadFiles(files: FileList | null) {
-    if (!files) return;
-    const uploaded = await Promise.all(Array.from(files).map((file) => new Promise<GalleryPhoto>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error("Gagal membaca file."));
-      reader.onload = () => {
-        const img = new Image();
-        img.onload = () => resolve({ id: uid("g"), url: String(reader.result), filename: file.name, w: img.naturalWidth || 900, h: img.naturalHeight || 650, sourceType: "laporan" });
-        img.onerror = () => reject(new Error("Gagal membaca gambar."));
-        img.src = String(reader.result);
-      };
-      reader.readAsDataURL(file);
-    })));
-    save({ ...state, gallery: [...uploaded, ...state.gallery] });
-    if (fileRef.current) fileRef.current.value = "";
+  function readImageSize(url: string) {
+    return new Promise<{ w: number; h: number }>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve({ w: img.naturalWidth || 900, h: img.naturalHeight || 650 });
+      img.onerror = () => resolve({ w: 900, h: 650 });
+      img.src = url;
+    });
   }
-  function itemOptions(selectedItem = "", includeEmpty = false) {
+  async function uploadFiles(files: FileList | null) {
+    if (!files?.length || uploading) return;
+    const list = Array.from(files).filter((file) => file.type.startsWith("image/"));
+    if (!list.length) return;
+    setUploading(true);
+    setUploadStatus(`Menyiapkan ${list.length} foto...`);
+    try {
+      const uploaded: GalleryPhoto[] = [];
+      for (let index = 0; index < list.length; index += 1) {
+        const original = list[index];
+        setUploadStatus(`Resize ${index + 1}/${list.length}: ${original.name}`);
+        const prepared = await prepareUploadImage(original);
+        const form = new FormData();
+        form.append("kind", "report-photo");
+        if (state.workspace.activeProjectId) form.append("projectId", state.workspace.activeProjectId);
+        form.append("file", prepared.file);
+        form.append("originalName", original.name);
+        form.append("originalSizeBytes", String(prepared.originalBytes));
+        form.append("resized", prepared.resized ? "true" : "false");
+        form.append("width", String(prepared.w));
+        form.append("height", String(prepared.h));
+        setUploadStatus(`Upload ${index + 1}/${list.length}: ${prepared.file.name}`);
+        const response = await fetch("/api/storage/upload", { method: "POST", body: form });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload.photo?.url) throw new Error(payload.error || "Upload storage gagal.");
+        uploaded.push({ ...payload.photo, id: payload.photo.id || uid("g"), w: prepared.w, h: prepared.h, sourceType: "laporan" } as GalleryPhoto);
+      }
+
+      const next = cloneState(state);
+      next.gallery = [...uploaded, ...next.gallery];
+      const openSlots = next.reportPhotos.filter((row) => !row.photoId).map((row) => row.id);
+      let startIndex = 0;
+      if (pickerId && next.reportPhotos.some((row) => row.id === pickerId)) {
+        const first = uploaded[0];
+        next.reportPhotos = next.reportPhotos.map((row) => row.id === pickerId ? { ...row, photoId: first.id, fitMode: row.fitMode || "crop", cropY: typeof row.cropY === "number" ? row.cropY : 50 } : row);
+        startIndex = 1;
+      }
+
+      for (let index = startIndex; index < uploaded.length; index += 1) {
+        const photo = uploaded[index];
+        const slotId = openSlots.find((id) => id !== pickerId && next.reportPhotos.some((row) => row.id === id && !row.photoId));
+        if (slotId) {
+          next.reportPhotos = next.reportPhotos.map((row) => row.id === slotId ? { ...row, photoId: photo.id, fitMode: row.fitMode || "crop", cropY: typeof row.cropY === "number" ? row.cropY : 50 } : row);
+          const used = openSlots.indexOf(slotId);
+          if (used >= 0) openSlots.splice(used, 1);
+        } else {
+          next.reportPhotos.push(newReportPhotoFromUpload(photo.id, photo.filename));
+        }
+      }
+
+      save(next);
+      setPickerId(null);
+      setUploadStatus(`${uploaded.length} foto berhasil diupload. ${uploaded.some((photo) => photo.resized) ? "Resize aktif." : ""}`.trim());
+      window.setTimeout(() => {
+        const last = next.reportPhotos[next.reportPhotos.length - 1];
+        if (!last) return;
+        document.getElementById(`photo-card-${last.id}`)?.scrollIntoView({ block: "center", inline: "nearest" });
+      }, 120);
+    } catch (error) {
+      setWarning(error instanceof Error ? error.message : "Upload storage gagal.");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+      window.setTimeout(() => setUploadStatus(null), 3200);
+    }
+  }  function itemOptions(selectedItem = "", includeEmpty = false) {
     const projectItems = getProjectItems(state);
     return <>{includeEmpty ? <option value="">Pilih item pekerjaan</option> : null}{selectedItem && !projectItems.some((item) => item.toLowerCase() === selectedItem.toLowerCase()) ? <option value={selectedItem}>{selectedItem} (custom)</option> : null}{projectItems.map((item) => <option key={item} value={item}>{item}</option>)}</>;
   }
@@ -668,13 +1003,22 @@ export function WizardStep3Page() {
     window.location.assign(route("wizard-step4.html"));
   }
   const fitItem = fitId ? rows.find((row) => row.id === fitId && row.photo) : null;
-  return <div className="wizard-shell"><WizardChrome step={3} actions={<><Link className="pixel-btn pixel-btn-ghost" href={route("wizard-step2.html")}>Kembali</Link><button className="pixel-btn pixel-btn-accent" type="button" onClick={goPreview}>Preview</button></>} /><main className="wizard-page container"><div className="wizard-title-row"><div><div className="wizard-kicker">STEP 03</div><h1 className="wizard-title">FOTO & CAPTION</h1><p className="wizard-subtitle">Tambah card foto, pilih gambar dari galeri, lalu isi caption, urutan, fit, AI extend, dan geotag per card.</p></div><StateChips items={[`Project: ${state.project.name}`, `Slot foto: ${state.reportPhotos.length}`, `Kosong: ${emptyRows.length}`]} /></div><div className="gallery-layout report-only-layout"><section><div className="photo-workbar"><div><div className="pixel-heading" style={{ fontSize: 13 }}>FOTO DALAM LAPORAN</div><div className="text-muted" style={{ fontSize: 12, marginTop: 6 }}>{state.reportPhotos.length} card laporan / {emptyRows.length} placeholder kosong</div></div><div className="bulk-box"><div><label className="mini-label">BULK ITEM</label><select className="field-input" id="bulkItem">{itemOptions("", true)}</select></div><div><label className="mini-label">BULK PROGRESS</label><input className="field-input mono" id="bulkProgress" type="number" min="0" max="100" placeholder="75" /></div><button className="pixel-btn pixel-btn-ghost" type="button" onClick={applyBulk}>Terapkan</button></div></div><div className="report-grid">{rows.length ? rows.map((item) => <PhotoCard key={item.id} item={item} itemOptions={itemOptions} update={updateReportPhoto} move={movePhoto} remove={removePhoto} openFit={openFit} openGeo={openGeo} openPicker={openPicker} />) : <div className="empty-state">Belum ada card foto. Klik Add Foto untuk membuat placeholder.</div>}</div></section></div></main><input ref={fileRef} type="file" accept="image/*" multiple style={{ display: "none" }} onChange={(e) => void uploadFiles(e.target.files)} /><button className="floating-add-photo pixel-btn pixel-btn-accent" type="button" aria-label="Tambah frame foto" onClick={createEmptySlot}><PixelIcon name="camera" size={15} color="#fff" /><span>Add Foto</span></button><PhotoPickerModal state={state} pickerId={pickerId} selectedMap={selectedMap} pickPhoto={pickPhoto} upload={() => fileRef.current?.click()} close={() => setPickerId(null)} />{warning ? <div className="modal-overlay show" onClick={(e) => { if (e.target === e.currentTarget) setWarning(null); }}><div className="modal-box warning-box"><div className="modal-head"><div><div className="modal-title">Foto belum lengkap</div><div className="modal-sub">Lengkapi semua card foto sebelum masuk ke preview.</div></div><button className="modal-close" type="button" onClick={() => setWarning(null)}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><div className="prototype-banner">{warning}</div><button className="pixel-btn pixel-btn-accent" type="button" style={{ marginTop: 14, width: "100%", justifyContent: "center" }} onClick={() => setWarning(null)}>Lengkapi Foto</button></div></div> : null}<div className={`modal-overlay ${fitId ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setFitId(null); }}><div className="modal-box"><div className="modal-head"><div><div className="modal-title">Posisi Foto</div><div className="modal-sub">Pilih cara foto masuk ke frame 4:3.</div></div><button className="modal-close" type="button" onClick={() => setFitId(null)}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><div className="crop-stage">{fitItem?.photo ? <img src={fitItem.photo.url} style={imageFitStyle({ ...fitItem, photo: fitItem.photo, cropY })} alt="Preview" /> : null}</div><div className="fit-options">{(["crop", "contain", "ai"] as const).map((mode) => <button key={mode} className={(mode === "ai" && fitItem?.aiExtended) || mode === fitItem?.fitMode ? "active" : ""} type="button" onClick={() => { if (!fitId) return; updateReportPhoto(fitId, mode === "ai" ? { fitMode: "crop", cropY, aiExtended: true } : { fitMode: mode, cropY, aiExtended: false }); setFitId(null); }}>{mode === "crop" ? "Crop 4:3" : mode === "contain" ? "Contain" : "AI Extend"}</button>)}</div>{fitItem?.fitMode !== "contain" ? <div className="style-row" style={{ marginTop: 12, marginBottom: 0 }}><div className="style-label">POSISI CROP VERTIKAL: <span className="mono">{cropY}%</span></div><input type="range" min="0" max="100" value={cropY} onChange={(e) => setCropY(Number(e.target.value))} /></div> : null}<div className="prototype-banner" style={{ marginTop: 12 }}>AI Extend di prototype hanya menandai state. Di production nanti memanggil Image Edit API setelah user konfirmasi kredit.</div></div></div><div className={`modal-overlay ${geoId ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setGeoId(null); }}><div className="modal-box geo-modal-box"><div className="modal-head"><div><div className="modal-title">Geotag Overlay</div><div className="modal-sub">Pilih titik lewat peta satelit Esri dan cari lokasi dengan Geoapify.</div></div><button className="modal-close" type="button" onClick={() => setGeoId(null)}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><GeotagMapPicker key={geoId || "geo"} value={geoForm} onChange={setGeoForm} /><div className="form-grid" style={{ marginTop: 12 }}><div><label className="field-label">Latitude</label><input className="field-input mono" value={geoForm.lat.toFixed(6)} onChange={(e) => { const lat = Number(e.target.value); if (Number.isFinite(lat)) setGeoForm({ ...geoForm, lat }); }} /></div><div><label className="field-label">Longitude</label><input className="field-input mono" value={geoForm.lng.toFixed(6)} onChange={(e) => { const lng = Number(e.target.value); if (Number.isFinite(lng)) setGeoForm({ ...geoForm, lng }); }} /></div><div><label className="field-label">Tanggal</label><input className="field-input mono" type="date" value={geoForm.date} onChange={(e) => setGeoForm({ ...geoForm, date: e.target.value })} /></div><div><label className="field-label">Jam</label><input className="field-input mono" type="time" value={geoForm.time} onChange={(e) => setGeoForm({ ...geoForm, time: e.target.value })} /></div></div><div style={{ display: "flex", gap: 8, marginTop: 16 }}><button className="pixel-btn pixel-btn-ghost" type="button" style={{ flex: 1, justifyContent: "center" }} onClick={() => { if (geoId) updateReportPhoto(geoId, { geotag: null }); setGeoId(null); }}>Hapus</button><button className="pixel-btn pixel-btn-accent" type="button" style={{ flex: 2, justifyContent: "center" }} onClick={() => { if (geoId) updateReportPhoto(geoId, { geotag: { ...geoForm, address: geoForm.address || "Lokasi dipilih" } }); setGeoId(null); }}>Simpan Geotag</button></div></div></div></div>;
+  return <div className="wizard-shell"><WizardChrome step={3} actions={<><Link className="pixel-btn pixel-btn-ghost" href={route("wizard-step2.html")}>Kembali</Link><button className="pixel-btn pixel-btn-accent" type="button" onClick={goPreview}>Preview</button></>} /><main className="wizard-page container"><div className="wizard-title-row"><div><div className="wizard-kicker">STEP 03</div><h1 className="wizard-title">FOTO & CAPTION</h1><p className="wizard-subtitle">Tambah card foto, pilih gambar dari galeri, lalu isi caption, urutan, fit, AI extend, dan geotag per card.</p></div><StateChips items={[`Project: ${state.project.name}`, `Slot foto: ${state.reportPhotos.length}`, `Kosong: ${emptyRows.length}`]} /></div><div className="gallery-layout report-only-layout"><section><div className="photo-workbar"><div><div className="pixel-heading" style={{ fontSize: 13 }}>FOTO DALAM LAPORAN</div><div className="text-muted" style={{ fontSize: 12, marginTop: 6 }}>{state.reportPhotos.length} card laporan / {emptyRows.length} placeholder kosong</div></div><div className="bulk-box"><button className="pixel-btn pixel-btn-accent" type="button" onClick={() => fileRef.current?.click()} disabled={uploading}>{uploading ? "Uploading..." : "Bulk Upload"}</button><div><label className="mini-label">BULK ITEM</label><select className="field-input" id="bulkItem">{itemOptions("", true)}</select></div><div><label className="mini-label">BULK PROGRESS</label><input className="field-input mono" id="bulkProgress" type="number" min="0" max="100" placeholder="75" /></div><button className="pixel-btn pixel-btn-ghost" type="button" onClick={applyBulk}>Terapkan</button></div></div>{uploadStatus ? <div className="prototype-banner upload-status-banner">{uploadStatus}</div> : null}<div className="report-grid">{rows.length ? rows.map((item) => <PhotoCard key={item.id} item={item} itemOptions={itemOptions} update={updateReportPhoto} move={movePhoto} remove={removePhoto} openFit={openFit} openGeo={openGeo} openPicker={openPicker} />) : <div className="empty-state">Belum ada card foto. Klik Add Foto untuk membuat placeholder.</div>}</div></section></div></main><input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple style={{ display: "none" }} onChange={(e) => void uploadFiles(e.target.files)} /><button className="floating-add-photo pixel-btn pixel-btn-accent" type="button" aria-label="Tambah frame foto" onClick={createEmptySlot}><PixelIcon name="camera" size={15} color="#fff" /><span>Add Foto</span></button><PhotoPickerModal state={state} pickerId={pickerId} selectedMap={selectedMap} pickPhoto={pickPhoto} upload={() => fileRef.current?.click()} uploading={uploading} uploadStatus={uploadStatus} close={() => setPickerId(null)} />{warning ? <div className="modal-overlay show" onClick={(e) => { if (e.target === e.currentTarget) setWarning(null); }}><div className="modal-box warning-box"><div className="modal-head"><div><div className="modal-title">Foto belum lengkap</div><div className="modal-sub">Lengkapi semua card foto sebelum masuk ke preview.</div></div><button className="modal-close" type="button" onClick={() => setWarning(null)}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><div className="prototype-banner">{warning}</div><button className="pixel-btn pixel-btn-accent" type="button" style={{ marginTop: 14, width: "100%", justifyContent: "center" }} onClick={() => setWarning(null)}>Lengkapi Foto</button></div></div> : null}<div className={`modal-overlay ${fitId ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setFitId(null); }}><div className="modal-box"><div className="modal-head"><div><div className="modal-title">Posisi Foto</div><div className="modal-sub">Pilih cara foto masuk ke frame 4:3.</div></div><button className="modal-close" type="button" onClick={() => setFitId(null)}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><div className="crop-stage">{fitItem?.photo ? <img src={fitItem.photo.url} style={imageFitStyle({ ...fitItem, photo: fitItem.photo, cropY })} alt="Preview" /> : null}</div><div className="fit-options">{(["crop", "contain", "ai"] as const).map((mode) => <button key={mode} className={(mode === "ai" && fitItem?.aiExtended) || mode === fitItem?.fitMode ? "active" : ""} type="button" onClick={() => { if (!fitId) return; updateReportPhoto(fitId, mode === "ai" ? { fitMode: "crop", cropY, aiExtended: true } : { fitMode: mode, cropY, aiExtended: false }); setFitId(null); }}>{mode === "crop" ? "Crop 4:3" : mode === "contain" ? "Contain" : "AI Extend"}</button>)}</div>{fitItem?.fitMode !== "contain" ? <div className="style-row" style={{ marginTop: 12, marginBottom: 0 }}><div className="style-label">POSISI CROP VERTIKAL: <span className="mono">{cropY}%</span></div><input type="range" min="0" max="100" value={cropY} onChange={(e) => setCropY(Number(e.target.value))} /></div> : null}<div className="prototype-banner" style={{ marginTop: 12 }}>AI Extend di prototype hanya menandai state. Di production nanti memanggil Image Edit API setelah user konfirmasi kredit.</div></div></div><div className={`modal-overlay ${geoId ? "show" : ""}`} onClick={(e) => { if (e.target === e.currentTarget) setGeoId(null); }}><div className="modal-box geo-modal-box"><div className="modal-head"><div><div className="modal-title">Geotag Overlay</div><div className="modal-sub">Pilih titik lewat peta satelit Esri dan cari lokasi dengan Geoapify.</div></div><button className="modal-close" type="button" onClick={() => setGeoId(null)}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><GeotagMapPicker key={geoId || "geo"} value={geoForm} onChange={setGeoForm} actions={<><button className="geo-mini-btn ghost" type="button" onClick={clearCurrentGeotag}>Hapus</button><button className="geo-mini-btn accent" type="button" onClick={saveCurrentGeotag}>Simpan Geotag</button></>} /><div className="form-grid" style={{ marginTop: 12 }}><div className="span-2"><label className="field-label">Lokasi Tampil <span className="text-muted">(editable)</span></label><input className="field-input" value={geoForm.address} placeholder="Tulis nama lokasi manual jika provider tidak akurat" onChange={(e) => setGeoForm({ ...geoForm, address: e.target.value, addressMode: "manual" })} /><div className="geo-manual-actions"><button className="mini-action-btn" type="button" onClick={() => setGeoForm({ ...geoForm, address: state.project.location || state.project.lokasi || geoForm.address, addressMode: "manual" })}>Pakai lokasi project</button>{geoForm.providerAddress ? <button className="mini-action-btn" type="button" onClick={() => setGeoForm({ ...geoForm, address: geoForm.providerAddress || geoForm.address, addressMode: "provider" })}>Pakai hasil provider</button> : null}</div>{geoForm.providerAddress ? <div className="geo-provider-note">Provider: {geoForm.providerAddress}</div> : <div className="geo-provider-note">Daerah minim data: isi lokasi tampil manual, koordinat tetap memakai titik tengah peta.</div>}</div><div><label className="field-label">Latitude</label><input className="field-input mono" value={geoForm.lat.toFixed(6)} onChange={(e) => { const lat = Number(e.target.value); if (Number.isFinite(lat)) setGeoForm({ ...geoForm, lat }); }} /></div><div><label className="field-label">Longitude</label><input className="field-input mono" value={geoForm.lng.toFixed(6)} onChange={(e) => { const lng = Number(e.target.value); if (Number.isFinite(lng)) setGeoForm({ ...geoForm, lng }); }} /></div><div><label className="field-label">Tanggal</label><input className="field-input mono" type="date" value={geoForm.date} onChange={(e) => setGeoForm({ ...geoForm, date: e.target.value })} /></div><div><label className="field-label">Jam</label><input className="field-input mono" type="time" value={geoForm.time} onChange={(e) => setGeoForm({ ...geoForm, time: e.target.value })} /></div></div></div></div></div>;
 }
 type TileConfig = {
   provider: string;
   tileUrl: string;
   attribution: string;
   maxZoom: number;
+  defaultZoom?: number;
+  tileGridRadius?: number;
+  estimatedTilesPerViewport?: number;
+  costControl?: {
+    reverseGeocodeDecimals: number;
+    geocodePerMinute: number;
+    geocodePerDay: number;
+    reverseGeocodeOnDragEndOnly: boolean;
+  };
 };
 
 type MapSearchResult = {
@@ -744,7 +1088,7 @@ function tilePositionToGeotag(base: Geotag, tileX: number, tileY: number, zoom: 
   };
 }
 
-function GeotagMapPicker({ value, onChange }: { value: Geotag; onChange: (next: Geotag) => void }) {
+function GeotagMapPicker({ value, onChange, actions }: { value: Geotag; onChange: (next: Geotag) => void; actions?: React.ReactNode }) {
   const [zoom, setZoom] = useState(GEO_DEFAULT_ZOOM);
   const [config, setConfig] = useState<TileConfig | null>(null);
   const [query, setQuery] = useState(value.address || "");
@@ -752,7 +1096,10 @@ function GeotagMapPicker({ value, onChange }: { value: Geotag; onChange: (next: 
   const [status, setStatus] = useState("Memuat peta satelit...");
   const [dragging, setDragging] = useState(false);
   const dragRef = useRef<GeoDragState | null>(null);
-  const maxZoom = config?.maxZoom || 19;
+  const lastReverseKeyRef = useRef("");
+  const maxZoom = config?.maxZoom || 18;
+  const tileGridRadius = config?.tileGridRadius ?? 2;
+  const reverseDecimals = config?.costControl?.reverseGeocodeDecimals ?? 4;
   const tiles = useMemo<GeoTile[]>(() => {
     const centerX = lonToTilePosition(value.lng, zoom);
     const centerY = latToTilePosition(value.lat, zoom);
@@ -761,7 +1108,7 @@ function GeotagMapPicker({ value, onChange }: { value: Geotag; onChange: (next: 
     const fracX = centerX - baseX;
     const fracY = centerY - baseY;
     const maxTile = 2 ** zoom;
-    const offsets = [-2, -1, 0, 1, 2];
+    const offsets = Array.from({ length: tileGridRadius * 2 + 1 }, (_, index) => index - tileGridRadius);
 
     return offsets.flatMap((dy) => offsets.flatMap((dx) => {
       const rawY = baseY + dy;
@@ -775,13 +1122,13 @@ function GeotagMapPicker({ value, onChange }: { value: Geotag; onChange: (next: 
         top: (dy - fracY) * GEO_TILE_SIZE,
       }];
     }));
-  }, [value.lat, value.lng, zoom]);
+  }, [value.lat, value.lng, zoom, tileGridRadius]);
 
   useEffect(() => {
     let alive = true;
     fetch("/api/maps/config")
       .then((res) => res.json())
-      .then((data) => { if (alive) { setConfig(data); setStatus("Geser peta sampai titik berada di tengah, atau cari alamat."); } })
+      .then((data) => { if (alive) { setConfig(data); setZoom(Math.min(data.defaultZoom || GEO_DEFAULT_ZOOM, data.maxZoom || 18)); setStatus("Geser peta sampai titik berada di tengah, atau cari alamat."); } })
       .catch(() => { if (alive) setStatus("Gagal memuat konfigurasi peta."); });
     return () => { alive = false; };
   }, []);
@@ -799,7 +1146,7 @@ function GeotagMapPicker({ value, onChange }: { value: Geotag; onChange: (next: 
     const rows = (payload.results || []) as MapSearchResult[];
     setResults(rows);
     if (rows[0]) {
-      onChange({ ...value, address: rows[0].address, lat: rows[0].location.lat, lng: rows[0].location.lng });
+      onChange({ ...value, address: rows[0].address, providerAddress: rows[0].address, addressMode: "provider", lat: rows[0].location.lat, lng: rows[0].location.lng });
       setQuery(rows[0].address);
       setStatus(`Dipilih: ${rows[0].address}`);
     } else {
@@ -809,16 +1156,26 @@ function GeotagMapPicker({ value, onChange }: { value: Geotag; onChange: (next: 
 
   async function reverseLookup(next: Geotag) {
     onChange(next);
+    const reverseKey = `${next.lat.toFixed(reverseDecimals)},${next.lng.toFixed(reverseDecimals)}`;
+    if (lastReverseKeyRef.current === reverseKey) {
+      setStatus("Koordinat berubah kecil; memakai lokasi terakhir untuk menghemat request.");
+      return;
+    }
+    lastReverseKeyRef.current = reverseKey;
     setStatus("Membaca alamat dari koordinat...");
     const response = await fetch(`/api/maps/geocode?lat=${encodeURIComponent(next.lat)}&lng=${encodeURIComponent(next.lng)}`);
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.results?.[0]) {
-      setStatus("Titik dipilih. Alamat tidak ditemukan otomatis.");
+      const limitReason = response.status === 429 ? " Limit geocode tercapai; simpan koordinat atau edit lokasi manual." : "";
+      setStatus(`Titik dipilih. Alamat tidak ditemukan otomatis.${limitReason}`);
       return;
     }
-    onChange({ ...next, address: payload.results[0].address });
-    setQuery(payload.results[0].address);
-    setStatus(`Titik dipilih: ${payload.results[0].address}`);
+    const providerAddress = payload.results[0].address;
+    const address = next.addressMode === "manual" && next.address.trim() ? next.address : providerAddress;
+    onChange({ ...next, address, providerAddress, addressMode: next.addressMode === "manual" ? "manual" : "provider" });
+    setQuery(providerAddress);
+    const cacheState = payload.cache === "hit" ? "cache" : "provider";
+    setStatus(`Titik dipilih (${cacheState}). Lokasi tampil bisa diedit manual.`);
   }
 
   function moveCenterFromDrag(event: React.PointerEvent<HTMLDivElement>, shouldReverse = false) {
@@ -866,10 +1223,17 @@ function GeotagMapPicker({ value, onChange }: { value: Geotag; onChange: (next: 
 
   function changeZoom(direction: number) {
     setZoom((current) => clamp(current + direction, GEO_MIN_ZOOM, maxZoom));
-    setStatus("Zoom berubah. Marker tengah tetap menjadi titik koordinat.");
+    setStatus("Zoom berubah. Marker tengah tetap menjadi titik koordinat. Tidak ada request geocode tambahan.");
   }
 
-  return <div className="geo-map-picker"><label className="field-label">Cari Lokasi</label><div className="geo-search-row"><input className="field-input" value={query} placeholder="mis. Kota Jayapura" onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void searchLocation(); }} /><button className="pixel-btn pixel-btn-ghost" type="button" onClick={() => void searchLocation()}>Cari</button></div><div className={`geo-map-real ${dragging ? "is-dragging" : ""}`} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerEnd} onPointerCancel={handlePointerEnd}>{config ? <div className="geo-tile-layer">{tiles.map((tile) => <img key={tile.key} src={buildTileUrl(config.tileUrl, zoom, tile.x, tile.y)} alt="" style={{ left: `calc(50% + ${tile.left}px)`, top: `calc(50% + ${tile.top}px)` }} />)}</div> : <div className="geo-map-loading">Memuat tile...</div>}<div className="geo-map-controls" onPointerDown={(e) => e.stopPropagation()}><button type="button" aria-label="Zoom in" onClick={(e) => { e.stopPropagation(); changeZoom(1); }}>+</button><button type="button" aria-label="Zoom out" onClick={(e) => { e.stopPropagation(); changeZoom(-1); }}>-</button></div><div className="map-pin-center"><PixelIcon name="mapPin" size={32} color="#E8331C" /></div><div className="geo-center-crosshair" /><div className="map-coords">{value.lat.toFixed(6)}, {value.lng.toFixed(6)} / Z{zoom}</div>{config ? <div className="geo-map-attribution">{config.attribution}</div> : null}</div><div className="geo-map-status">{status}</div>{results.length ? <div className="geo-result-list">{results.map((row) => <button key={`${row.location.lat}-${row.location.lng}`} type="button" onClick={() => { onChange({ ...value, address: row.address, lat: row.location.lat, lng: row.location.lng }); setQuery(row.address); setStatus(`Dipilih: ${row.address}`); }}><strong>{row.address}</strong><span>{row.location.lat.toFixed(6)}, {row.location.lng.toFixed(6)}</span></button>)}</div> : null}</div>;
+  function handleWheelZoom(event: React.WheelEvent<HTMLDivElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    const direction = event.deltaY < 0 ? 1 : -1;
+    changeZoom(direction);
+  }
+
+  return <div className="geo-map-picker"><label className="field-label">Cari Lokasi</label><div className="geo-search-row"><input className="field-input" value={query} placeholder="mis. Kota Jayapura" onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") void searchLocation(); }} /><button className="pixel-btn pixel-btn-ghost" type="button" onClick={() => void searchLocation()}>Cari</button></div><div className={`geo-map-real ${dragging ? "is-dragging" : ""}`} onWheel={handleWheelZoom} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerEnd} onPointerCancel={handlePointerEnd}>{config ? <div className="geo-tile-layer">{tiles.map((tile) => <img key={tile.key} src={buildTileUrl(config.tileUrl, zoom, tile.x, tile.y)} alt="" style={{ left: `calc(50% + ${tile.left}px)`, top: `calc(50% + ${tile.top}px)` }} />)}</div> : <div className="geo-map-loading">Memuat tile...</div>}<div className="geo-map-controls" onPointerDown={(e) => e.stopPropagation()}><button type="button" aria-label="Zoom in" onClick={(e) => { e.stopPropagation(); changeZoom(1); }}>+</button><button type="button" aria-label="Zoom out" onClick={(e) => { e.stopPropagation(); changeZoom(-1); }}>-</button></div><div className="map-pin-center"><PixelIcon name="mapPin" size={32} color="#E8331C" /></div><div className="geo-center-crosshair" /><div className="map-coords">{value.lat.toFixed(6)}, {value.lng.toFixed(6)} / Z{zoom} / ~{config?.estimatedTilesPerViewport || 25} tile</div>{config ? <div className="geo-map-attribution">{config.attribution}</div> : null}{actions ? <div className="geo-map-floating-actions" onPointerDown={(e) => e.stopPropagation()} onWheel={(e) => e.stopPropagation()}>{actions}</div> : null}</div><div className="geo-map-status">{status}</div><div className="geo-cost-hint">Reverse geocode hanya dipanggil saat drag selesai. Zoom dan drag kecil memakai cache untuk kontrol biaya.</div>{results.length ? <div className="geo-result-list">{results.map((row) => <button key={`${row.location.lat}-${row.location.lng}`} type="button" onClick={() => { onChange({ ...value, address: row.address, providerAddress: row.address, addressMode: "provider", lat: row.location.lat, lng: row.location.lng }); setQuery(row.address); setStatus(`Dipilih: ${row.address}`); }}><strong>{row.address}</strong><span>{row.location.lat.toFixed(6)}, {row.location.lng.toFixed(6)}</span></button>)}</div> : null}</div>;
 }
 type Step3Row = ReportPhoto & { index: number; photo?: GalleryPhoto };
 
@@ -882,9 +1246,9 @@ function PhotoCard({ item, itemOptions, update, move, remove, openFit, openGeo, 
   return <article id={`photo-card-${item.id}`} className={`photo-card ${hasPhoto ? "" : "is-empty"}`} tabIndex={-1}>{hasPhoto && item.photo ? <div className="photo-frame"><img src={item.photo.url} style={imageFitStyle({ ...item, photo: item.photo })} alt="" /><div className="photo-badge">{arLabel(item.photo)}{item.aiExtended ? " / AI" : ""}</div><div className="photo-index">#{String(item.index + 1).padStart(2, "0")}</div>{item.geotag ? <GeoOverlay geo={item.geotag} /> : null}</div> : <button className="photo-frame photo-frame-empty" type="button" onClick={() => openPicker(item.id)}><span className="empty-plus" /><span className="empty-status">EMPTY</span><span className="empty-help">Klik Add/Replace Foto</span></button>}<div className="photo-tools icon-tools"><PhotoToolButton icon={hasPhoto ? "solidReplace" : "solidPlus"} color={hasPhoto ? "#0A0A0A" : "#FF6B1A"} label={hasPhoto ? "Ganti foto" : "Add foto"} shortLabel={hasPhoto ? "GANTI" : "ADD"} onClick={() => openPicker(item.id)} /><PhotoToolButton icon="solidUp" label="Naikkan foto" shortLabel="NAIK" onClick={() => move(item.id, -1)} /><PhotoToolButton icon="solidDown" label="Turunkan foto" shortLabel="TURUN" onClick={() => move(item.id, 1)} /><PhotoToolButton icon="solidFit" color={item.fitMode && hasPhoto ? "#FF6B1A" : "#0A0A0A"} label="Atur fit foto" shortLabel="FIT" active={Boolean(item.fitMode && hasPhoto)} disabled={!hasPhoto} onClick={() => openFit(item.id)} /><PhotoToolButton icon="solidAi" color={item.aiExtended && hasPhoto ? "#2E9E5B" : "#0A0A0A"} label="AI extend" shortLabel="AI" done={Boolean(item.aiExtended && hasPhoto)} disabled={!hasPhoto} onClick={() => update(item.id, { aiExtended: true, fitMode: "crop", cropY: 50 })} /><PhotoToolButton icon="solidGeo" color={item.geotag && hasPhoto ? "#FF6B1A" : "#0A0A0A"} label="Geotag" shortLabel="GEO" active={Boolean(item.geotag && hasPhoto)} disabled={!hasPhoto} onClick={() => openGeo(item.id)} /><PhotoToolButton icon="solidTrash" color="#E8331C" label="Hapus card" shortLabel="HAPUS" danger onClick={() => remove(item.id)} /></div><div className="photo-fields"><div><div className="mini-label">NAMA PEKERJAAN</div><input className="mini-input" value={item.nama} onChange={(e) => update(item.id, { nama: e.target.value })} /></div><div><div className="mini-label">ITEM PEKERJAAN</div><select className="mini-input item-dropdown" value={item.item} onChange={(e) => update(item.id, { item: e.target.value })}>{itemOptions(item.item, true)}</select></div><div><div className="mini-label">PROGRESS</div><div className="progress-row"><input className="mini-input" type="number" min="0" max="100" value={item.progress} onChange={(e) => update(item.id, { progress: e.target.value })} /><span className="mono" style={{ fontSize: 10 }}>%</span><div className="progress-quick">{[25, 50, 75, 100].map((value) => <button type="button" key={value} className={String(item.progress) === String(value) ? "active" : ""} onClick={() => update(item.id, { progress: value })}>{value}</button>)}</div></div></div></div></article>;
 }
 
-function PhotoPickerModal({ state, pickerId, selectedMap, pickPhoto, upload, close }: { state: WizardState; pickerId: string | null; selectedMap: Map<string, string>; pickPhoto: (photoId: string) => void; upload: () => void; close: () => void }) {
+function PhotoPickerModal({ state, pickerId, selectedMap, pickPhoto, upload, uploading, uploadStatus, close }: { state: WizardState; pickerId: string | null; selectedMap: Map<string, string>; pickPhoto: (photoId: string) => void; upload: () => void; uploading: boolean; uploadStatus: string | null; close: () => void }) {
   if (!pickerId) return null;
-  return <div className="modal-overlay show" onClick={(event) => { if (event.target === event.currentTarget) close(); }}><div className="modal-box photo-picker-box"><div className="modal-head"><div><div className="modal-title">Pilih Foto Galeri</div><div className="modal-sub">Foto yang sudah dipakai ditandai abu-abu dengan centang hijau.</div></div><button className="modal-close" type="button" onClick={close}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><div className="picker-actions"><button className="pixel-btn pixel-btn-accent" type="button" onClick={upload}>Upload Foto</button><div className="text-muted" id="pickerHint">Pilih foto kosong untuk mengisi card aktif.</div></div><div className="photo-picker-grid">{state.gallery.length ? state.gallery.map((photo) => { const usedBy = selectedMap.get(photo.id); const isCurrent = usedBy === pickerId; const isUsed = Boolean(usedBy); return <button className={`picker-photo ${isUsed ? "is-used" : ""} ${isCurrent ? "is-current" : ""}`} key={photo.id} type="button" onClick={() => pickPhoto(photo.id)} disabled={Boolean(usedBy && usedBy !== pickerId)}><span className="picker-thumb"><img src={photo.url} alt="" /></span>{isUsed ? <span className="picker-check"><PixelIcon name="check" size={12} color="#fff" /></span> : null}<span className="picker-name">{photo.filename}</span><span className="picker-badge">{photo.sourceType === "bukti_lapangan" ? "BUKTI LAPANGAN" : "LAPORAN"} / {arLabel(photo)}</span></button>; }) : <div className="empty-state">Galeri masih kosong. Upload foto terlebih dahulu.</div>}</div></div></div>;
+  return <div className="modal-overlay show" onClick={(event) => { if (event.target === event.currentTarget) close(); }}><div className="modal-box photo-picker-box"><div className="modal-head"><div><div className="modal-title">Pilih Foto Galeri</div><div className="modal-sub">Foto yang sudah dipakai ditandai abu-abu dengan centang hijau.</div></div><button className="modal-close" type="button" onClick={close}><PixelIcon name="x" size={16} color="#6B6B68" /></button></div><div className="picker-actions"><button className="pixel-btn pixel-btn-accent" type="button" onClick={upload} disabled={uploading}>{uploading ? "Uploading..." : "Upload Foto"}</button><div className="text-muted" id="pickerHint">Pilih banyak foto untuk bulk upload. Foto besar otomatis di-resize max 2200px.</div></div>{uploadStatus ? <div className="prototype-banner upload-status-banner">{uploadStatus}</div> : null}<div className="photo-picker-grid">{state.gallery.length ? state.gallery.map((photo) => { const usedBy = selectedMap.get(photo.id); const isCurrent = usedBy === pickerId; const isUsed = Boolean(usedBy); return <button className={`picker-photo ${isUsed ? "is-used" : ""} ${isCurrent ? "is-current" : ""}`} key={photo.id} type="button" onClick={() => pickPhoto(photo.id)} disabled={Boolean(usedBy && usedBy !== pickerId)}><span className="picker-thumb"><img src={photo.url} alt="" /></span>{isUsed ? <span className="picker-check"><PixelIcon name="check" size={12} color="#fff" /></span> : null}<span className="picker-name">{photo.filename}</span><span className="picker-badge">{photo.sourceType === "bukti_lapangan" ? "BUKTI LAPANGAN" : "LAPORAN"} / {arLabel(photo)}</span></button>; }) : <div className="empty-state">Galeri masih kosong. Upload foto terlebih dahulu.</div>}</div></div></div>;
 }
 function GeoOverlay({ geo }: { geo: Geotag }) {
   return <div className="geo-overlay"><div>{geo.address}</div><div className="mono">{geo.lat.toFixed(5)}, {geo.lng.toFixed(5)}</div><div className="mono">{geo.date} {geo.time}</div></div>;
@@ -937,7 +1301,7 @@ export function WizardStep4Page() {
       document.title = previousTitle;
     }, { once: true });
   }
-  return <div className="wizard-shell"><WizardChrome step={4} actions={<><Link className="pixel-btn pixel-btn-ghost" href={route("wizard-step3.html")}>Kembali</Link><button className="pixel-btn pixel-btn-success" onClick={exportPdf}><PixelIcon name="download" size={13} color="#fff" />Export PDF</button></>} /><div className="preview-layout"><aside className="preview-sidebar"><div className="sidebar-tabs"><button className={panel === "template" ? "active" : ""} onClick={() => setPanel("template")}>TEMPLATE</button><button className={panel === "style" ? "active" : ""} onClick={() => setPanel("style")}>GAYA</button></div>{panel === "template" ? <TemplatePanel state={state} photosPerPage={photosPerPage} updatePreview={updatePreview} /> : <StylePanel state={state} updatePreview={updatePreview} updateProject={updateProject} />}</aside><main className="preview-main"><div className="wizard-title-row"><div><div className="wizard-kicker">STEP 04</div><h1 className="wizard-title">PREVIEW & EXPORT</h1><p className="wizard-subtitle">Template menentukan jumlah foto per halaman. Halaman terakhir tetap memakai layout template, slot kosong dibiarkan sebagai whitespace tanpa placeholder.</p></div><StateChips items={[`Kertas: ${paper.label}`, `Template: ${tpl.label}`, `Foto/hal: ${ppp}`, `Foto: ${state.reportPhotos.length}`]} /></div><div className="pages-wrap">{pages.map((pageItems, index) => <div className="page-col" key={index}><div className="page-label">HAL. {index + 1}</div><div className="a4-page" style={{ width: dim.w, height: dim.h }}><HeaderPreview state={state} pageIndex={index} /><div className="a4-content">{renderPageContent(state, tpl.id, ppp, pageItems)}</div><div className="a4-footer"><span>{state.project.name || "-"}</span><span className="mono" style={{ color: state.preview.accentColor, fontWeight: 900 }}>{index + 1}/{pages.length}</span></div></div></div>)}</div></main></div></div>;
+  return <div className="wizard-shell"><WizardChrome step={4} actions={<><Link className="pixel-btn pixel-btn-ghost" href={route("wizard-step3.html")}>Kembali</Link><button className="pixel-btn pixel-btn-success" onClick={exportPdf}><PixelIcon name="download" size={13} color="#fff" />Export PDF</button></>} /><div className="preview-layout"><aside className="preview-sidebar"><div className="sidebar-tabs"><button className={panel === "template" ? "active" : ""} onClick={() => setPanel("template")}>TEMPLATE</button><button className={panel === "style" ? "active" : ""} onClick={() => setPanel("style")}>GAYA</button></div>{panel === "template" ? <TemplatePanel state={state} photosPerPage={photosPerPage} updatePreview={updatePreview} /> : <StylePanel state={state} updatePreview={updatePreview} updateProject={updateProject} />}</aside><main className="preview-main"><div className="wizard-title-row"><div><div className="wizard-kicker">STEP 04</div><h1 className="wizard-title">PREVIEW & EXPORT</h1><p className="wizard-subtitle">Template menentukan jumlah foto per halaman. Halaman terakhir tetap memakai layout template, slot kosong dibiarkan sebagai whitespace tanpa placeholder.</p></div><StateChips items={[`Kertas: ${paper.label}`, `Template: ${tpl.label}`, `Foto/hal: ${ppp}`, `Foto: ${state.reportPhotos.length}`]} /></div><div className="pages-wrap">{pages.map((pageItems, index) => <div className="page-col" key={index}><div className="page-label">HAL. {index + 1}</div><div className="a4-page" style={{ width: dim.w, height: dim.h }}><HeaderPreview state={state} pageIndex={index} /><HeaderPeriodBlock state={state} pageIndex={index} /><div className="a4-content">{renderPageContent(state, tpl.id, ppp, pageItems)}</div><div className="a4-footer"><span>{state.project.name || "-"}</span><span className="mono" style={{ color: state.preview.accentColor, fontWeight: 900 }}>{index + 1}/{pages.length}</span></div></div></div>)}</div></main></div></div>;
 }
 
 function TemplatePanel({ state, photosPerPage, updatePreview }: { state: WizardState; photosPerPage: (id: string) => number; updatePreview: (changes: Partial<Preview>) => void }) {
@@ -946,9 +1310,16 @@ function TemplatePanel({ state, photosPerPage, updatePreview }: { state: WizardS
 
 function StylePanel({ state, updatePreview, updateProject }: { state: WizardState; updatePreview: (changes: Partial<Preview>) => void; updateProject: (changes: Partial<Project>) => void }) {
   const colors = ["#0A0A0A", "#FF6B1A", "#E8331C", "#FFA41B", "#2563EB", "#0F766E", "#7C3AED"];
-  return <><div className="style-row"><div className="style-label">UKURAN KERTAS</div><div className="toggle-row"><button className={`toggle-btn ${state.preview.paperSize === "a4" ? "active" : ""}`} onClick={() => updatePreview({ paperSize: "a4" })}>A4</button><button className={`toggle-btn ${state.preview.paperSize === "f4" ? "active" : ""}`} onClick={() => updatePreview({ paperSize: "f4" })}>F4</button></div></div><div className="prototype-banner" style={{ marginBottom: 14 }}>Kapasitas foto mengikuti ukuran kertas. F4 memberi ruang ekstra: stack bisa 3 foto, grid bisa 6 foto.</div><Swatches label="WARNA AKSEN" colors={colors} value={state.preview.accentColor} onChange={(accentColor) => updatePreview({ accentColor })} /><Swatches label="KOORDINAT GRID - OUTLINE OTOMATIS" colors={["#FFFFFF", "#0A0A0A", "#FFD600", "#20E82A"]} value={state.preview.gridGeoColor} onChange={(gridGeoColor) => updatePreview({ gridGeoColor })} /><RangeControl label="UKURAN KOORDINAT GRID" value={state.preview.gridGeoSize} min={6} max={12} onChange={(gridGeoSize) => updatePreview({ gridGeoSize })} /><RangeControl label="JARAK FOTO" value={state.preview.spacing} min={2} max={18} onChange={(spacing) => updatePreview({ spacing })} /><RangeControl label="UKURAN TEKS" value={state.preview.fontSize} min={6} max={12} onChange={(fontSize) => updatePreview({ fontSize })} /><div className="style-row"><div className="style-label">BORDER FOTO</div><button className={`toggle-btn ${state.preview.border ? "active" : ""}`} onClick={() => updatePreview({ border: !state.preview.border })}>{state.preview.border ? "Aktif" : "Nonaktif"}</button></div><RangeControl label="RADIUS SUDUT" value={state.preview.borderRadius} min={0} max={8} onChange={(borderRadius) => updatePreview({ borderRadius })} /><div className="style-row"><div className="style-label">HEADER</div><div className="toggle-row"><button className={`toggle-btn ${state.project.headerMode === "all" ? "active" : ""}`} onClick={() => updateProject({ headerMode: "all" })}>Semua</button><button className={`toggle-btn ${state.project.headerMode === "first" ? "active" : ""}`} onClick={() => updateProject({ headerMode: "first" })}>Hal. 1</button></div></div></>;
+  const alignOptions: { value: HeaderAlign; label: string }[] = [
+    { value: "left", label: "Kiri" },
+    { value: "center", label: "Tengah" },
+    { value: "right", label: "Kanan" },
+    { value: "justify", label: "Kiri-kanan" },
+  ];
+  const lineSpacingValue = Math.round((state.project.headerLineSpacing || 1.35) * 10);
+  const variantOptions: { value: HeaderVariant; label: string }[] = [{ value: "official-logo-left", label: "Logo Left" }, { value: "official-center", label: "Official Center" }, { value: "compact-box", label: "Compact Box" }];
+  return <><div className="style-row"><div className="style-label">UKURAN KERTAS</div><div className="toggle-row"><button className={`toggle-btn ${state.preview.paperSize === "a4" ? "active" : ""}`} onClick={() => updatePreview({ paperSize: "a4" })}>A4</button><button className={`toggle-btn ${state.preview.paperSize === "f4" ? "active" : ""}`} onClick={() => updatePreview({ paperSize: "f4" })}>F4</button></div></div><div className="prototype-banner" style={{ marginBottom: 14 }}>Kapasitas foto mengikuti ukuran kertas. F4 memberi ruang ekstra: stack bisa 3 foto, grid bisa 6 foto.</div><Swatches label="WARNA AKSEN" colors={colors} value={state.preview.accentColor} onChange={(accentColor) => updatePreview({ accentColor })} /><Swatches label="KOORDINAT GRID - OUTLINE OTOMATIS" colors={["#FFFFFF", "#0A0A0A", "#FFD600", "#20E82A"]} value={state.preview.gridGeoColor} onChange={(gridGeoColor) => updatePreview({ gridGeoColor })} /><RangeControl label="UKURAN KOORDINAT GRID" value={state.preview.gridGeoSize} min={6} max={12} onChange={(gridGeoSize) => updatePreview({ gridGeoSize })} /><RangeControl label="JARAK FOTO" value={state.preview.spacing} min={2} max={18} onChange={(spacing) => updatePreview({ spacing })} /><RangeControl label="UKURAN TEKS" value={state.preview.fontSize} min={6} max={12} onChange={(fontSize) => updatePreview({ fontSize })} /><div className="style-row"><div className="style-label">BORDER FOTO</div><button className={`toggle-btn ${state.preview.border ? "active" : ""}`} onClick={() => updatePreview({ border: !state.preview.border })}>{state.preview.border ? "Aktif" : "Nonaktif"}</button></div><RangeControl label="RADIUS SUDUT" value={state.preview.borderRadius} min={0} max={8} onChange={(borderRadius) => updatePreview({ borderRadius })} /><div className="style-divider" /><div className="style-row"><div className="style-label">HEADER</div><div className="toggle-row"><button className={`toggle-btn ${state.project.headerMode === "all" ? "active" : ""}`} onClick={() => updateProject({ headerMode: "all" })}>Semua</button><button className={`toggle-btn ${state.project.headerMode === "first" ? "active" : ""}`} onClick={() => updateProject({ headerMode: "first" })}>Hal. 1</button></div></div><div className="style-row"><div className="style-label">VARIANT HEADER</div><div className="toggle-row wrap-toggle">{variantOptions.map((option) => <button key={option.value} className={`toggle-btn ${state.project.headerVariant === option.value ? "active" : ""}`} onClick={() => updateProject({ headerVariant: option.value })}>{option.label}</button>)}</div></div><div className="style-row"><div className="style-label">RATA TEKS HEADER</div><div className="toggle-row wrap-toggle">{alignOptions.map((option) => <button key={option.value} className={`toggle-btn ${state.project.headerAlign === option.value ? "active" : ""}`} onClick={() => updateProject({ headerAlign: option.value })}>{option.label}</button>)}</div></div><RangeControl label="UKURAN HEADER" value={state.project.headerFontSize || 7} min={6} max={12} onChange={(headerFontSize) => updateProject({ headerFontSize })} /><div className="style-row"><div className="style-label">KETEBALAN HEADER</div><div className="toggle-row"><button className={`toggle-btn ${state.project.headerWeight === "normal" ? "active" : ""}`} onClick={() => updateProject({ headerWeight: "normal" })}>Normal</button><button className={`toggle-btn ${state.project.headerWeight === "bold" ? "active" : ""}`} onClick={() => updateProject({ headerWeight: "bold" })}>Tebal</button></div></div><div className="style-row"><div className="style-label">SPASI HEADER: <span className="mono">{(lineSpacingValue / 10).toFixed(1)}x</span></div><input type="range" min={10} max={18} value={lineSpacingValue} onChange={(event) => updateProject({ headerLineSpacing: Number(event.target.value) / 10 })} /></div></>;
 }
-
 function Swatches({ label, colors, value, onChange }: { label: string; colors: string[]; value: string; onChange: (color: string) => void }) {
   return <div className="style-row"><div className="style-label">{label}</div><div className="swatch-row">{colors.map((color) => <button key={color} className={`swatch-btn ${value === color ? "active" : ""}`} style={{ background: color }} onClick={() => onChange(color)} />)}</div>{label.startsWith("KOORDINAT") ? <div className="mini-label">Stroke otomatis menjaga teks tetap terbaca di latar terang/gelap.</div> : null}</div>;
 }
@@ -963,10 +1334,255 @@ function gridSpec(count: number) {
   return { cols: 2, rows: Math.ceil(count / 2) };
 }
 
+function classifyHeaderLineLevel(text: string, index: number): HeaderLineLevel {
+  const upper = text.toUpperCase();
+  const lower = text.toLowerCase();
+  if (/alamat|jalan|jl\.|tlp|telp|email|@/.test(lower)) return 3;
+  if (/^KEMENTE?RIAN\b/.test(upper) || upper === "DAN PERUMAHAN RAKYAT") return 1;
+  if (upper.startsWith("DIREKTORAT")) return 2;
+  if (upper.startsWith("BALAI") || upper.startsWith("SATUAN")) return 3;
+  if (index === 0) return 1;
+  if (index === 1) return 2;
+  return 3;
+}
+
+function headerKeyForText(text: string, index: number) {
+  const upper = text.toUpperCase();
+  const lower = text.toLowerCase();
+  if (/alamat|jalan|jl\.|tlp|telp|email|@/.test(lower)) return "address";
+  if (/^KEMENTE?RIAN\b/.test(upper) || upper === "DAN PERUMAHAN RAKYAT") return "mainInstitution";
+  if (upper.startsWith("DIREKTORAT")) return "directorate";
+  if (upper.startsWith("BALAI")) return "office";
+  if (upper.startsWith("SATUAN")) return "unit";
+  return `line-${index}`;
+}
+
+function splitBalancedText(text: string, maxLines: number) {
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  if (maxLines <= 1 || words.length <= 3) return [text.trim()].filter(Boolean);
+  const lines: string[] = [];
+  const wordsPerLine = Math.ceil(words.length / maxLines);
+  for (let i = 0; i < words.length; i += wordsPerLine) lines.push(words.slice(i, i + wordsPerLine).join(" "));
+  return lines;
+}
+
+function splitInstitutionSmart(text: string) {
+  const source = text.replace(/\s+/g, " ").trim();
+  if (!source) return [];
+  const semanticParts = source
+    .replace(/\s+(?=DIREKTORAT\b)/gi, "|")
+    .replace(/\s+(?=DINAS\b)/gi, "|")
+    .replace(/\s+(?=BIDANG\b)/gi, "|")
+    .replace(/\s+(?=BALAI\b)/gi, "|")
+    .replace(/\s+(?=SATUAN\s+KERJA\b)/gi, "|")
+    .replace(/\s+(?=ALAMAT\b|JL\.\b|JALAN\b)/gi, "|")
+    .split("|")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  return semanticParts.flatMap((part) => {
+    const ministryBreak = part.search(/\s+DAN\s+PERUMAHAN\s+RAKYAT\b/i);
+    if (/^KEMENTE?RIAN\b/i.test(part) && ministryBreak > 0) return [part.slice(0, ministryBreak).trim(), part.slice(ministryBreak).trim()].filter(Boolean);
+    return [part];
+  });
+}
+
+function headerBaseFont(level: HeaderLineLevel, variant: HeaderVariant, baseSize: number) {
+  if (variant === "compact-box") {
+    if (level === 1) return Math.min(8.2, Math.max(6.8, baseSize + 0.2));
+    if (level === 2) return Math.min(7.2, Math.max(6.4, baseSize - 0.2));
+    return Math.min(6.8, Math.max(5.8, baseSize - 0.6));
+  }
+  if (level === 1) return baseSize + 3;
+  if (level === 2) return baseSize + 1.1;
+  return Math.max(5, baseSize - 1.2);
+}
+
+function headerMinFont(level: HeaderLineLevel, variant: HeaderVariant) {
+  if (variant === "compact-box") {
+    if (level === 1) return 5.8;
+    if (level === 2) return 5.6;
+    return 5.2;
+  }
+  if (level === 1) return 5.9;
+  if (level === 2) return 5.2;
+  return 4.7;
+}
+
+function headerLineLimit(level: HeaderLineLevel, variant: HeaderVariant) {
+  if (variant === "compact-box") return level === 1 ? 29 : level === 2 ? 38 : 44;
+  if (variant === "official-logo-left") return level === 1 ? 38 : level === 2 ? 48 : 70;
+  return level === 1 ? 36 : level === 2 ? 46 : 66;
+}
+
+function splitHeaderLineByWords(text: string, maxChars: number) {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let current = "";
+  for (const word of words) {
+    const next = current ? `${current} ${word}` : word;
+    if (current && next.length > maxChars) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = next;
+    }
+  }
+  if (current) lines.push(current);
+  return lines.length ? lines : [text];
+}
+
+function estimateHeaderLength(text: string) {
+  return text.split("").reduce((total, char) => {
+    if (char === " ") return total + 0.38;
+    if (/[I1.,:]/.test(char)) return total + 0.42;
+    if (/[MW]/.test(char)) return total + 0.95;
+    if (/[A-Z0-9]/.test(char)) return total + 0.72;
+    return total + 0.62;
+  }, 0);
+}
+
+function headerCapacity(source: HeaderSourceLine, fontSize: number, letterSpacing: number) {
+  const base = headerLineLimit(source.level, source.variant);
+  const fontGain = source.preferredFontSize / fontSize;
+  const spacingGain = 1 + Math.max(0, source.letterSpacing - letterSpacing) * 0.22;
+  return base * fontGain * spacingGain;
+}
+
+function fitHeaderCandidate(source: HeaderSourceLine, text: string) {
+  let fontSize = source.preferredFontSize;
+  let letterSpacing = source.letterSpacing;
+  const textLength = estimateHeaderLength(text);
+  while (textLength > headerCapacity(source, fontSize, letterSpacing) && fontSize > source.minFontSize) fontSize = Math.max(source.minFontSize, Math.round((fontSize - 0.2) * 10) / 10);
+  while (textLength > headerCapacity(source, fontSize, letterSpacing) && letterSpacing > source.minLetterSpacing) letterSpacing = Math.max(source.minLetterSpacing, Math.round((letterSpacing - 0.05) * 100) / 100);
+  return {
+    fits: textLength <= headerCapacity(source, fontSize, letterSpacing),
+    line: { key: source.key, text, level: source.level, fontSize, minFontSize: source.minFontSize, fontWeight: 800, lineHeight: source.lineHeight, letterSpacing, minLetterSpacing: source.minLetterSpacing, nowrap: true } satisfies ReportHeaderLine,
+  };
+}
+
+function layoutHeaderSourceLine(source: HeaderSourceLine) {
+  if (source.splitStrategy === "manual" && source.manualLines?.length) return source.manualLines.map((line) => fitHeaderCandidate(source, line).line);
+  const single = fitHeaderCandidate(source, source.text);
+  if (single.fits) return [single.line];
+  const maxLines = Math.max(2, source.maxLines);
+  const pieces = source.splitStrategy === "balanced" ? splitBalancedText(source.text, maxLines) : splitHeaderLineByWords(source.text, Math.max(14, Math.floor(headerCapacity(source, source.minFontSize, source.minLetterSpacing))));
+  return pieces.flatMap((piece) => {
+    const fitted = fitHeaderCandidate(source, piece);
+    if (fitted.fits) return [fitted.line];
+    const forced = splitHeaderLineByWords(piece, Math.max(12, Math.floor(headerCapacity(source, source.minFontSize, source.minLetterSpacing))));
+    return forced.map((line) => ({ ...fitHeaderCandidate(source, line).line, nowrap: true }));
+  });
+}
+
+function buildHeaderSourceLines(state: WizardState, variant: HeaderVariant) {
+  const baseSize = state.project.headerFontSize || 7;
+  const rawLines = state.project.headerText.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const semanticLines = rawLines.flatMap(splitInstitutionSmart);
+  const sourceLines = semanticLines.length ? semanticLines : [state.project.client || state.project.instansi || state.project.name || "-"];
+  return sourceLines.map((text, index) => {
+    const level = classifyHeaderLineLevel(text, index);
+    const key = headerKeyForText(text, index);
+    const isCompact = variant === "compact-box";
+    const preferredFontSize = headerBaseFont(level, variant, baseSize);
+    const splitStrategy: HeaderSplitStrategy = key === "mainInstitution" || key === "unit" || text.length > headerLineLimit(level, variant) ? "balanced" : "single-line";
+    return {
+      key,
+      text,
+      level,
+      variant,
+      preferredFontSize,
+      minFontSize: headerMinFont(level, variant),
+      maxLines: key === "mainInstitution" || key === "unit" || key === "address" ? 2 : 1,
+      lineHeight: isCompact ? (level === 1 ? 1.05 : 1.06) : (level === 3 ? Math.max(1.05, (state.project.headerLineSpacing || 1.25) - 0.15) : state.project.headerLineSpacing || 1.25),
+      letterSpacing: isCompact ? -0.15 : 0,
+      minLetterSpacing: isCompact ? -0.45 : -0.25,
+      splitStrategy,
+    } satisfies HeaderSourceLine;
+  });
+}
+
+function buildHeaderLayout(state: WizardState, variant: HeaderVariant) {
+  return buildHeaderSourceLines(state, variant).flatMap(layoutHeaderSourceLine);
+}
+
+function buildReportHeaderConfig(state: WizardState): ReportHeaderConfig {
+  const variant = state.project.headerVariant || "official-center";
+  const baseWeight = state.project.headerWeight === "normal" ? 650 : 900;
+  const lines = buildHeaderLayout(state, variant).map((line) => ({ ...line, fontWeight: line.level === 3 ? Math.max(500, baseWeight - 250) : baseWeight }));
+  return {
+    variant,
+    align: variant === "official-center" || variant === "compact-box" ? "center" : state.project.headerAlign || "center",
+    showLogoInstansi: state.project.logoInstansi,
+    showLogoPerusahaan: state.project.logoPerusahaan,
+    accentColor: state.preview.accentColor,
+    lines,
+  };
+}
+function HeaderLogoBox({ label }: { label: string }) {
+  return <div className="logo-box report-logo-box">{label}</div>;
+}
+
+function FitHeaderLine({ line }: { line: ReportHeaderLine; variant: HeaderVariant }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [style, setStyle] = useState({ fontSize: line.fontSize, letterSpacing: line.letterSpacing, whiteSpace: "nowrap" as "nowrap" | "normal" });
+  useLayoutEffect(() => {
+    let alive = true;
+    const fit = async () => {
+      const fonts = (document as Document & { fonts?: { ready?: Promise<unknown> } }).fonts;
+      if (fonts?.ready) await fonts.ready;
+      const el = ref.current;
+      if (!alive || !el || !el.parentElement?.clientWidth) return;
+      let fontSize = line.fontSize;
+      let letterSpacing = line.letterSpacing;
+      const availableWidth = el.parentElement.clientWidth;
+      el.style.whiteSpace = "nowrap";
+      el.style.fontSize = `${fontSize}px`;
+      el.style.letterSpacing = `${letterSpacing}px`;
+      for (let i = 0; i < 48 && el.scrollWidth > availableWidth && fontSize > line.minFontSize; i += 1) {
+        fontSize = Math.max(line.minFontSize, Math.round((fontSize - 0.2) * 10) / 10);
+        el.style.fontSize = `${fontSize}px`;
+      }
+      for (let i = 0; i < 24 && el.scrollWidth > availableWidth && letterSpacing > line.minLetterSpacing; i += 1) {
+        letterSpacing = Math.max(line.minLetterSpacing, Math.round((letterSpacing - 0.05) * 100) / 100);
+        el.style.letterSpacing = `${letterSpacing}px`;
+      }
+      setStyle({ fontSize, letterSpacing, whiteSpace: el.scrollWidth > availableWidth + 1 ? "normal" : "nowrap" });
+    };
+    void fit();
+    window.addEventListener("resize", fit);
+    return () => { alive = false; window.removeEventListener("resize", fit); };
+  }, [line.fontSize, line.letterSpacing, line.minFontSize, line.minLetterSpacing, line.text]);
+  return <div ref={ref} className={`a4-header-line header-line-level-${line.level}`} style={{ fontSize: style.fontSize, letterSpacing: style.letterSpacing, whiteSpace: style.whiteSpace, fontWeight: line.fontWeight, lineHeight: line.lineHeight }}>{line.text}</div>;
+}
+
+function ReportHeader({ config }: { config: ReportHeaderConfig }) {
+  const textAlign = config.align === "justify" ? "center" : config.align;
+  return (
+    <header className={`a4-header report-header report-header-${config.variant}`} style={{ "--report-accent": config.accentColor } as React.CSSProperties}>
+      <div className="report-header-grid">
+        <div className="a4-header-left">{config.showLogoInstansi ? <HeaderLogoBox label="INS" /> : null}</div>
+        <div className="a4-header-text" style={{ textAlign }}>
+          <div className="report-header-lines">
+            {config.lines.map((line, index) => <FitHeaderLine key={`${line.level}-${index}-${line.text}`} line={line} variant={config.variant} />)}
+          </div>
+        </div>
+        <div className="a4-header-right">{config.showLogoPerusahaan ? <HeaderLogoBox label="PT" /> : null}</div>
+      </div>
+      <div className="report-header-accent-line" />
+    </header>
+  );
+}
+
 function HeaderPreview({ state, pageIndex }: { state: WizardState; pageIndex: number }) {
   const shouldShow = state.project.headerMode === "all" || (state.project.headerMode === "first" && pageIndex === 0);
   if (!shouldShow) return null;
-  return <div className="a4-header" style={{ borderBottomColor: state.preview.accentColor }}>{state.project.logoInstansi ? <div className="logo-box">INS</div> : null}{state.project.logoPerusahaan ? <div className="logo-box">PT</div> : null}<div className="a4-header-text">{state.project.headerText.split("\n").map((line) => <span key={line}>{line}<br /></span>)}</div><div className="mono" style={{ fontSize: 6.5, color: "var(--text-muted)" }}>{state.report.period}</div></div>;
+  return <ReportHeader config={buildReportHeaderConfig(state)} />;
+}
+
+function HeaderPeriodBlock({ state, pageIndex }: { state: WizardState; pageIndex: number }) {
+  const shouldShow = state.project.headerMode === "all" || (state.project.headerMode === "first" && pageIndex === 0);
+  if (!shouldShow || !state.report.period.trim()) return null;
+  return <div className="a4-period-row"><span className="mono">{state.report.period}</span></div>;
 }
 
 function renderPageContent(state: WizardState, templateId: string, ppp: number, pageItems: (ReportPhoto & { index: number; photo: GalleryPhoto })[]) {

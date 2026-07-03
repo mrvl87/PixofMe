@@ -27,12 +27,21 @@ $$;
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text,
+  username text,
+  first_name text,
+  last_name text,
   full_name text,
+  email_verified_at timestamptz,
   plan text not null default 'free' check (plan in ('free', 'pro', 'team')),
   ai_credit_balance integer not null default 0 check (ai_credit_balance >= 0),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.profiles add column if not exists username text;
+alter table public.profiles add column if not exists first_name text;
+alter table public.profiles add column if not exists last_name text;
+alter table public.profiles add column if not exists email_verified_at timestamptz;
 
 create table if not exists public.workspaces (
   id uuid primary key default gen_random_uuid(),
@@ -255,6 +264,10 @@ create table if not exists public.billing_webhook_events (
 -- Indexes
 -- -----------------------------------------------------------------------------
 
+create unique index if not exists profiles_email_lower_key
+  on public.profiles(lower(email)) where email is not null;
+create unique index if not exists profiles_username_lower_key
+  on public.profiles(lower(username)) where username is not null;
 create index if not exists workspaces_owner_idx on public.workspaces(owner_id);
 create index if not exists projects_workspace_idx on public.projects(workspace_id, status, updated_at desc);
 create index if not exists projects_owner_idx on public.projects(owner_id, updated_at desc);
@@ -477,6 +490,17 @@ on conflict (id) do update set
   file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
 
+
+-- Public homepage asset buckets. Use these only for landing-page visuals, never user report photos.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values
+  ('pixforme-homepage-hero', 'pixforme-homepage-hero', true, 10485760, array['image/jpeg', 'image/png', 'image/webp']),
+  ('pixforme-homepage-workflow', 'pixforme-homepage-workflow', true, 10485760, array['image/jpeg', 'image/png', 'image/webp']),
+  ('pixforme-homepage-templates', 'pixforme-homepage-templates', true, 10485760, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 drop policy if exists pixforme_photos_select_own on storage.objects;
 create policy pixforme_photos_select_own on storage.objects for select to authenticated
 using (
@@ -516,7 +540,7 @@ using (
 grant usage on schema public to authenticated;
 
 grant select, insert on public.profiles to authenticated;
-grant update(email, full_name, updated_at) on public.profiles to authenticated;
+grant update(email, username, first_name, last_name, full_name, email_verified_at, updated_at) on public.profiles to authenticated;
 
 grant select, insert, update, delete on
   public.workspaces,

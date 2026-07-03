@@ -108,6 +108,13 @@
     state.project.instansi = state.project.client;
     state.project.location = project.location || project.lokasi || '';
     state.project.lokasi = state.project.location;
+    state.project.contractNumber = project.contractNumber || project.nomorKontrak || '';
+    state.project.nomorKontrak = state.project.contractNumber;
+    state.project.jobType = project.jobType || project.jenisPekerjaan || '';
+    state.project.jenisPekerjaan = state.project.jobType;
+    state.project.period = project.period || project.periode || state.report.period || '';
+    state.project.periode = state.project.period;
+    state.report.period = state.project.period;
     state.project.items = Array.isArray(project.items) ? project.items.slice() : state.project.items;
     state.project.rabText = project.rabText || (Array.isArray(state.project.items) ? state.project.items.join('\n') : '');
     PixWizard.saveState(state);
@@ -128,7 +135,7 @@
       return;
     }
     var id = 'project_' + Date.now().toString(36);
-    var project = { id: id, name: name, instansi: 'Belum diatur', location: '-', status: 'Aktif', items: [], rabText: '' };
+    var project = { id: id, name: name, instansi: 'Belum diatur', location: '-', contractNumber: '', jobType: '', period: '', status: 'Aktif', items: [], rabText: '' };
     state.workspace.projects.forEach(function (row) { if (row.status === 'Aktif') row.status = 'Draft'; });
     state.workspace.projects.unshift(project);
     state.workspace.activeProjectId = id;
@@ -138,6 +145,13 @@
     state.project.instansi = '';
     state.project.location = '';
     state.project.lokasi = '';
+    state.project.contractNumber = '';
+    state.project.nomorKontrak = '';
+    state.project.jobType = '';
+    state.project.jenisPekerjaan = '';
+    state.project.period = '';
+    state.project.periode = '';
+    state.report.period = '';
     state.project.items = [];
     state.project.rabText = '';
     PixWizard.saveState(state);

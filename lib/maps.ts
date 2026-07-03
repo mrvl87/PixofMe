@@ -1,4 +1,4 @@
-import { getGeoapifyApiKey, getMapProviderEnv } from "./env";
+import { getGeoapifyApiKey, getMapBudgetEnv, getMapProviderEnv } from "./env";
 
 export type LatLng = {
   lat: number;
@@ -38,6 +38,8 @@ type GeoapifyPayload = {
 
 export function getMapTileConfig() {
   getMapProviderEnv();
+  const budget = getMapBudgetEnv();
+  const tileCountPerViewport = (budget.tileGridRadius * 2 + 1) ** 2;
 
   return {
     provider: "esri-world-imagery",
@@ -45,7 +47,16 @@ export function getMapTileConfig() {
     tileUrl: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     attribution:
       "Tiles (C) Esri - Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community",
-    maxZoom: 19,
+    maxZoom: budget.maxZoom,
+    defaultZoom: budget.defaultZoom,
+    tileGridRadius: budget.tileGridRadius,
+    estimatedTilesPerViewport: tileCountPerViewport,
+    costControl: {
+      reverseGeocodeDecimals: budget.reverseGeocodeDecimals,
+      geocodePerMinute: budget.geocodePerMinute,
+      geocodePerDay: budget.geocodePerDay,
+      reverseGeocodeOnDragEndOnly: true,
+    },
   } as const;
 }
 
