@@ -504,7 +504,7 @@
     var shouldShow = state.project.headerMode === 'all' || (state.project.headerMode === 'first' && pageIndex === 0);
     if (!shouldShow) return '';
     var variant = state.project.headerVariant || 'official-center';
-    if (variant === 'custom') return PixHeaderBuilder.render(PixHeaderBuilder.ensureConfig(state));
+    if (variant === 'custom') variant = 'official-center';
     var align = variant === 'official-center' || variant === 'compact-box' ? 'center' : (state.project.headerAlign || 'left');
     if (align === 'justify') align = 'center';
     var baseWeight = state.project.headerWeight === 'normal' ? 650 : 900;
@@ -563,8 +563,7 @@
     var rows = [
       ['Nama Paket Pekerjaan', state.project.name || state.project.pekerjaan],
       ['Jenis Pekerjaan', state.project.jobType || state.project.jenisPekerjaan],
-      ['Lokasi Proyek', state.project.location || state.project.lokasi],
-      ['Periode', state.project.period || state.project.periode || state.report.period]
+      ['Lokasi Proyek', state.project.location || state.project.lokasi]
     ];
     return '<section class="project-description-block">' +
       '<div class="project-description-heading"><div class="project-description-instansi">' + esc(projectMetaValue(instansi)) + '</div><div class="project-description-title">Laporan Dokumentasi Proyek</div></div>' +
@@ -585,7 +584,7 @@
     if (!pages.length) pages.push([]);
 
     document.getElementById('pagesWrap').innerHTML = pages.map(function (pageItems, idx) {
-      return '<div class="page-col"><div class="page-label">HAL. ' + (idx + 1) + '</div><div class="a4-page" style="width:' + dim.w + 'px;height:' + dim.h + 'px;">' + projectDescriptionHeaderHTML(idx) + '<div class="a4-content">' + renderPageContent(tpl, pageItems) + '</div><div class="a4-footer"><span>' + esc(state.project.name || '-') + '</span><span class="mono" style="color:' + state.preview.accentColor + ';font-weight:900;">' + (idx + 1) + '/' + pages.length + '</span></div></div></div>';
+      return '<div class="page-col"><div class="page-label">HAL. ' + (idx + 1) + '</div><div class="a4-page" style="width:' + dim.w + 'px;height:' + dim.h + 'px;">' + headerHTML(idx) + headerPeriodHTML(idx) + projectDescriptionHeaderHTML(idx) + '<div class="a4-content">' + renderPageContent(tpl, pageItems) + '</div><div class="a4-footer"><span>' + esc(state.project.name || '-') + '</span><span class="mono" style="color:' + state.preview.accentColor + ';font-weight:900;">' + (idx + 1) + '/' + pages.length + '</span></div></div></div>';
     }).join('');
     fitHeaderLines();
     renderSummary();
