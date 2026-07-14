@@ -1,0 +1,4 @@
+interface:
+  display_name: "supabase rls review"
+  short_description: "Pixforme supabase rls review workflow"
+  default_prompt: "Use this Pixforme skill to perform the requested review or change with repository evidence."

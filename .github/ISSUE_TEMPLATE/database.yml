@@ -1,0 +1,33 @@
+name: Database change
+description: Plan a Pixforme migration, RLS, constraint, or backfill.
+title: "[DB] "
+labels: ["database", "needs-data-contract"]
+body:
+  - type: textarea
+    id: invariant
+    attributes: { label: Domain invariant and data ownership }
+    validations: { required: true }
+  - type: textarea
+    id: current
+    attributes: { label: Current schema/query evidence }
+    validations: { required: true }
+  - type: textarea
+    id: change
+    attributes: { label: Expand, backfill, contract plan }
+    validations: { required: true }
+  - type: textarea
+    id: rls
+    attributes: { label: RLS, grants, tenant FKs, actor matrix }
+    validations: { required: true }
+  - type: textarea
+    id: risk
+    attributes: { label: Lock/data/compatibility risk and rollback/forward-fix }
+    validations: { required: true }
+  - type: textarea
+    id: verify
+    attributes: { label: Migration, type generation, advisor, and data verification }
+    validations: { required: true }
+  - type: input
+    id: owner
+    attributes: { label: Database owner and reviewers }
+    validations: { required: true }

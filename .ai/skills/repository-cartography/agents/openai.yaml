@@ -1,0 +1,4 @@
+interface:
+  display_name: "repository cartography"
+  short_description: "Pixforme repository cartography workflow"
+  default_prompt: "Use this Pixforme skill to perform the requested review or change with repository evidence."

@@ -1,0 +1,29 @@
+name: Architecture decision
+description: Propose a Pixforme boundary or technology decision requiring an ADR.
+title: "[ARCH] "
+labels: ["architecture", "adr-proposed"]
+body:
+  - type: textarea
+    id: context
+    attributes: { label: Context and repository evidence }
+    validations: { required: true }
+  - type: textarea
+    id: drivers
+    attributes: { label: Decision drivers and constraints }
+    validations: { required: true }
+  - type: textarea
+    id: alternatives
+    attributes: { label: Alternatives including status quo }
+    validations: { required: true }
+  - type: textarea
+    id: boundaries
+    attributes: { label: Domains, contracts, and prohibited dependencies }
+    validations: { required: true }
+  - type: textarea
+    id: risks
+    attributes: { label: Consequences, risks, migration, rollback }
+    validations: { required: true }
+  - type: input
+    id: owner
+    attributes: { label: Architecture owner and approver }
+    validations: { required: true }

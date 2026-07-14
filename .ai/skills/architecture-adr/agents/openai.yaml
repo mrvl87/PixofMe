@@ -1,0 +1,4 @@
+interface:
+  display_name: "architecture adr"
+  short_description: "Pixforme architecture adr workflow"
+  default_prompt: "Use this Pixforme skill to perform the requested review or change with repository evidence."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "database transaction design"
+  short_description: "Pixforme database transaction design workflow"
+  default_prompt: "Use this Pixforme skill to perform the requested review or change with repository evidence."

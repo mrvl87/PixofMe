@@ -1,0 +1,4 @@
+interface:
+  display_name: "report golden testing"
+  short_description: "Pixforme report golden testing workflow"
+  default_prompt: "Use this Pixforme skill to perform the requested review or change with repository evidence."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "api contract"
+  short_description: "Pixforme api contract workflow"
+  default_prompt: "Use this Pixforme skill to perform the requested review or change with repository evidence."

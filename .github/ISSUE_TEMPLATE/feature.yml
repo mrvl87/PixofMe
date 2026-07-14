@@ -1,0 +1,36 @@
+name: Feature
+description: Define a Pixforme feature contract before implementation.
+title: "[FEATURE] "
+labels: ["feature", "needs-contract"]
+body:
+  - type: textarea
+    id: problem
+    attributes: { label: Problem and user, description: "Who has what problem?", placeholder: "Actor, context, outcome" }
+    validations: { required: true }
+  - type: textarea
+    id: current
+    attributes: { label: Current repository behavior, description: "Cite routes/files and observed behavior." }
+    validations: { required: true }
+  - type: textarea
+    id: scope
+    attributes: { label: Scope, placeholder: "Included behavior and states" }
+    validations: { required: true }
+  - type: textarea
+    id: out
+    attributes: { label: Out of scope }
+    validations: { required: true }
+  - type: textarea
+    id: acceptance
+    attributes: { label: Acceptance criteria, placeholder: "Measurable happy, empty, error, permission, retry states" }
+    validations: { required: true }
+  - type: textarea
+    id: impacts
+    attributes: { label: Architecture, data, security, cost impact }
+  - type: input
+    id: owner
+    attributes: { label: Owner agent and required skills }
+    validations: { required: true }
+  - type: textarea
+    id: evidence
+    attributes: { label: Verification evidence }
+    validations: { required: true }

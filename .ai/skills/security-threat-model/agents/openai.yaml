@@ -1,0 +1,4 @@
+interface:
+  display_name: "security threat model"
+  short_description: "Pixforme security threat model workflow"
+  default_prompt: "Use this Pixforme skill to perform the requested review or change with repository evidence."

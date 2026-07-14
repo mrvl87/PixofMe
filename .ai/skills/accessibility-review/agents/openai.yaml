@@ -1,0 +1,4 @@
+interface:
+  display_name: "accessibility review"
+  short_description: "Pixforme accessibility review workflow"
+  default_prompt: "Use this Pixforme skill to perform the requested review or change with repository evidence."

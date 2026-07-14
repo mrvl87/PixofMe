@@ -1,0 +1,4 @@
+interface:
+  display_name: "media storage lifecycle"
+  short_description: "Pixforme media storage lifecycle workflow"
+  default_prompt: "Use this Pixforme skill to perform the requested review or change with repository evidence."

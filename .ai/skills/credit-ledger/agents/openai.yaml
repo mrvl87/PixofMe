@@ -1,0 +1,4 @@
+interface:
+  display_name: "credit ledger"
+  short_description: "Pixforme credit ledger workflow"
+  default_prompt: "Use this Pixforme skill to perform the requested review or change with repository evidence."
