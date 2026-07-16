@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getHomepageStorageBuckets, getSupabaseStorageBucket } from "../../../../lib/env";
+import { getSupabaseStorageBucket } from "../../../../lib/env";
 import { createSupabaseServerClient, createSupabaseServiceRoleClient } from "../../../../lib/supabase/server";
 
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
@@ -21,14 +21,6 @@ function cleanName(value: string) {
     .slice(0, 96) || "image";
 }
 
-function pickBucket(kind: string) {
-  const homepageBuckets = getHomepageStorageBuckets();
-  if (kind === "homepage-hero") return { bucket: homepageBuckets.hero, publicBucket: true, folder: "hero" };
-  if (kind === "homepage-workflow") return { bucket: homepageBuckets.workflow, publicBucket: true, folder: "workflow" };
-  if (kind === "homepage-template") return { bucket: homepageBuckets.templates, publicBucket: true, folder: "templates" };
-  return { bucket: getSupabaseStorageBucket(), publicBucket: false, folder: "report-photos" };
-}
-
 function sizeFromUpload(file: File, widthValue: FormDataEntryValue | null, heightValue: FormDataEntryValue | null) {
   const width = Number(widthValue || 0);
   const height = Number(heightValue || 0);
@@ -40,12 +32,47 @@ function sizeFromUpload(file: File, widthValue: FormDataEntryValue | null, heigh
 export async function POST(request: Request) {
   try {
     const contentType = request.headers.get("content-type") || "";
+    const serverClient = await createSupabaseServerClient();
+    const { data: userData } = await serverClient.auth.getUser();
+    const ownerId = userData.user?.id || "";
+
+    if (!ownerId) {
+      return NextResponse.json({ error: "Login dibutuhkan untuk upload foto." }, { status: 401 });
+    }
+
     if (!contentType.includes("multipart/form-data")) {
       return NextResponse.json({ error: "Gunakan multipart/form-data dengan field file." }, { status: 400 });
     }
-    const form = await request.formData();
+
+    let form: FormData;
+    try {
+      form = await request.formData();
+    } catch {
+      return NextResponse.json({ error: "Payload upload tidak valid." }, { status: 400 });
+    }
+
+    const rawKindEntry = form.get("kind");
+
+    if (typeof rawKindEntry !== "string" || rawKindEntry.length === 0) {
+      return NextResponse.json({ error: "Jenis upload wajib dikirim." }, { status: 400 });
+    }
+
+    const rawKind = rawKindEntry;
+
+    if (rawKind.startsWith("homepage-")) {
+      return NextResponse.json({ error: "Upload homepage tidak diizinkan." }, { status: 403 });
+    }
+
+    const isReportPhoto = rawKind === "report-photo";
+    if (!isReportPhoto) {
+      return NextResponse.json({ error: "Jenis upload tidak didukung." }, { status: 400 });
+    }
+
+    if (form.has("bucket") || form.has("path")) {
+      return NextResponse.json({ error: "Target upload tidak boleh ditentukan client." }, { status: 400 });
+    }
+
     const file = form.get("file");
-    const kind = String(form.get("kind") || "report-photo");
     const projectId = String(form.get("projectId") || "").trim() || null;
     const widthValue = form.get("width");
     const heightValue = form.get("height");
@@ -65,14 +92,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Ukuran gambar maksimal 15MB." }, { status: 413 });
     }
 
-    const serverClient = await createSupabaseServerClient();
-    const { data: userData } = await serverClient.auth.getUser();
-    const ownerId = userData.user?.id || "";
-
-    if (!ownerId) {
-      return NextResponse.json({ error: "Login dibutuhkan untuk upload foto." }, { status: 401 });
-    }
-
     if (projectId) {
       const { data: project, error: projectError } = await serverClient
         .from("projects")
@@ -80,72 +99,72 @@ export async function POST(request: Request) {
         .eq("id", projectId)
         .eq("owner_id", ownerId)
         .maybeSingle();
-      if (projectError) return NextResponse.json({ error: projectError.message }, { status: 502 });
+      if (projectError) return NextResponse.json({ error: "Gagal memverifikasi project." }, { status: 502 });
       if (!project) return NextResponse.json({ error: "Project tidak ditemukan untuk user ini." }, { status: 404 });
     }
 
     const admin = createSupabaseServiceRoleClient();
-    const bucketConfig = pickBucket(kind);
+    const bucket = getSupabaseStorageBucket();
     const extension = EXT_BY_MIME[file.type] || "jpg";
     const baseName = cleanName(file.name.replace(/\.[^.]+$/, ""));
-    const pathParts = [ownerId, bucketConfig.folder];
-    if (projectId && kind === "report-photo") pathParts.push(projectId);
+    const pathParts = [ownerId, "report-photos"];
+    if (projectId) pathParts.push(projectId);
     pathParts.push(new Date().toISOString().slice(0, 10));
     const objectPath = `${pathParts.join("/")}/${crypto.randomUUID()}-${baseName}.${extension}`;
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    const { error: uploadError } = await admin.storage.from(bucketConfig.bucket).upload(objectPath, buffer, {
+    const { error: uploadError } = await admin.storage.from(bucket).upload(objectPath, buffer, {
       contentType: file.type,
-      cacheControl: bucketConfig.publicBucket ? "31536000" : "3600",
+      cacheControl: "3600",
       upsert: false,
     });
 
     if (uploadError) {
-      return NextResponse.json({ error: uploadError.message, bucket: bucketConfig.bucket }, { status: 502 });
+      return NextResponse.json({ error: "Upload storage gagal." }, { status: 502 });
     }
 
-    const url = bucketConfig.publicBucket
-      ? admin.storage.from(bucketConfig.bucket).getPublicUrl(objectPath).data.publicUrl
-      : (await admin.storage.from(bucketConfig.bucket).createSignedUrl(objectPath, 60 * 60 * 24 * 7)).data?.signedUrl;
+    const { data: signedUrlData, error: signedUrlError } = await admin.storage
+      .from(bucket)
+      .createSignedUrl(objectPath, 60 * 60 * 24 * 7);
+    const url = signedUrlData?.signedUrl;
 
-    if (!url) {
+    if (signedUrlError || !url) {
+      await admin.storage.from(bucket).remove([objectPath]);
       return NextResponse.json({ error: "Gagal membuat URL preview storage." }, { status: 502 });
     }
 
     const dimensions = sizeFromUpload(file, widthValue, heightValue);
-    const sourceType = kind === "report-photo" ? "laporan" : "bukti_lapangan";
+    const sourceType = "laporan";
     const filename = originalName || file.name;
     const photoId = crypto.randomUUID();
 
-    if (kind === "report-photo") {
-      const { error: insertError } = await admin.from("gallery_photos").insert({
-        id: photoId,
-        owner_id: ownerId,
-        project_id: projectId,
-        source_type: sourceType,
-        storage_path: objectPath,
-        public_url: bucketConfig.publicBucket ? url : null,
-        filename,
-        mime_type: file.type,
-        width: dimensions.width,
-        height: dimensions.height,
-        size_bytes: file.size,
-        metadata: {
-          bucket: bucketConfig.bucket,
-          resized,
-          originalSizeBytes: Number.isFinite(originalSizeBytes) && originalSizeBytes > 0 ? originalSizeBytes : file.size,
-        },
-      });
+    const { error: insertError } = await admin.from("gallery_photos").insert({
+      id: photoId,
+      owner_id: ownerId,
+      project_id: projectId,
+      source_type: sourceType,
+      storage_path: objectPath,
+      public_url: null,
+      filename,
+      mime_type: file.type,
+      width: dimensions.width,
+      height: dimensions.height,
+      size_bytes: file.size,
+      metadata: {
+        bucket,
+        resized,
+        originalSizeBytes: Number.isFinite(originalSizeBytes) && originalSizeBytes > 0 ? originalSizeBytes : file.size,
+      },
+    });
 
-      if (insertError) {
-        await admin.storage.from(bucketConfig.bucket).remove([objectPath]);
-        return NextResponse.json({ error: insertError.message }, { status: 502 });
-      }
+    if (insertError) {
+      await admin.storage.from(bucket).remove([objectPath]);
+      return NextResponse.json({ error: "Gagal menyimpan metadata foto." }, { status: 502 });
     }
 
     const photo = {
       id: photoId,
-      bucket: bucketConfig.bucket,
+      bucket,
       storagePath: objectPath,
       url,
       filename,
@@ -156,11 +175,11 @@ export async function POST(request: Request) {
       w: dimensions.width || 900,
       h: dimensions.height || 650,
       sourceType,
-      publicBucket: bucketConfig.publicBucket,
+      publicBucket: false,
     };
 
     return NextResponse.json({ photo });
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Upload gagal." }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "Upload gagal." }, { status: 500 });
   }
 }
