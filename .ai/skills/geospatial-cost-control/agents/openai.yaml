@@ -1,0 +1,4 @@
+interface:
+  display_name: "geospatial cost control"
+  short_description: "Pixforme geospatial cost control workflow"
+  default_prompt: "Use this Pixforme skill to perform the requested review or change with repository evidence."

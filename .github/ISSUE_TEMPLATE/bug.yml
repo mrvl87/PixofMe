@@ -1,0 +1,36 @@
+name: Bug
+description: Report a reproducible Pixforme defect.
+title: "[BUG] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: textarea
+    id: observed
+    attributes: { label: Observed behavior }
+    validations: { required: true }
+  - type: textarea
+    id: expected
+    attributes: { label: Expected behavior and source }
+    validations: { required: true }
+  - type: textarea
+    id: reproduce
+    attributes: { label: Reproduction, route, data, viewport/environment }
+    validations: { required: true }
+  - type: textarea
+    id: evidence
+    attributes: { label: Screenshots, console/network/log evidence, affected files }
+  - type: dropdown
+    id: severity
+    attributes: { label: Severity, options: ["P0 Critical", "P1 High", "P2 Medium", "P3 Low"] }
+    validations: { required: true }
+  - type: textarea
+    id: scope
+    attributes: { label: Fix scope and out of scope }
+    validations: { required: true }
+  - type: textarea
+    id: verify
+    attributes: { label: Regression verification }
+    validations: { required: true }
+  - type: input
+    id: owner
+    attributes: { label: Owner agent and required skills }
+    validations: { required: true }

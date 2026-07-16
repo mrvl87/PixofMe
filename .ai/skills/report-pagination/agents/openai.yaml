@@ -1,0 +1,4 @@
+interface:
+  display_name: "report pagination"
+  short_description: "Pixforme report pagination workflow"
+  default_prompt: "Use this Pixforme skill to perform the requested review or change with repository evidence."

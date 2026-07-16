@@ -1,0 +1,4 @@
+interface:
+  display_name: "domain modeling"
+  short_description: "Pixforme domain modeling workflow"
+  default_prompt: "Use this Pixforme skill to perform the requested review or change with repository evidence."

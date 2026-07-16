@@ -1,0 +1,4 @@
+interface:
+  display_name: "ai job state machine"
+  short_description: "Pixforme ai job state machine workflow"
+  default_prompt: "Use this Pixforme skill to perform the requested review or change with repository evidence."

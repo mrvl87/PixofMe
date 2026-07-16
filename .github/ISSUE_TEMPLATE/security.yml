@@ -1,0 +1,33 @@
+name: Security finding
+description: Track a Pixforme vulnerability or hardening requirement without exposing secrets.
+title: "[SEC] "
+labels: ["security", "needs-triage"]
+body:
+  - type: dropdown
+    id: severity
+    attributes: { label: Severity, options: ["P0 Critical", "P1 High", "P2 Medium", "P3 Low"] }
+    validations: { required: true }
+  - type: textarea
+    id: surface
+    attributes: { label: Asset, actor, and trust boundary }
+    validations: { required: true }
+  - type: textarea
+    id: evidence
+    attributes: { label: Safe evidence and affected files, description: "Do not include credentials or weaponized public details." }
+    validations: { required: true }
+  - type: textarea
+    id: impact
+    attributes: { label: Impact and exposure }
+    validations: { required: true }
+  - type: textarea
+    id: containment
+    attributes: { label: Containment and required control }
+    validations: { required: true }
+  - type: textarea
+    id: verification
+    attributes: { label: Negative/regression verification }
+    validations: { required: true }
+  - type: input
+    id: owners
+    attributes: { label: Implementation and independent security owners }
+    validations: { required: true }

@@ -1,0 +1,4 @@
+interface:
+  display_name: "nextjs boundary review"
+  short_description: "Pixforme nextjs boundary review workflow"
+  default_prompt: "Use this Pixforme skill to perform the requested review or change with repository evidence."
